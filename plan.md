@@ -14,7 +14,7 @@ It also Provides a sell phone number users could call to perform some of the fun
 
 Businesses could set some configurations as well which tells the AI if a caller or user could attempt an action
 
-### Frontend
+## Frontend
 
 - Web ( Main App )
   - React + vite
@@ -22,7 +22,7 @@ Businesses could set some configurations as well which tells the AI if a caller 
 - Chatbot widget
   - React + vite ( would be accessible via an iframe using app deployed url )
 
-### Backend
+## Backend
 
 - Nodejs / Expressjs ( core backend api )
 - Postgresql ( supabase )
@@ -39,17 +39,45 @@ Businesses could set some configurations as well which tells the AI if a caller 
   - sending sms
   -
 
-### Features ( UI )
+## Features ( UI )
 
-### Workflow
+## Workflow
 
-##### Auth
+### Auth
 
 On signing up users are redirected to onboarding screen which asks for the following:
 
-- Business name
-- Business type
-- Business location
-- Business phone number
-- Business email
--
+- name
+- type
+- phone number
+- email (optional)
+- opening days
+- opening hours
+- closing hours
+- country
+
+### Dashboard
+
+- Metrics
+  - Total calls
+  - Total messages
+  - Total appointments
+- Sentiment analysis ( Graph )
+  This could be filtered based on either (conversation between AI and user (in-call) ) or chat messages (chatbot)
+
+### Chatbot
+
+User could choose to either use the chatbot or call the phone number provided.
+
+- Chatbot widget
+
+### Bucket
+
+User could upload resources which would be used by the AI to answer questions asked by users. each bucket provides a way to group resources together. (website, docs, pdfs, etc)
+
+- name
+- description
+- Data
+  - pdf
+  - web url
+  - custom data (txt)
