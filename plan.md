@@ -45,7 +45,7 @@ Businesses could set some configurations as well which tells the AI if a caller 
 
 ### Auth
 
-On signing up users are redirected to onboarding screen which asks for the following:
+On signing up users are redirected to onboarding screen (if they dont have any business created) which asks for the following:
 
 - name
 - type
@@ -73,7 +73,7 @@ User could choose to either use the chatbot or call the phone number provided.
 
 ### Bucket
 
-User could upload resources which would be used by the AI to answer questions asked by users. each bucket provides a way to group resources together. (website, docs, pdfs, etc)
+User could upload resources which would be used by the AI to answer questions asked by extrernal users. each bucket provides a way to group resources together. (website, docs, pdfs, etc)
 
 - name
 - description
@@ -81,3 +81,34 @@ User could upload resources which would be used by the AI to answer questions as
   - pdf
   - web url
   - custom data (txt)
+
+### Conversations (Messages)
+
+This includes both chat messages and call messages (messages extracted from the call btw the AI and the user)
+
+- Sentiment Analysis Graph ( Still giving this a thought )
+  - provide sentiment analysis of the conversation of the customers response messages.
+- Type
+  - chat (chatbot)
+  - call (phone call)
+
+### Appointments (sync with calendar)
+
+Contains all the appointments made by the customers.
+
+- date
+- time
+- user
+- status (pending, completed, canceled)
+
+### Integrations
+
+Add third party integrations.
+
+- Calendar
+  resources:
+  [Link1](https://stackoverflow.com/questions/75785196/create-a-google-calendar-event-with-a-specified-google-meet-id-conferencedata-c)
+  [Link2](https://chatgpt.com/share/bbbe4e27-6e20-457b-9f85-057cba444cba)
+
+- Whatsapp (still giving this a thought)
+  provides a way to send messages to the user via whatsapp since sms could be expensive.
