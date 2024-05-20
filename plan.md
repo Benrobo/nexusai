@@ -112,3 +112,5 @@ Add third party integrations.
 
 - Whatsapp (still giving this a thought)
   provides a way to send messages to the user via whatsapp since sms could be expensive.
+
+For converting site content into valid markdown, we could use [html-to-markdown](https://github.com/mixmark-io/turndown) npm package. Or perhaps using a small cloudflare LLM worker to convert the content into markdown [cloudflare LLM](https://developers.cloudflare.com/workers-ai/models/qwen1.5-14b-chat-awq/)
