@@ -1,0 +1,130 @@
+datasource db {
+    provider     = "postgresql"
+    url          = env("DATABASE_URL")
+    relationMode = "prisma"
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+enum Role {
+    user
+    admin
+}
+
+enum AuthMethod {
+    credentials
+    magicLink
+    oauth
+}
+
+enum PlanType {
+    one_time
+    subscription
+}
+
+enum PlanDuration {
+    monthly
+    yearly
+    weekly
+    daily
+    forever
+}
+
+// Define the SubscriptionStatus enum in lowercase
+enum SubscriptionStatus {
+    // Currently in a trial period.
+    on_trial
+
+    // Active with ongoing payments.
+    active
+
+    // Payment collection paused.
+    paused
+
+    // Renewal payment failed, with retries.
+    past_due
+
+    // Unsuccessful payment recovery after 4 attempts.
+    unpaid
+
+    // Future payments cancelled, but still on a grace period.
+    cancelled
+
+    // Subscription has expired.
+    expired
+}
+
+model Users {
+    id       String  @id @default(cuid())
+    uId      String  @unique @default(cuid())
+    username String?
+    fullname String?
+    email    String
+    avatar   String?
+
+    // snapx token
+    snapx_token String?
+
+    provider  String?
+    role      Role     @default(user)
+    createdAt DateTime @default(now())
+
+    subscriptions Subscriptions?
+    sessions      Session[]
+
+    @@map(name: "users")
+}
+
+model Session {
+    id        String   @id
+    userId    String
+    expiresAt DateTime
+    user      Users    @relation(references: [uId], fields: [userId], onDelete: Cascade)
+
+    @@index([userId])
+    @@map(name: "sessions")
+}
+
+model Subscriptions {
+    id         String  @id @default(cuid())
+    uId        String  @unique
+    user_name  String?
+    user_email String?
+
+    product_id   String
+    product_name String?
+    variant_id   String?
+    variant_name String?
+
+    order_id String
+    store_id String
+
+    subscription_id String?
+    customer_id     String?
+
+    card_brand     String?
+    card_last_four String?
+
+    status SubscriptionStatus @default(on_trial)
+
+    ends_at   DateTime?
+    renews_at DateTime?
+    createdAt DateTime  @default(now())
+
+    test_mode Boolean @default(false)
+
+    user Users @relation(fields: [uId], references: [uId])
+
+    @@map(name: "subscriptions")
+}
+
+// waitlist
+model Waitlist {
+    id        String   @id @default(cuid())
+    email     String   @unique
+    createdAt DateTime @default(now())
+
+    @@map(name: "waitlist")
+}
