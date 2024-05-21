@@ -54,3 +54,11 @@ export enum RESPONSE_CODE {
   SUBSCRIPTION_NOT_FOUND,
   SUBSCRIPTION_CREATION_FAILED,
 }
+
+export interface IReqObject {
+  user: {
+    id: string;
+    email?: string;
+    role?: string;
+  };
+}

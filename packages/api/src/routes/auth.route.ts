@@ -15,9 +15,15 @@ export default class AuthRoute {
 
   initializeRoutes() {
     // login
-    this.router.post(
+    this.router.get(
       `${this.path}/google`,
-      useCatchErrors(this.authService.login.bind(this.authService))
+      useCatchErrors(this.authService.googleAuth.bind(this.authService))
+    );
+
+    // handle google callback
+    this.router.get(
+      `${this.path}/google/callback`,
+      useCatchErrors(this.authService.googleAuthCallback.bind(this.authService))
     );
   }
 }

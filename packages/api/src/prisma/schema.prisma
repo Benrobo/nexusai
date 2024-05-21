@@ -26,23 +26,16 @@ model Users {
     email    String
     avatar   String?
 
-    role      Role     @default(user)
+    role Role @default(user)
+
+    // google oauth
+    google_ref_token String?
+
     createdAt DateTime @default(now())
 
-    authTokens   AuthToken[]
     integrations Integration[]
 
     @@map(name: "users")
-}
-
-model AuthToken {
-    id        String @id @default(cuid())
-    userId    String
-    ref_token String @unique
-    user      Users  @relation(fields: [userId], references: [id])
-
-    @@index([userId])
-    @@map(name: "auth_tokens")
 }
 
 // integrations added by user

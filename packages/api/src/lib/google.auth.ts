@@ -1,11 +1,61 @@
 import { google } from "googleapis";
+import { Request, Response } from "express";
+import env from "../config/env";
+import shortUUID from "short-uuid";
 
+interface ISignIn {
+  state?: string | undefined;
+  req: Request;
+  res: Response;
+}
+
+interface ICallBack {
+  code: string;
+}
+
+const googleClient = new google.auth.OAuth2({
+  clientId: env.GOOGLE_CLIENT_ID,
+  clientSecret: env.GOOGLE_CLIENT_SECRET,
+  redirectUri: env.GOOGLE_REDIRECT_URL,
+});
 
 // Google authorize
 export default class GoogleAuth {
   constructor() {}
 
-  public async signIn() {}
+  public static async signIn({ state, req, res }: ISignIn) {
+    const scopes = [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile",
+    ];
 
-  public async callBack() {}
+    const url = googleClient.generateAuthUrl({
+      scope: scopes,
+      state,
+      access_type: "offline",
+      // Enable incremental authorization.
+      include_granted_scopes: true,
+    });
+
+    res.redirect(url);
+  }
+
+  public static async callBack({ code }: ICallBack) {
+    return await googleClient.getToken(code);
+  }
+
+  public static async verifyIdToken({ idToken }: { idToken: string }) {
+    return await googleClient.verifyIdToken({
+      idToken,
+      audience: env.GOOGLE_CLIENT_ID,
+    });
+  }
+
+  public static async verifyAccessToken({
+    accessToken,
+  }: {
+    accessToken: string;
+  }) {
+    return await googleClient.getTokenInfo(accessToken);
+  }
 }
