@@ -13,47 +13,9 @@ enum Role {
     admin
 }
 
-enum AuthMethod {
-    credentials
-    magicLink
-    oauth
-}
-
-enum PlanType {
-    one_time
-    subscription
-}
-
-enum PlanDuration {
-    monthly
-    yearly
-    weekly
-    daily
-    forever
-}
-
-// Define the SubscriptionStatus enum in lowercase
-enum SubscriptionStatus {
-    // Currently in a trial period.
-    on_trial
-
-    // Active with ongoing payments.
-    active
-
-    // Payment collection paused.
-    paused
-
-    // Renewal payment failed, with retries.
-    past_due
-
-    // Unsuccessful payment recovery after 4 attempts.
-    unpaid
-
-    // Future payments cancelled, but still on a grace period.
-    cancelled
-
-    // Subscription has expired.
-    expired
+enum IntegrationType {
+    google_calendar
+    google_meet
 }
 
 model Users {
@@ -64,67 +26,34 @@ model Users {
     email    String
     avatar   String?
 
-    // snapx token
-    snapx_token String?
-
-    provider  String?
     role      Role     @default(user)
     createdAt DateTime @default(now())
 
-    subscriptions Subscriptions?
-    sessions      Session[]
+    authTokens   AuthToken[]
+    integrations Integration[]
 
     @@map(name: "users")
 }
 
-model Session {
-    id        String   @id
+model AuthToken {
+    id        String @id @default(cuid())
     userId    String
-    expiresAt DateTime
-    user      Users    @relation(references: [uId], fields: [userId], onDelete: Cascade)
+    ref_token String @unique
+    user      Users  @relation(fields: [userId], references: [id])
 
     @@index([userId])
-    @@map(name: "sessions")
+    @@map(name: "auth_tokens")
 }
 
-model Subscriptions {
-    id         String  @id @default(cuid())
-    uId        String  @unique
-    user_name  String?
-    user_email String?
+// integrations added by user
+model Integration {
+    id      String          @id @default(cuid())
+    userId  String
+    type    IntegrationType
+    enabled Boolean         @default(false)
 
-    product_id   String
-    product_name String?
-    variant_id   String?
-    variant_name String?
+    user Users @relation(fields: [userId], references: [id])
 
-    order_id String
-    store_id String
-
-    subscription_id String?
-    customer_id     String?
-
-    card_brand     String?
-    card_last_four String?
-
-    status SubscriptionStatus @default(on_trial)
-
-    ends_at   DateTime?
-    renews_at DateTime?
-    createdAt DateTime  @default(now())
-
-    test_mode Boolean @default(false)
-
-    user Users @relation(fields: [uId], references: [uId])
-
-    @@map(name: "subscriptions")
-}
-
-// waitlist
-model Waitlist {
-    id        String   @id @default(cuid())
-    email     String   @unique
-    createdAt DateTime @default(now())
-
-    @@map(name: "waitlist")
+    @@index([userId])
+    @@map(name: "integrations")
 }

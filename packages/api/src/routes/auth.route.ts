@@ -16,14 +16,8 @@ export default class AuthRoute {
   initializeRoutes() {
     // login
     this.router.post(
-      `${this.path}/login`,
+      `${this.path}/google`,
       useCatchErrors(this.authService.login.bind(this.authService))
-    );
-
-    // otp auth
-    this.router.post(
-      `${this.path}/otp-auth`,
-      useCatchErrors(this.authService.otpAuth.bind(this.authService))
     );
   }
 }
