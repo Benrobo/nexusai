@@ -217,3 +217,10 @@ export const CaretSort = (props: SvgIconProps) => (
     <path d="m7 9 5-5 5 5" />
   </IconMarkup>
 );
+
+export const Plus = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M5 12h14" />
+    <path d="M12 5v14" />
+  </IconMarkup>
+);
