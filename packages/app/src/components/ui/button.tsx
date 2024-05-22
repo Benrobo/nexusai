@@ -2,6 +2,7 @@ import React, { ButtonHTMLAttributes, DetailedHTMLProps } from "react";
 import { VariantProps, cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
   "relative px-4 py-3 flex items-center justify-center gap-5 w-fit h-[48px] rounded-sm font-ppReg text-white-100",
@@ -50,6 +51,7 @@ export interface ButtonProps extends ButtonVariants {
   href?: string;
   spinnerColor?: string;
   spinnerSize?: string | number;
+  childrenClass?: React.ComponentProps<"div">["className"];
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -62,14 +64,14 @@ const Button: React.FC<ButtonProps> = ({
   href,
   spinnerColor,
   spinnerSize,
+  childrenClass,
   ...props
 }) => {
   const classNames = twMerge(buttonVariants(props), className);
 
   if (href) {
     return (
-      // @ts-expect-error
-      <Link to={href} className={classNames} {...props}>
+      <Link to={href} className={cn(classNames, childrenClass)} {...props}>
         {leftIcon && leftIcon}
         {children}
         {rightIcon && rightIcon}
@@ -102,8 +104,9 @@ const Button: React.FC<ButtonProps> = ({
       </div>
       <div
         className={twMerge(
-          "flex items-center justify-center gap-2",
-          isLoading ? "opacity-0" : "opacity-1"
+          "w-auto flex items-center justify-center gap-2",
+          isLoading ? "opacity-0" : "opacity-1",
+          childrenClass
         )}
       >
         {leftIcon}
