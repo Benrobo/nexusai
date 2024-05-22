@@ -224,3 +224,34 @@ export const Plus = (props: SvgIconProps) => (
     <path d="M12 5v14" />
   </IconMarkup>
 );
+
+export const Home = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </IconMarkup>
+);
+
+export const Library = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <rect width="8" height="18" x="3" y="3" rx="1" />
+    <path d="M7 3v18" />
+    <path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z" />
+  </IconMarkup>
+);
+
+export const Inbox = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+    <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+  </IconMarkup>
+);
+
+export const Package = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="m7.5 4.27 9 5.15" />
+    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+    <path d="m3.3 7 8.7 5 8.7-5" />
+    <path d="M12 22V12" />
+  </IconMarkup>
+);

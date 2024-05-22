@@ -12,14 +12,46 @@ import {
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "../Flex";
-import { CaretSort, CheckCheck, Plus } from "../icons";
+import {
+  CaretSort,
+  CheckCheck,
+  Home,
+  Inbox,
+  Library,
+  Package,
+  Plus,
+} from "../icons";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+
+const sidebarRoutes = [
+  {
+    title: "Dashboard",
+    key: "dashboard",
+    path: "/dashboard",
+  },
+  {
+    title: "Inbox",
+    key: "inbox",
+    path: "/inbox",
+  },
+  {
+    title: "Knowledge Base",
+    key: "knowledge_base",
+    path: "/knowledge-base",
+  },
+  {
+    title: "Integration",
+    key: "integration",
+    path: "/integration",
+  },
+];
 
 export default function DashboardSidebar() {
-  const [open, setOpen] = React.useState(false);
+  const [activePage, setActivePage] = React.useState("dashboard");
 
   return (
-    <div className="w-full max-w-[250px] h-screen bg-gradient-to-b from-dark-103 from-50% to-70% to-dark-105 px-4 py-5">
+    <div className="w-full h-screen bg-gradient-to-b from-dark-103 from-50% to-70% to-dark-105 px-4 py-5">
       {/* business switcher */}
       <Popover>
         <PopoverTrigger className="w-full">
@@ -48,7 +80,7 @@ export default function DashboardSidebar() {
           <FlexColStart className="w-full px-3 py-3 border-b-[.5px] border-b-white-300/30">
             <p className="text-sm font-ppM text-white-300">Businesses</p>
           </FlexColStart>
-          <FlexColStart className="w-full mt-2 px-0 py-2">
+          <FlexColStart className="w-full mt-0 px-0 py-2">
             <button className="w-full relative border-none outline-none scale-[.95]">
               <FlexRowStartCenter
                 className={cn(
@@ -90,7 +122,60 @@ export default function DashboardSidebar() {
           </FlexRowStartCenter>
         </PopoverContent>
       </Popover>
-      DashboardSidebar
+
+      <FlexColStart className="w-full mt-4">
+        {sidebarRoutes.map((route) => (
+          <Link className="w-full" onClick={() => setActivePage(route.key)}>
+            <FlexRowStart
+              className={cn(
+                "w-full py-3 px-3 rounded-lg ",
+                activePage === route.key &&
+                  "bg-gradient-to-b from-purple-103 from-5% to-70% to-purple-102"
+              )}
+            >
+              {renderIcons(route.key, activePage)}
+              <span
+                className={cn(
+                  "text-sm",
+                  activePage === route.key
+                    ? "font-ppM text-white-100 "
+                    : "font-ppL font-light text-white-400 "
+                )}
+              >
+                {route.title}
+              </span>
+            </FlexRowStart>
+          </Link>
+        ))}
+      </FlexColStart>
     </div>
   );
+}
+
+function renderIcons(name: string, active: string) {
+  const mainStyle =
+    active === name ? "stroke-white-100" : "stroke-white-400/80";
+  let icon = null;
+
+  switch (name) {
+    case "dashboard":
+      icon = <Home size={20} className={cn(mainStyle, "")} />;
+      break;
+
+    case "inbox":
+      icon = <Inbox size={20} className={cn(mainStyle, "")} />;
+      break;
+
+    case "knowledge_base":
+      icon = <Library size={20} className={cn(mainStyle, "")} />;
+      break;
+
+    case "integration":
+      icon = <Package size={20} className={cn(mainStyle, "")} />;
+      break;
+
+    default:
+      break;
+  }
+  return icon;
 }

@@ -1,15 +1,15 @@
-import type { PropsWithChildren } from "react";
 import DashboardSidebar from "./sidebar";
+import { Outlet } from "react-router-dom";
 
-interface Props extends PropsWithChildren {}
-
-export default function DashboardLayout(props: Props) {
+export default function DashboardLayout() {
   return (
-    <div className="w-full h-full grid">
-      <div className=" grid-cols-1">
+    <div className="w-auto h-full flex items-start justify-start">
+      <div className="w-full h-full max-w-[250px]">
         <DashboardSidebar />
       </div>
-      <div className="grid-cols-3">{props.children}</div>
+      <div className="w-full h-full">
+        <Outlet />
+      </div>
     </div>
   );
 }
