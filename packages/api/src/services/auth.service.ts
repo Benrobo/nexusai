@@ -67,18 +67,6 @@ export default class AuthService {
           google_ref_token: tokens.refresh_token,
         },
       });
-      // set cookie
-      // res.cookie("token", tokens.access_token, {
-      //   httpOnly: true,
-      //   secure: true,
-      //   sameSite: "none",
-      // });
-      // // set userId in cookie
-      // res.cookie("_uId", uId, {
-      //   httpOnly: true,
-      //   secure: true,
-      //   sameSite: "none",
-      // });
 
       this.setCookie("token", tokens.access_token!, res);
       this.setCookie("_uId", uId, res);
@@ -98,13 +86,6 @@ export default class AuthService {
         google_ref_token: tokens.refresh_token,
       },
     });
-
-    // set cookie
-    // res.cookie("token", tokens.access_token, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "none",
-    // });
 
     this.setCookie("token", tokens.access_token!, res);
     this.setCookie("_uId", user.uId, res);

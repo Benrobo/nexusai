@@ -7,7 +7,6 @@ import type { TokenInfo, Credentials } from "google-auth-library";
 
 export function isAuthenticated(fn: Function) {
   return async (req: Request & IReqObject, res: Response) => {
-    // get token from req["cookies"]
     const token = req.cookies["token"];
     const userId = req.cookies["_uId"];
 
