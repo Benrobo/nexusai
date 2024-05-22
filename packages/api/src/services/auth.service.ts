@@ -75,7 +75,7 @@ export default class AuthService {
       this.setCookie("token", tokens.access_token!, res);
       this.setCookie("_uId", uId, res);
 
-      console.log(`User logged in with email: ${email}`);
+      console.log(`User created: ${email}`);
 
       res.redirect(`${env.CLIENT_URL}/dashboard`);
       return;
@@ -94,7 +94,7 @@ export default class AuthService {
     this.setCookie("token", tokens.access_token!, res);
     this.setCookie("_uId", user.uId, res);
 
-    console.log(`User created: ${email}`);
+    console.log(`User logged in with email: ${email}`);
 
     res.redirect(`${env.CLIENT_URL}/dashboard`);
   }

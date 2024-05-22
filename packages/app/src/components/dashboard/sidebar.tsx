@@ -76,7 +76,7 @@ export default function DashboardSidebar() {
             </FlexRowStartCenter>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[220px] mt-2 p-0 rounded-xl bg-dark-102 outline outline-[1px] outline-white-400/50 border-none">
+        <PopoverContent className="w-[220px] mt-0 p-0 rounded-xl bg-dark-102 outline outline-[1px] outline-white-400/50 border-none">
           <FlexColStart className="w-full px-3 py-3 border-b-[.5px] border-b-white-300/30">
             <p className="text-sm font-ppM text-white-300">Businesses</p>
           </FlexColStart>
