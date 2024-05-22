@@ -27,6 +27,8 @@ export default class AuthService {
     const { tokens } = await GoogleAuth.callBack({ code });
 
     if (!tokens) {
+      // redirect to client with error param
+      res.redirect(`${env.CLIENT_URL}/auth?error=google_auth_failed`);
       throw new HttpException(RESPONSE_CODE.ERROR, "Google Auth failed", 401);
     }
 
@@ -34,9 +36,11 @@ export default class AuthService {
     const ticket = await GoogleAuth.verifyIdToken({ idToken: id_token! });
 
     const payload = ticket.getPayload();
-    const email = payload?.email;
+    let email = payload?.email;
 
     if (!email) {
+      // redirect to client with error param
+      res.redirect(`${env.CLIENT_URL}/auth?error=email_not_found`);
       throw new HttpException(
         RESPONSE_CODE.ERROR,
         "Email not found in google response",
@@ -64,7 +68,7 @@ export default class AuthService {
           username,
           fullname,
           avatar,
-          google_ref_token: tokens.refresh_token,
+          google_ref_token: tokens?.refresh_token!,
         },
       });
 

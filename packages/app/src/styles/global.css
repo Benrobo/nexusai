@@ -1,107 +1,51 @@
-/* Loading provided fonts listed within @vercel/og ImageResponse */
-
-@font-face {
-    font-family: "--poppins-regular";
-    src: url("/assets/fonts/poppins/Poppins-Regular.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "--poppins-medium";
-    src: url("/assets/fonts/poppins/Poppins-Medium.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "--poppins-bold";
-    src: url("/assets/fonts/poppins/Poppins-Bold.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "--poppins-extrabold";
-    src: url("/assets/fonts/poppins/Poppins-ExtraBold.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "--rubik-mono";
-    src: url("/assets/fonts/rubik-mono/RubikMonoOne.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "--jb-mono";
-    src: url("/assets/fonts/jetbrain-mono/JetBrainsMono.ttf") format("truetype");
-}
-
-.font-ppReg {
-    font-family: "--poppins-regular";
-}
-
-.font-ppMed {
-    font-family: "--poppins-medium";
-}
-
-.font-ppBold {
-    font-family: "--poppins-bold";
-}
-
-.font-ppExBold {
-    font-family: "--poppins-extrabold";
-}
-
-.font-rm {
-    font-family: "--rubik-mono";
-}
-
-.font-jb {
-    font-family: "--jb-mono";
-}
-
 ::selection {
-    background: rgba(86, 86, 255, 0.362);
+  background: rgba(86, 86, 255, 0.362);
 }
 
 body {
-    scroll-behavior: smooth;
+  scroll-behavior: smooth;
 }
 
 #loading-spinner {
-    animation: spinner 0.5s linear infinite;
-    border-radius: 30px;
-    /* transition: .2s ease; */
+  animation: spinner 0.5s linear infinite;
+  border-radius: 30px;
+  /* transition: .2s ease; */
 }
 
 @keyframes spinner {
-    0% {
-        transform: rotate(0deg);
-    }
+  0% {
+    transform: rotate(0deg);
+  }
 
-    100% {
-        transform: rotate(360deg);
-    }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .hideScrollBar::-webkit-scrollbar {
-    /* customize it */
-    width: 3px;
-    background: transparent;
+  /* customize it */
+  width: 3px;
+  background: transparent;
 }
 
 .hideScrollBar::-webkit-scrollbar-thumb {
-    /* customize it */
-    background: #777;
-    border-radius: 30px;
+  /* customize it */
+  background: #777;
+  border-radius: 30px;
 }
 
 .hideScrollBar::-webkit-scrollbar-track {
-    /* customize it */
-    background: transparent;
+  /* customize it */
+  background: transparent;
 }
 
 .hideScrollBar2::-webkit-scrollbar {
-    /* customize it */
-    width: 1px;
-    background: transparent;
+  /* customize it */
+  width: 1px;
+  background: transparent;
 }
 
 /* hide code highlight scrollbar */
 pre {
-    scrollbar-width: none;
+  scrollbar-width: none;
 }

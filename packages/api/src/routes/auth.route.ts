@@ -25,5 +25,11 @@ export default class AuthRoute {
       `${this.path}/google/callback`,
       useCatchErrors(this.authService.googleAuthCallback.bind(this.authService))
     );
+
+    // logout
+    this.router.get(
+      `${this.path}/logout`,
+      useCatchErrors(this.authService.logout.bind(this.authService))
+    );
   }
 }
