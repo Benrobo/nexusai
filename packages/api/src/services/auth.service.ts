@@ -1,8 +1,4 @@
 import { Request, Response } from "express";
-import ZodValidation from "../lib/zodValidation";
-import { emailSchema, loginSchema } from "../lib/schema_validation";
-import redis from "../config/redis";
-import sendResponse from "../lib/sendResponse";
 import { RESPONSE_CODE } from "../types";
 import prisma from "../config/prisma";
 import HttpException from "../lib/exception";
@@ -16,6 +12,14 @@ export default class AuthService {
   public async googleAuth(req: Request, res: Response) {
     const state = shortUUID.generate();
     await GoogleAuth.signIn({ req, res, state });
+  }
+
+  private setCookie(name: string, value: string, res: Response) {
+    res.cookie(name, value, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
   }
 
   public async googleAuthCallback(req: Request, res: Response) {
@@ -64,11 +68,20 @@ export default class AuthService {
         },
       });
       // set cookie
-      res.cookie("token", tokens.access_token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-      });
+      // res.cookie("token", tokens.access_token, {
+      //   httpOnly: true,
+      //   secure: true,
+      //   sameSite: "none",
+      // });
+      // // set userId in cookie
+      // res.cookie("_uId", uId, {
+      //   httpOnly: true,
+      //   secure: true,
+      //   sameSite: "none",
+      // });
+
+      this.setCookie("token", tokens.access_token!, res);
+      this.setCookie("_uId", uId, res);
 
       console.log(`User logged in with email: ${email}`);
 
@@ -87,11 +100,14 @@ export default class AuthService {
     });
 
     // set cookie
-    res.cookie("token", tokens.access_token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
+    // res.cookie("token", tokens.access_token, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "none",
+    // });
+
+    this.setCookie("token", tokens.access_token!, res);
+    this.setCookie("_uId", user.uId, res);
 
     console.log(`User created: ${email}`);
 

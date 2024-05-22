@@ -13,7 +13,7 @@ interface ICallBack {
   code: string;
 }
 
-const googleClient = new google.auth.OAuth2({
+export const googleClient = new google.auth.OAuth2({
   clientId: env.GOOGLE_CLIENT_ID,
   clientSecret: env.GOOGLE_CLIENT_SECRET,
   redirectUri: env.GOOGLE_REDIRECT_URL,
@@ -41,7 +41,9 @@ export default class GoogleAuth {
   }
 
   public static async callBack({ code }: ICallBack) {
-    return await googleClient.getToken(code);
+    const token = await googleClient.getToken(code);
+    googleClient.setCredentials(token.tokens);
+    return token;
   }
 
   public static async verifyIdToken({ idToken }: { idToken: string }) {
@@ -51,11 +53,9 @@ export default class GoogleAuth {
     });
   }
 
-  public static async verifyAccessToken({
-    accessToken,
-  }: {
-    accessToken: string;
-  }) {
+  public static async verifyAccessToken(accessToken: string) {
     return await googleClient.getTokenInfo(accessToken);
   }
+
+  public async tokenExpired(token: string) {}
 }

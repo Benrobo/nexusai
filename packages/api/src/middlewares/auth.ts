@@ -1,15 +1,34 @@
 import { Request, Response } from "express";
 import HttpException from "../lib/exception";
-import { RESPONSE_CODE } from "../types";
+import { RESPONSE_CODE, type IReqObject } from "../types";
 import prisma from "../config/prisma";
-import JWT from "../lib/jwt";
+import GoogleAuth, { googleClient } from "../lib/google.auth";
+import type { TokenInfo, Credentials } from "google-auth-library";
 
 export function isAuthenticated(fn: Function) {
-  return async (req: Request, res: Response) => {
-    try {
-      const jwtToken = await new JWT().getToken(req);
+  return async (req: Request & IReqObject, res: Response) => {
+    // get token from req["cookies"]
+    const token = req.cookies["token"];
+    const userId = req.cookies["_uId"];
 
-      if (!jwtToken) {
+    if (!token || !userId) {
+      throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
+    }
+
+    let decoded: TokenInfo | null = null;
+    try {
+      // verify token
+      decoded = await GoogleAuth.verifyAccessToken(token);
+    } catch (e: any) {
+      console.log(`Refreshing token...`);
+
+      const user = await prisma.users.findFirst({
+        where: {
+          uId: userId,
+        },
+      });
+
+      if (!user) {
         throw new HttpException(
           RESPONSE_CODE.UNAUTHORIZED,
           "Unauthorized",
@@ -17,42 +36,73 @@ export function isAuthenticated(fn: Function) {
         );
       }
 
-      let user = await prisma.users?.findFirst({
-        where: { uId: jwtToken?.uId as string },
+      const refToken = user.google_ref_token;
+
+      // refresh token
+      googleClient.setCredentials({
+        refresh_token: refToken,
       });
 
-      if (!user) {
+      const credentials = (await googleClient.refreshAccessToken()).credentials;
+
+      if (!credentials) {
         throw new HttpException(
           RESPONSE_CODE.UNAUTHORIZED,
-          `Unauthorized, Invalid Token`,
-          403
+          "Unauthorized",
+          401
         );
       }
 
-      (req as any)["user"] = { id: user.uId };
+      const userInfo = await googleClient.getTokenInfo(
+        credentials.access_token!
+      );
+
+      if (!userInfo) {
+        throw new HttpException(
+          RESPONSE_CODE.UNAUTHORIZED,
+          "Unauthorized",
+          401
+        );
+      }
+
+      // set cookie
+      res.cookie("token", credentials.access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
+
+      // set userId in cookie
+      res.cookie("_uId", user.uId, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
+
+      req["user"] = {
+        id: user.uId!,
+      };
+
       return await fn(req, res);
-    } catch (e: any) {
-      console.log(e);
-      throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, e.message, 401);
-    }
-  };
-}
-
-export function isAdmin(fn: Function) {
-  return async (req: Request) => {
-    const userId = (req as any)?.user?.id;
-
-    if (!userId) {
-      throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
     }
 
-    const admin = await prisma.users.findFirst({
-      where: { uId: userId, role: "admin" },
+    const email = decoded?.email;
+
+    // check if user exists in our db
+    const user = await prisma.users.findFirst({
+      where: {
+        email,
+      },
     });
 
-    if (!admin) {
+    if (!email) {
       throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
     }
-    return await fn(req);
+
+    req["user"] = {
+      id: user?.uId!,
+    };
+
+    return await fn(req, res);
   };
 }

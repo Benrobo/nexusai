@@ -57,7 +57,7 @@ export enum RESPONSE_CODE {
 
 export interface IReqObject {
   user: {
-    id: string;
+    id: string | null | undefined;
     email?: string;
     role?: string;
   };

@@ -8,6 +8,7 @@ function App() {
   return (
     <>
       <h1 className="text-red-200">welcome </h1>
+      <a href="http://localhost:4001/api/auth/google">SignIn with Google.</a>
     </>
   );
 }
