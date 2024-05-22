@@ -94,4 +94,11 @@ export default class AuthService {
 
     res.redirect(`${env.CLIENT_URL}/dashboard`);
   }
+
+  public logout(req: Request, res: Response) {
+    res.clearCookie("token");
+    res.clearCookie("_uId");
+
+    res.redirect(env.CLIENT_URL);
+  }
 }
