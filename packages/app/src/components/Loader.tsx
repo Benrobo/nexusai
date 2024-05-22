@@ -1,18 +1,27 @@
+import { cn } from "@/lib/utils";
 import { FlexColCenter, FlexRowStartCenter } from "./Flex";
 import { Spinner } from "./Spinner";
 
 type Props = {
   showText?: boolean;
   text?: string;
+  fixed?: boolean;
+  blur?: boolean;
 };
 
-export function FullPageLoader({ showText, text }: Props) {
+export function FullPageLoader({ showText, text, fixed, blur }: Props) {
   return (
-    <FlexColCenter className="w-full min-h-screen bg-dark-100/30 z-[999] fixed top-0 left-0 backdrop-blur-lg">
+    <FlexColCenter
+      className={cn(
+        "w-full min-h-full bg-white-100 z-[999]",
+        fixed && "fixed top-0 left-0",
+        blur && "backdrop-blur-lg bg-white-100/50"
+      )}
+    >
       <FlexRowStartCenter className="w-auto">
-        <Spinner size={20} color={"#fff"} />
+        <Spinner size={20} color={"#000"} />
         {showText && (
-          <p className="text-white-100 text-[13px] font-ppReg">
+          <p className="text-dark-100 text-[13px] font-ppReg">
             {text ?? "Loading..."}
           </p>
         )}

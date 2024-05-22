@@ -125,7 +125,11 @@ export default function DashboardSidebar() {
 
       <FlexColStart className="w-full mt-4">
         {sidebarRoutes.map((route) => (
-          <Link className="w-full" onClick={() => setActivePage(route.key)}>
+          <Link
+            className="w-full"
+            to={route.path}
+            onClick={() => setActivePage(route.key)}
+          >
             <FlexRowStart
               className={cn(
                 "w-full py-3 px-3 rounded-lg ",
