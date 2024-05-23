@@ -74,6 +74,8 @@ User could choose to either use the chatbot or call the phone number provided.
 
 ### Bucket
 
+!update: So no more bucket for now, right now the knowledge base should provide the option to upload resources. if they want to upload or add more, they could choose to create a new business profile.
+
 User could upload resources which would be used by the AI to answer questions asked by extrernal users. each bucket provides a way to group resources together. (website, docs, pdfs, etc)
 
 - name
@@ -115,3 +117,36 @@ Add third party integrations.
   provides a way to send messages to the user via whatsapp since sms could be expensive.
 
 For converting site content into valid markdown, we could use [html-to-markdown](https://github.com/mixmark-io/turndown) npm package. Or perhaps using a small cloudflare LLM worker to convert the content into markdown [cloudflare LLM](https://developers.cloudflare.com/workers-ai/models/qwen1.5-14b-chat-awq/)
+
+## UI
+
+Note, the main feature isn't based on chatbot but on automated voice calls assistant for businesses. chatbot is just an additional feature. So focus more on that.
+
+- Dashboard
+
+  - Metrics
+  - Sentiment Analysis
+
+- Knowledge Base
+  - Sources
+    This would be a horizontal tab which contains the following:
+    - pdf (multiple pdf) 4mb max
+    - webpages (multiple url)
+    - youtube (multiple youtube url) - < 1hr content
+- Conversations
+
+  - Chat
+  - Call
+
+- Chatbot
+
+  - Chatbot widget
+
+- Appointments
+
+  - List of appointments
+
+- Integrations
+  - Calendar
+  - Whatsapp
+-
