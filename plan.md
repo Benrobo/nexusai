@@ -19,7 +19,7 @@ Businesses could set some configurations as well which tells the AI if a caller 
 
 - Web ( Main App )
   - React + vite
-  - Chartjs ( document / graph out the intent of each calls or message made )
+  - Chartjs ( document / graph out the intent of each calls or message made ) or Nivo [https://github.com/plouc/nivo](https://github.com/plouc/nivo)
 - Chatbot widget
   - React + vite ( would be accessible via an iframe using app deployed url )
 
