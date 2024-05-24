@@ -18,35 +18,148 @@ enum IntegrationType {
     google_meet
 }
 
+enum AgentPurpose {
+    ANTI_SCAM
+    CUSTOMER_SUPPORT
+}
+
+enum EntityType {
+    AGENT
+    USER
+    CONVERSATION
+}
+
 model Users {
-    id       String  @id @default(cuid())
-    uId      String  @unique @default(cuid())
-    username String?
-    fullname String?
-    email    String
-    avatar   String?
-
-    role Role @default(user)
-
-    // google oauth
+    id               String          @id @default(cuid())
+    uId              String          @unique @default(cuid())
+    username         String?
+    fullname         String?
+    email            String
+    avatar           String?
+    role             Role            @default(user)
     google_ref_token String?
-
-    createdAt DateTime @default(now())
-
-    integrations Integration[]
+    createdAt        DateTime        @default(now())
+    work_space       Workspace[]
+    conversations    Conversations[]
 
     @@map(name: "users")
+}
+
+// users are limited to 2 agents per workspace
+model Workspace {
+    id         String   @id @unique @default(cuid())
+    userId     String
+    name       String
+    logo       String?
+    created_at DateTime @default(now())
+
+    user Users @relation(fields: [userId], references: [id])
+
+    agents        Agents[]
+    integration   Integration[]
+    settings      WorkspaceSettings?
+    Conversations Conversations[]
+
+    @@index([userId])
+}
+
+model WorkspaceSettings {
+    id         String   @id @default(cuid())
+    wsId       String   @unique
+    email      String? // default email if available where notifications are sent
+    created_at DateTime @default(now())
+
+    workspace Workspace @relation(fields: [wsId], references: [id])
+
+    @@index([wsId])
+}
+
+// AI Agents
+model Agents {
+    id              String          @id @default(cuid())
+    wsId            String          @unique
+    name            String
+    purpose         AgentPurpose
+    phonenumber     String?
+    welcome_message String?
+    seed_phrase     String?
+    created_at      DateTime        @default(now())
+    workspace       Workspace       @relation(fields: [wsId], references: [id])
+    Conversations   Conversations[]
+
+    @@index([wsId])
 }
 
 // integrations added by user
 model Integration {
     id      String          @id @default(cuid())
-    userId  String
+    wsId    String          @unique
     type    IntegrationType
     enabled Boolean         @default(false)
 
-    user Users @relation(fields: [userId], references: [id])
+    Workspace Workspace? @relation(fields: [wsId], references: [id])
 
-    @@index([userId])
+    @@index([wsId])
     @@map(name: "integrations")
+}
+
+model Conversations {
+    id         String   @id @default(cuid())
+    wsId       String
+    agentId    String
+    userId     String
+    created_at DateTime @default(now())
+    escalated  Boolean  @default(false)
+
+    workspace Workspace  @relation(fields: [wsId], references: [id])
+    user      Users      @relation(fields: [userId], references: [id])
+    Agents    Agents?    @relation(fields: [agentId], references: [id])
+    messages  Messages[]
+
+    conv_account ConversationAccount[]
+
+    @@index([wsId])
+    @@index([agentId])
+    @@index([userId])
+}
+
+// Only mean't for users using the chatbot widget
+model ConversationAccount {
+    id          String   @id @default(cuid())
+    wsId        String
+    con_user_id String
+    email       String
+    name        String
+    verified    Boolean  @default(false)
+    created_at  DateTime @default(now())
+
+    conversations Conversations @relation(fields: [con_user_id], references: [id])
+
+    @@index([wsId])
+    @@index([con_user_id])
+}
+
+model MessageEntity {
+    id         String     @id @default(cuid())
+    entityId   String
+    entityType EntityType
+    message    Messages[]
+
+    @@unique([entityId])
+}
+
+model Messages {
+    id              String   @id @default(cuid())
+    conversationsId String
+    entityId        String
+    content         String
+    created_at      DateTime @default(now())
+    agentsId        String?
+
+    conversations Conversations @relation(fields: [conversationsId], references: [id])
+    entity        MessageEntity @relation(fields: [entityId], references: [entityId])
+
+    @@index([entityId])
+    @@index([agentsId])
+    @@index([conversationsId])
 }
