@@ -61,4 +61,6 @@ export interface IReqObject {
     email?: string;
     role?: string;
   };
+
+  serverUrl?: string;
 }
