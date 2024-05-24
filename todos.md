@@ -6,10 +6,10 @@
 
   - [x] Implement Google OAuth
 
-- Business profile
+- Space
 
-  - [ ] Prevent any API endpoint from getting called if users has not created a business profile
-  - [ ] Create business profile
+  - [ ] Prevent any API endpoint from getting called if users has not created a space
+  - [ ] Create space
     - [ ] verify business phone number.
     - [ ] make sure business phone number is a whatsapp number
   - [ ] Update business profile
