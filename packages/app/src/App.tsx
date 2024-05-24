@@ -12,6 +12,7 @@ import DashboardLayout from "./components/dashboard/layout";
 import Inbox from "./pages/inbox";
 import KnowledgeBase from "./pages/knowledge-base";
 import Integration from "./pages/integration";
+import Agents from "./pages/agents/page";
 
 // tanstack reqct query
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/inbox" element={<Inbox />} />
               <Route path="/knowledge-base" element={<KnowledgeBase />} />
+              <Route path="/agents" element={<Agents />} />
               <Route path="/integration" element={<Integration />} />
             </Route>
           </Routes>

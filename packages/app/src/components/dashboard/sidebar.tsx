@@ -15,6 +15,7 @@ import {
 import {
   CaretSort,
   CheckCheck,
+  CPU,
   Home,
   Inbox,
   Library,
@@ -34,6 +35,11 @@ const sidebarRoutes = [
     title: "Inbox",
     key: "inbox",
     path: "/inbox",
+  },
+  {
+    title: "Agents",
+    key: "agents",
+    path: "/agents",
   },
   {
     title: "Knowledge Base",
@@ -170,6 +176,18 @@ function renderIcons(name: string, active: string) {
 
     case "integration":
       icon = <Package size={20} className={cn(mainStyle, "")} />;
+      break;
+
+    case "agents":
+      icon = (
+        <CPU
+          size={20}
+          className={cn(
+            mainStyle,
+            active === name ? "fill-white-100" : "fill-white-400/80"
+          )}
+        />
+      );
       break;
 
     default:
