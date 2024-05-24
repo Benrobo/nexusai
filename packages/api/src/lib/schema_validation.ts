@@ -53,18 +53,6 @@ export const updateUserDetailsSchema = zod.object({
   }),
 });
 
-// waitlist
-export const addToWaitlistSchema = zod.object({
-  email: zod
-    .string({
-      required_error: "Email is required",
-    })
-    .email()
-    .regex(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    ),
-});
-
 export const emailSchema = zod.object({
   email: zod
     .string({
@@ -73,4 +61,14 @@ export const emailSchema = zod.object({
     .email({
       message: "Invalid email",
     }),
+});
+
+// WORKSPACE SCHEMA
+export const createWorkspaceSchema = zod.object({
+  name: zod
+    .string({
+      required_error: "Workspace name is required",
+    })
+    .min(3)
+    .max(50),
 });
