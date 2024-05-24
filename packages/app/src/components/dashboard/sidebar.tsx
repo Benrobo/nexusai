@@ -57,7 +57,7 @@ export default function DashboardSidebar() {
         <PopoverTrigger className="w-full">
           <Button
             intent="tertiary"
-            className="bg-dark-102 outline outline-[1px] outline-white-400/50 w-full min-h-[50px] py-4 hover:bg-dark-102/90 rounded-xl mb-5"
+            className="bg-dark-102 outline outline-[1px] outline-white-400/50 w-full min-h-[50px] py-4 hover:bg-dark-102/90 rounded-xl mb-2"
             childrenClass="w-full"
             rightIcon={<CaretSort size={15} />}
           >
@@ -69,16 +69,13 @@ export default function DashboardSidebar() {
               />
               <FlexColStart className="w-auto gap-0">
                 <span className="text-sm font-ppM text-white-100">Med2.0</span>
-                <span className="text-white-300 text-xs font-ppReg">
-                  category
-                </span>
               </FlexColStart>
             </FlexRowStartCenter>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[220px] mt-0 p-0 rounded-xl bg-dark-102 outline outline-[1px] outline-white-400/50 border-none">
           <FlexColStart className="w-full px-3 py-3 border-b-[.5px] border-b-white-300/30">
-            <p className="text-sm font-ppM text-white-300">Businesses</p>
+            <p className="text-sm font-ppM text-white-300">Workspace</p>
           </FlexColStart>
           <FlexColStart className="w-full mt-0 px-0 py-2">
             <button className="w-full relative border-none outline-none scale-[.95]">
@@ -95,9 +92,6 @@ export default function DashboardSidebar() {
                 <FlexColStart className="w-auto gap-0">
                   <span className="text-sm font-ppM text-white-100">
                     Med2.0
-                  </span>
-                  <span className="text-white-300 text-xs font-ppReg">
-                    category
                   </span>
                 </FlexColStart>
 
@@ -117,7 +111,7 @@ export default function DashboardSidebar() {
               <Plus size={15} className="stroke-white-100" />
             </button>
             <span className="text-white-300 font-ppReg text-xs">
-              Create Business
+              Create Workspace
             </span>
           </FlexRowStartCenter>
         </PopoverContent>
