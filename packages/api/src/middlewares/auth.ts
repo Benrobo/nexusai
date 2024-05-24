@@ -4,9 +4,13 @@ import { RESPONSE_CODE, type IReqObject } from "../types";
 import prisma from "../config/prisma";
 import GoogleAuth, { googleClient } from "../lib/google.auth";
 import type { TokenInfo, Credentials } from "google-auth-library";
+import env from "../config/env";
 
 export function isAuthenticated(fn: Function) {
   return async (req: Request & IReqObject, res: Response) => {
+    // set serverUrl (would be used globally in the app)
+    req["serverUrl"] = `${env.API_URL}${req.url}`;
+
     const token = req.cookies["token"];
     const userId = req.cookies["_uId"];
 
