@@ -39,7 +39,7 @@ model Users {
     role             Role            @default(user)
     google_ref_token String?
     createdAt        DateTime        @default(now())
-    work_space       Workspace[]
+    workspace        Workspace[]     @relation("WorkspaceToUser")
     conversations    Conversations[]
 
     @@map(name: "users")
@@ -53,9 +53,9 @@ model Workspace {
     logo       String?
     created_at DateTime @default(now())
 
-    user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user Users @relation("WorkspaceToUser", fields: [userId], references: [uId], onDelete: Cascade)
 
-    agents        Agents[]
+    agents        Agents[]           @relation("WorkspaceToAgents")
     integration   Integration[]
     settings      WorkspaceSettings?
     Conversations Conversations[]
@@ -84,7 +84,7 @@ model Agents {
     welcome_message String?
     seed_phrase     String?
     created_at      DateTime        @default(now())
-    workspace       Workspace       @relation(fields: [wsId], references: [id], onDelete: Cascade)
+    workspace       Workspace       @relation("WorkspaceToAgents", fields: [wsId], references: [id], onDelete: Cascade)
     Conversations   Conversations[]
 
     @@index([wsId])

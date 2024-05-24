@@ -14,6 +14,9 @@ export default class UserController extends BaseController {
       where: {
         uId: user.id,
       },
+      include: {
+        workspace: true,
+      },
     });
 
     return sendResponse.success(res, RESPONSE_CODE.SUCCESS, "Success", 200, {
@@ -23,6 +26,8 @@ export default class UserController extends BaseController {
       full_name: userData?.fullname ?? "",
       avatar: userData?.avatar,
       role: userData?.role,
+      workspace: userData?.workspace,
+      // ws: workspace,
     });
   }
 }

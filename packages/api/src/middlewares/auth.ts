@@ -98,7 +98,10 @@ export function isAuthenticated(fn: Function) {
       },
     });
 
-    if (!email) {
+    if (!email || !user) {
+      // clear cookie
+      res.clearCookie("token");
+      res.clearCookie("_uId");
       throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
     }
 

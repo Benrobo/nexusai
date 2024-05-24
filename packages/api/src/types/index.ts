@@ -8,6 +8,7 @@ export interface Routes {
 export enum RESPONSE_CODE {
   // Common Responses code
   INVALID_FIELDS,
+  DUPLICATE_ENTRY,
   USER_NOT_FOUND,
   USER_ALREADY_EXIST,
   INTERNAL_SERVER_ERROR,

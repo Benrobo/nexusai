@@ -21,7 +21,6 @@ export default class WorkspaceController extends BaseController {
 
     await ZodValidation(createWorkspaceSchema, payload, req.serverUrl!);
 
-    // check if name already exists
     const workspaceExists = await prisma.workspace.findFirst({
       where: {
         AND: {
@@ -33,17 +32,20 @@ export default class WorkspaceController extends BaseController {
 
     if (workspaceExists) {
       throw new HttpException(
-        RESPONSE_CODE.VALIDATION_ERROR,
+        RESPONSE_CODE.DUPLICATE_ENTRY,
         "Workspace with this name already exists",
         400
       );
     }
 
-    // create workspace
     const workspace = await prisma.workspace.create({
       data: {
         name: payload.name,
-        userId: user.id! as string,
+        user: {
+          connect: {
+            uId: user.id!,
+          },
+        },
       },
     });
 
