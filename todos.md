@@ -12,6 +12,7 @@
   - [ ] Prevent any API endpoint from getting called if users has not created a space
 
 - Agents
+  for voice call agents, a valid US phone number is required.
 
   - [ ] create agents
   - [ ] verify business phone number.
