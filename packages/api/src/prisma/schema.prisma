@@ -49,11 +49,11 @@ model Users {
 model Workspace {
     id         String   @id @unique @default(cuid())
     userId     String
-    name       String
+    name       String   @unique
     logo       String?
     created_at DateTime @default(now())
 
-    user Users @relation(fields: [userId], references: [id])
+    user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     agents        Agents[]
     integration   Integration[]
@@ -69,7 +69,7 @@ model WorkspaceSettings {
     email      String? // default email if available where notifications are sent
     created_at DateTime @default(now())
 
-    workspace Workspace @relation(fields: [wsId], references: [id])
+    workspace Workspace @relation(fields: [wsId], references: [id], onDelete: Cascade)
 
     @@index([wsId])
 }
@@ -84,7 +84,7 @@ model Agents {
     welcome_message String?
     seed_phrase     String?
     created_at      DateTime        @default(now())
-    workspace       Workspace       @relation(fields: [wsId], references: [id])
+    workspace       Workspace       @relation(fields: [wsId], references: [id], onDelete: Cascade)
     Conversations   Conversations[]
 
     @@index([wsId])
@@ -97,7 +97,7 @@ model Integration {
     type    IntegrationType
     enabled Boolean         @default(false)
 
-    Workspace Workspace? @relation(fields: [wsId], references: [id])
+    Workspace Workspace? @relation(fields: [wsId], references: [id], onDelete: Cascade)
 
     @@index([wsId])
     @@map(name: "integrations")
