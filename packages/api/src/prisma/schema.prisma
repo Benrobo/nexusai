@@ -149,17 +149,17 @@ model MessageEntity {
 }
 
 model Messages {
-    id              String   @id @default(cuid())
-    conversationsId String
-    entityId        String
-    content         String
-    created_at      DateTime @default(now())
-    agentsId        String?
+    id         String   @id @default(cuid())
+    convId     String
+    entityId   String
+    content    String
+    created_at DateTime @default(now())
+    agentsId   String?
 
-    conversations Conversations @relation(fields: [conversationsId], references: [id])
+    conversations Conversations @relation(fields: [convId], references: [id])
     entity        MessageEntity @relation(fields: [entityId], references: [entityId])
 
     @@index([entityId])
     @@index([agentsId])
-    @@index([conversationsId])
+    @@index([convId])
 }
