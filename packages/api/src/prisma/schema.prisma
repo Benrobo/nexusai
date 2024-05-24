@@ -19,8 +19,9 @@ enum IntegrationType {
 }
 
 enum AgentPurpose {
-    ANTI_SCAM
-    CUSTOMER_SUPPORT
+    ANTI_SCAM // requires valid US phonenumber
+    AUTOMATED_CUSTOMER_SUPPORT // requires valid US phonenumber
+    CHATBOT // doesn't require phonenumber
 }
 
 enum EntityType {
@@ -76,16 +77,26 @@ model WorkspaceSettings {
 
 // AI Agents
 model Agents {
-    id              String          @id @default(cuid())
-    wsId            String          @unique
-    name            String
-    purpose         AgentPurpose
-    phonenumber     String?
+    id      String       @id @default(cuid())
+    wsId    String       @unique
+    name    String
+    purpose AgentPurpose
+
+    // required! for [ANTI_SCAM, AUTOMATED_CUSTOMER_SUPPORT]
+    phonenumber String? // Must be a US number
+
+    country_code String?
+    country      String?
+
+    // welcome message for the agent 
     welcome_message String?
-    seed_phrase     String?
-    created_at      DateTime        @default(now())
-    workspace       Workspace       @relation("WorkspaceToAgents", fields: [wsId], references: [id], onDelete: Cascade)
-    Conversations   Conversations[]
+
+    // Protection mean't for anti-scam agents
+    seed_phrase String?
+
+    created_at    DateTime        @default(now())
+    workspace     Workspace       @relation("WorkspaceToAgents", fields: [wsId], references: [id], onDelete: Cascade)
+    Conversations Conversations[]
 
     @@index([wsId])
 }

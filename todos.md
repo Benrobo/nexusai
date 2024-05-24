@@ -8,11 +8,10 @@
 
 - Space
 
+  - [x] Create space
   - [ ] Prevent any API endpoint from getting called if users has not created a space
-  - [ ] Create space
 
 - Agents
-  AI agents
 
   - [ ] create agents
   - [ ] verify business phone number.
