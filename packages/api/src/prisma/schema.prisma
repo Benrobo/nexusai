@@ -18,7 +18,7 @@ enum IntegrationType {
     google_meet
 }
 
-enum AgentPurpose {
+enum AgentType {
     ANTI_SCAM // requires valid US phonenumber
     AUTOMATED_CUSTOMER_SUPPORT // requires valid US phonenumber
     CHATBOT // doesn't require phonenumber
@@ -40,54 +40,26 @@ model Users {
     role                   Role                   @default(user)
     google_ref_token       String?
     createdAt              DateTime               @default(now())
-    workspace              Workspace[]            @relation("WorkspaceToUser")
     conversations          Conversations[]
     verified_phone_numbers VerifiedPhoneNumbers[]
+    agents                 Agents[]
 
     @@map(name: "users")
 }
 
 // users are limited to 2 agents per workspace
-model Workspace {
-    id         String   @id @unique @default(cuid())
-    userId     String
-    name       String   @unique
-    logo       String?
-    created_at DateTime @default(now())
-
-    user Users @relation("WorkspaceToUser", fields: [userId], references: [uId], onDelete: Cascade)
-
-    agents        Agents[]           @relation("WorkspaceToAgents")
-    integration   Integration[]
-    settings      WorkspaceSettings?
-    Conversations Conversations[]
-
-    @@index([userId])
-}
-
-model WorkspaceSettings {
-    id         String   @id @default(cuid())
-    wsId       String   @unique
-    email      String? // default email if available where notifications are sent
-    created_at DateTime @default(now())
-
-    workspace Workspace @relation(fields: [wsId], references: [id], onDelete: Cascade)
-
-    @@index([wsId])
-}
-
 // AI Agents
 model Agents {
-    id      String       @id @default(cuid())
-    wsId    String       @unique
-    name    String
-    purpose AgentPurpose
+    id     String    @id @default(cuid())
+    userId String
+    name   String
+    type   AgentType
 
     // required! for [ANTI_SCAM, AUTOMATED_CUSTOMER_SUPPORT]
     phonenumber String? // Must be a US number
 
-    country_code String?
-    country      String?
+    dial_code String?
+    country   String?
 
     // welcome message for the agent 
     welcome_message String?
@@ -96,10 +68,10 @@ model Agents {
     seed_phrase String?
 
     created_at    DateTime        @default(now())
-    workspace     Workspace       @relation("WorkspaceToAgents", fields: [wsId], references: [id], onDelete: Cascade)
     Conversations Conversations[]
+    users         Users           @relation(fields: [userId], references: [uId])
 
-    @@index([wsId])
+    @@index([userId])
 }
 
 // integrations added by user
@@ -108,8 +80,6 @@ model Integration {
     wsId    String          @unique
     type    IntegrationType
     enabled Boolean         @default(false)
-
-    Workspace Workspace? @relation(fields: [wsId], references: [id], onDelete: Cascade)
 
     @@index([wsId])
     @@map(name: "integrations")
@@ -123,10 +93,9 @@ model Conversations {
     created_at DateTime @default(now())
     escalated  Boolean  @default(false)
 
-    workspace Workspace  @relation(fields: [wsId], references: [id])
-    user      Users      @relation(fields: [userId], references: [id])
-    Agents    Agents?    @relation(fields: [agentId], references: [id])
-    messages  Messages[]
+    user     Users      @relation(fields: [userId], references: [id])
+    Agents   Agents?    @relation(fields: [agentId], references: [id])
+    messages Messages[]
 
     conv_account ConversationAccount[]
 
@@ -179,7 +148,8 @@ model Messages {
 model VerifiedPhoneNumbers {
     id         String   @id @default(cuid())
     userId     String
-    phone      String
+    phone      String   @unique
+    isInUse    Boolean  @default(false)
     created_at DateTime @default(now())
 
     users Users @relation(fields: [userId], references: [uId])
