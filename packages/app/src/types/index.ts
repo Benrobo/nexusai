@@ -18,3 +18,17 @@ export type UserInfo = {
   id: string;
   role: string;
 };
+
+export interface IAgents {
+  id: string;
+  userId: string;
+  name: string;
+  type: string;
+  contact_number: string;
+  dial_code: string;
+  country: string;
+  welcome_message: string;
+  seed_phrase: string;
+  custom_prompt: string;
+  created_at: string;
+}
