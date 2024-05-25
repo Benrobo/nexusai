@@ -43,7 +43,6 @@ export default class GoogleAuth {
 
   public static async callBack({ code }: ICallBack) {
     const token = await googleClient.getToken(code);
-    console.log(token.tokens);
     googleClient.setCredentials(token.tokens);
     return token;
   }
