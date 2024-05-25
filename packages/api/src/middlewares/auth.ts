@@ -34,7 +34,7 @@ export function isAuthenticated(fn: Function) {
       if (!user) {
         throw new HttpException(
           RESPONSE_CODE.UNAUTHORIZED,
-          "Unauthorized",
+          "Unauthorized, user not found",
           401
         );
       }
