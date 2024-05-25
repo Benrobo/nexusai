@@ -32,7 +32,7 @@ export default class AgentRoute {
       )
     );
 
-    // verify otp
+    // verify phone number
     this.router.post(
       `${this.path}/verify-phone`,
       useCatchErrors(
