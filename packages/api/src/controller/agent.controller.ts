@@ -3,22 +3,73 @@ import BaseController from "./base.controller";
 import sendResponse from "../lib/sendResponse";
 import { RESPONSE_CODE, IReqObject } from "../types";
 import ZodValidation from "../lib/zodValidation";
-import { createWorkspaceSchema } from "../lib/schema_validation";
+import {
+  createWorkspaceSchema,
+  VerifyOTPCode,
+  verifyUsPhoneSchema,
+} from "../lib/schema_validation";
 import HttpException from "../lib/exception";
+import { formatPhoneNumber, validateUsNumber } from "../lib/utils";
+import OTPManager from "lib/otp-manager";
 
 interface ICreateAG {
   name: string;
 }
 
 export default class AgentController extends BaseController {
+  otpManager = new OTPManager();
   constructor() {
     super();
+  }
+
+  async sendOTPToPhone(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const payload = req.body as { phone: string };
+
+    await ZodValidation(verifyUsPhoneSchema, payload, req.serverUrl!);
+
+    const phone = formatPhoneNumber(payload.phone);
+
+    if (!validateUsNumber(phone)) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Invalid phone number",
+        400
+      );
+    }
+
+    // send OTP to phone number
+    const otpSent = await this.otpManager.sendOTPToPhone(phone, user.id);
+
+    if (!otpSent) {
+      throw new HttpException(
+        RESPONSE_CODE.OTP_FAILED,
+        "Failed to send OTP",
+        400
+      );
+    }
+
+    sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "OTP sent successfully",
+      200
+    );
+  }
+
+  // make sure phone number starts with +1 for US.
+  async verifyOTP(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const payload = req.body as { otp: string };
+
+    await ZodValidation(VerifyOTPCode, payload, req.serverUrl!);
+
+    const phone = payload.otp;
   }
 
   async createAgent(req: Request & IReqObject, res: Response) {
     const user = req["user"];
     const payload = req.body as ICreateAG;
-
     // await ZodValidation(createWorkspaceSchema, payload, req.serverUrl!);
   }
 
