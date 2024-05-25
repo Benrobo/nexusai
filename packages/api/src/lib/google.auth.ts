@@ -35,6 +35,7 @@ export default class GoogleAuth {
       access_type: "offline",
       // Enable incremental authorization.
       include_granted_scopes: true,
+      prompt: "consent",
     });
 
     res.redirect(url);
@@ -42,6 +43,7 @@ export default class GoogleAuth {
 
   public static async callBack({ code }: ICallBack) {
     const token = await googleClient.getToken(code);
+    console.log(token.tokens);
     googleClient.setCredentials(token.tokens);
     return token;
   }
