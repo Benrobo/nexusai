@@ -9,8 +9,8 @@
 - Agents
   for voice call agents, a valid US phone number is required.
 
-  - [ ] create agents
-  - [ ] verify business phone number.
+  - [x] create agents
+  - [x] verify business phone number.
   - [ ] make sure business phone number is a whatsapp number
 
 - Knowledge Base
