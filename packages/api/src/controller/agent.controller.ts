@@ -164,8 +164,7 @@ export default class AgentController extends BaseController {
     // uses this same number
     const agentWithSamePhone = await prisma.agents.findFirst({
       where: {
-        userId: user.id,
-        phonenumber: phone,
+        contact_number: phone,
         type,
       },
     });
@@ -183,7 +182,7 @@ export default class AgentController extends BaseController {
       data: {
         id: shortUUID.generate(),
         name,
-        phonenumber: phone,
+        contact_number: phone,
         type,
         country,
         dial_code: _countryExists.dial_code,
@@ -204,5 +203,19 @@ export default class AgentController extends BaseController {
 
   async getAgents(req: Request & IReqObject, res: Response) {
     const user = req["user"];
+
+    const agents = await prisma.agents.findMany({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Agents retrieved successfully",
+      200,
+      agents
+    );
   }
 }
