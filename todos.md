@@ -60,4 +60,4 @@
 
 Couples of things to note:
 
-1. A phone number used in one agent (automated customer support / spam call blocker) cannot be used in another agent.
+1. A phone number used in one agent ( t / spam call blocker) cannot be used in another agent.
