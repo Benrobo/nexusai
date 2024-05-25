@@ -3,7 +3,7 @@ export const validateUsNumber = (phone: string) => {
   // +1-615-988-2082
   const startWithCode = phone.startsWith("+1");
   if (startWithCode) {
-    phone.split("-").slice(1).join("-");
+    phone = phone.split("-").slice(1).join("-");
   }
   const reg = /^[0-9]{3}-[0-9]{3}-[0-9]{4}$/;
   return reg.test(phone);
