@@ -34,10 +34,10 @@ export default class AgentRoute {
 
     // verify otp
     this.router.post(
-      `${this.path}/verify-otp`,
+      `${this.path}/verify-phone`,
       useCatchErrors(
         isAuthenticated(
-          this.agentController.verifyOTP.bind(this.agentController)
+          this.agentController.verifyPhone.bind(this.agentController)
         )
       )
     );
