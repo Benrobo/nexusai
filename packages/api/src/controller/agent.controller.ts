@@ -70,6 +70,21 @@ export default class AgentController extends BaseController {
     const otp = await this.otpManager.verifyOTP(user.id, otpcode);
 
     // store verified phone number in db
+    const phoneexists = await prisma.verifiedPhoneNumbers.findFirst({
+      where: {
+        phone: otp.phone,
+        userId: user.id,
+      },
+    });
+
+    if (phoneexists) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Phone number already verified",
+        400
+      );
+    }
+
     await prisma.verifiedPhoneNumbers.create({
       data: {
         id: shortUUID.generate(),
