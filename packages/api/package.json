@@ -39,7 +39,8 @@
     "short-uuid": "^5.2.0",
     "svix": "^1.24.0",
     "winston": "^3.13.0",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@nexusai/shared": "1.0.0"
   },
   "devDependencies": {
     "@swc/cli": "^0.3.12",
