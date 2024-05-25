@@ -1,20 +1,27 @@
 import { Request, Response } from "express";
 import BaseController from "./base.controller";
 import sendResponse from "../lib/sendResponse";
-import { RESPONSE_CODE, IReqObject } from "../types";
+import { RESPONSE_CODE, IReqObject, type AgentType } from "../types";
 import ZodValidation from "../lib/zodValidation";
 import {
-  createWorkspaceSchema,
+  createAgentSchema,
   VerifyOTPCode,
   verifyUsPhoneSchema,
 } from "../lib/schema_validation";
 import HttpException from "../lib/exception";
-import { formatPhoneNumber, validateUsNumber } from "../lib/utils";
+import {
+  countryExists,
+  formatPhoneNumber,
+  validateUsNumber,
+} from "../lib/utils";
 import OTPManager from "lib/otp-manager";
 import shortUUID from "short-uuid";
 
 interface ICreateAG {
   name: string;
+  phone: string;
+  type: AgentType;
+  country: string;
 }
 
 export default class AgentController extends BaseController {
@@ -107,7 +114,92 @@ export default class AgentController extends BaseController {
   async createAgent(req: Request & IReqObject, res: Response) {
     const user = req["user"];
     const payload = req.body as ICreateAG;
-    // await ZodValidation(createWorkspaceSchema, payload, req.serverUrl!);
+    await ZodValidation(createAgentSchema, payload, req.serverUrl!);
+
+    const { country, name, phone, type } = payload;
+
+    // check if country exists among supported countries
+    const _countryExists = countryExists(country);
+    if (!_countryExists) {
+      throw new HttpException(
+        RESPONSE_CODE.UNSUPPORTED_COUNTRY,
+        "Country provided isn't supported",
+        400
+      );
+    }
+
+    // check if phone number is among verified phone numbers
+    const phoneExists = await prisma.verifiedPhoneNumbers.findFirst({
+      where: {
+        phone,
+        userId: user.id,
+      },
+    });
+
+    if (!phoneExists) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Phone number not verified",
+        400
+      );
+    }
+
+    // check if agent already exists
+    const agentExists = await prisma.agents.findFirst({
+      where: {
+        name: name,
+        userId: user.id,
+      },
+    });
+
+    if (agentExists) {
+      throw new HttpException(
+        RESPONSE_CODE.DUPLICATE_ENTRY,
+        "Agent already exists, please use a different name",
+        400
+      );
+    }
+
+    // check if other agents of type (anti-scam and automated-customer-support)
+    // uses this same number
+    const agentWithSamePhone = await prisma.agents.findFirst({
+      where: {
+        userId: user.id,
+        phonenumber: phone,
+        type,
+      },
+    });
+
+    if (agentWithSamePhone) {
+      throw new HttpException(
+        RESPONSE_CODE.PHONE_NUMBER_IN_USE,
+        "Phonenumber already in use by another agent.",
+        400
+      );
+    }
+
+    // create agent
+    const agent = await prisma.agents.create({
+      data: {
+        id: shortUUID.generate(),
+        name,
+        phonenumber: phone,
+        type,
+        country,
+        dial_code: _countryExists.dial_code,
+        users: {
+          connect: { uId: user.id },
+        },
+      },
+    });
+
+    sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Agent created successfully",
+      200,
+      agent
+    );
   }
 
   async getAgents(req: Request & IReqObject, res: Response) {
