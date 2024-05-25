@@ -6,11 +6,6 @@
 
   - [x] Implement Google OAuth
 
-- Space
-
-  - [x] Create space
-  - [ ] Prevent any API endpoint from getting called if users has not created a space
-
 - Agents
   for voice call agents, a valid US phone number is required.
 
@@ -62,3 +57,7 @@
 - Business profile
   - [ ] Prevent any UI element from getting shown if users has not created a business profile
   - [ ] Create business profile
+
+Couples of things to note:
+
+1. A phone number used in one agent (automated customer support / spam call blocker) cannot be used in another agent.
