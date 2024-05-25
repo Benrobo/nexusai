@@ -1,3 +1,5 @@
+import SUPPORTED_COUNTRIES from "@nexusai/shared/config/supported-countries";
+
 // verify US number
 export const validateUsNumber = (phone: string) => {
   // +1-615-988-2082
@@ -11,4 +13,8 @@ export const validateUsNumber = (phone: string) => {
 
 export const formatPhoneNumber = (phone: string) => {
   return phone.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+};
+
+export const countryExists = (country: string) => {
+  return SUPPORTED_COUNTRIES.find((c) => c.code === country);
 };
