@@ -58,13 +58,23 @@ export default class AgentController extends BaseController {
   }
 
   // make sure phone number starts with +1 for US.
-  async verifyOTP(req: Request & IReqObject, res: Response) {
+  async verifyPhone(req: Request & IReqObject, res: Response) {
     const user = req["user"];
     const payload = req.body as { otp: string };
 
     await ZodValidation(VerifyOTPCode, payload, req.serverUrl!);
 
-    const phone = payload.otp;
+    const otpcode = payload.otp;
+
+    const otp = await this.otpManager.verifyOTP(user.id, otpcode);
+
+    sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Phone number verified",
+      200,
+      otp
+    );
   }
 
   async createAgent(req: Request & IReqObject, res: Response) {
