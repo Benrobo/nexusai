@@ -1,4 +1,11 @@
 import redis from "config/redis";
+import HttpException from "./exception";
+import { RESPONSE_CODE } from "types";
+
+interface IStoredOTP {
+  otp: number;
+  phone: string;
+}
 
 export default class OTPManager {
   constructor() {}
@@ -26,10 +33,29 @@ export default class OTPManager {
     );
     await redis.expire(userId, ttl);
 
+    console.log(`\nOTP sent to phone: ${phone} is ${otp}\n`);
+
     //2. send OTP to phone number
     // IMPLEMENT TWILLIO FOR SENDING SMS
 
     //3. return success response
     return true;
+  }
+
+  public async verifyOTP(userId: string, otpCode: string) {
+    const otp = JSON.parse(await redis.get(userId)) as IStoredOTP;
+    if (!otp) {
+      throw new HttpException(RESPONSE_CODE.INVALID_OTP, "Invalid OTP", 400);
+    }
+
+    if (Number(otp.otp) !== Number(otpCode)) {
+      throw new HttpException(
+        RESPONSE_CODE.INVALID_OTP,
+        "Invalid OTP Code",
+        400
+      );
+    }
+
+    return otp;
   }
 }
