@@ -41,6 +41,8 @@ export function isAuthenticated(fn: Function) {
 
       const refToken = user.google_ref_token;
 
+      console.log({ user });
+
       // refresh token
       googleClient.setCredentials({
         refresh_token: refToken,
