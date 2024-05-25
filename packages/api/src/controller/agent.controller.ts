@@ -11,6 +11,7 @@ import {
 import HttpException from "../lib/exception";
 import { formatPhoneNumber, validateUsNumber } from "../lib/utils";
 import OTPManager from "lib/otp-manager";
+import shortUUID from "short-uuid";
 
 interface ICreateAG {
   name: string;
@@ -67,6 +68,17 @@ export default class AgentController extends BaseController {
     const otpcode = payload.otp;
 
     const otp = await this.otpManager.verifyOTP(user.id, otpcode);
+
+    // store verified phone number in db
+    await prisma.verifiedPhoneNumbers.create({
+      data: {
+        id: shortUUID.generate(),
+        phone: otp.phone,
+        users: {
+          connect: { uId: user.id },
+        },
+      },
+    });
 
     sendResponse.success(
       res,

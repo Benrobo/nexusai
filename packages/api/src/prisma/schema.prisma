@@ -31,17 +31,18 @@ enum EntityType {
 }
 
 model Users {
-    id               String          @id @default(cuid())
-    uId              String          @unique @default(cuid())
-    username         String?
-    fullname         String?
-    email            String
-    avatar           String?
-    role             Role            @default(user)
-    google_ref_token String?
-    createdAt        DateTime        @default(now())
-    workspace        Workspace[]     @relation("WorkspaceToUser")
-    conversations    Conversations[]
+    id                     String                 @id @default(cuid())
+    uId                    String                 @unique @default(cuid())
+    username               String?
+    fullname               String?
+    email                  String
+    avatar                 String?
+    role                   Role                   @default(user)
+    google_ref_token       String?
+    createdAt              DateTime               @default(now())
+    workspace              Workspace[]            @relation("WorkspaceToUser")
+    conversations          Conversations[]
+    verified_phone_numbers VerifiedPhoneNumbers[]
 
     @@map(name: "users")
 }
@@ -173,4 +174,15 @@ model Messages {
     @@index([entityId])
     @@index([agentsId])
     @@index([convId])
+}
+
+model VerifiedPhoneNumbers {
+    id         String   @id @default(cuid())
+    userId     String
+    phone      String
+    created_at DateTime @default(now())
+
+    users Users @relation(fields: [userId], references: [uId])
+
+    @@index([userId])
 }
