@@ -1,3 +1,4 @@
+import { AgentType } from "types";
 import zod from "zod";
 
 // Declare all your api server schema validations here
@@ -64,13 +65,33 @@ export const emailSchema = zod.object({
 });
 
 // WORKSPACE SCHEMA
-export const createWorkspaceSchema = zod.object({
+export const createAgentSchema = zod.object({
   name: zod
     .string({
       required_error: "Workspace name is required",
     })
     .min(3)
     .max(50),
+  phone: zod
+    .string({
+      required_error: "Phone number is required",
+    })
+    .regex(/^\+1-[0-9]{3}-[0-9]{3}-[0-9]{4}$/, {
+      message: "Invalid US phone number",
+    })
+    .refine((data) => data.startsWith("+1"), {
+      message: "Phone number must start with country code +1",
+    }),
+  type: zod
+    .nativeEnum(AgentType, {
+      required_error: "Agent type is required",
+    })
+    .refine((data) => Object.values(AgentType).includes(data), {
+      message: "Invalid agent type",
+    }),
+  country: zod.string({
+    required_error: "Country is required",
+  }),
 });
 
 // verify US phone number
