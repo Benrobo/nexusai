@@ -40,9 +40,3 @@ export interface IReqObject {
 
   serverUrl?: string;
 }
-
-export enum AgentType {
-  ANTI_SCAM = "ANTI_SCAM",
-  AUTOMATED_CUSTOMER_SUPPORT = "AUTOMATED_CUSTOMER_SUPPORT",
-  CHATBOT = "CHATBOT",
-}

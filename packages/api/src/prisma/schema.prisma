@@ -56,7 +56,7 @@ model Agents {
     type   AgentType
 
     // required! for [ANTI_SCAM, AUTOMATED_CUSTOMER_SUPPORT]
-    contact_number String? @unique // Must be a US number
+    contact_number String? // Must be a US number
 
     dial_code String?
     country   String?
@@ -70,11 +70,26 @@ model Agents {
     // custom settings
     custom_prompt String?
 
-    created_at    DateTime        @default(now())
-    Conversations Conversations[]
-    users         Users           @relation(fields: [userId], references: [uId])
+    created_at        DateTime                @default(now())
+    Conversations     Conversations[]
+    users             Users                   @relation(fields: [userId], references: [uId])
+    protected_numbers AgentProtectedNumbers[]
 
     @@index([userId])
+}
+
+// ANTI_SCAM Only (TODOS)
+model AgentProtectedNumbers {
+    id         String   @id @default(cuid())
+    agentId    String
+    phone      String   @unique
+    dial_code  String?
+    country    String?
+    created_at DateTime @default(now())
+
+    agents Agents @relation(fields: [agentId], references: [id])
+
+    @@index([agentId])
 }
 
 // integrations added by user

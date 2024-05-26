@@ -1,4 +1,4 @@
-import { AgentType } from "types";
+import { AgentEnum } from "@nexusai/shared/types";
 import zod from "zod";
 
 // Declare all your api server schema validations here
@@ -83,10 +83,10 @@ export const createAgentSchema = zod.object({
       message: "Phone number must start with country code +1",
     }),
   type: zod
-    .nativeEnum(AgentType, {
+    .nativeEnum(AgentEnum, {
       required_error: "Agent type is required",
     })
-    .refine((data) => Object.values(AgentType).includes(data), {
+    .refine((data) => Object.values(AgentEnum).includes(data), {
       message: "Invalid agent type",
     }),
   country: zod.string({

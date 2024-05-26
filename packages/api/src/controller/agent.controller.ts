@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import BaseController from "./base.controller";
 import sendResponse from "../lib/sendResponse";
-import { RESPONSE_CODE, IReqObject, type AgentType } from "../types";
+import { RESPONSE_CODE, IReqObject } from "../types";
+import { type AgentEnum } from "@nexusai/shared/types";
 import ZodValidation from "../lib/zodValidation";
 import {
   createAgentSchema,
@@ -20,7 +21,7 @@ import shortUUID from "short-uuid";
 interface ICreateAG {
   name: string;
   phone: string;
-  type: AgentType;
+  type: AgentEnum;
   country: string;
 }
 

@@ -27,7 +27,8 @@
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.23.1",
     "tailwind-merge": "^2.3.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "@nexusai/shared": "^1.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

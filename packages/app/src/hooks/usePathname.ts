@@ -9,6 +9,8 @@ export const routeNameMap = {
   "/agents": "Agents",
 } as Record<string, string>;
 
+const dynamicRoutes = ["agents"];
+
 const usePathname = () => {
   const [pathname, setPathname] = useState("");
   const [path, setPath] = useState("");
@@ -23,6 +25,12 @@ const usePathname = () => {
     if (name) {
       setPathname(name);
       setFormattedPathname(`${name} | Bizconnect24`);
+    } else {
+      const dyPath = pathname.toLowerCase().split("/")[1];
+      if (dynamicRoutes.includes(dyPath)) {
+        setPathname(dyPath);
+        setPath(dyPath);
+      }
     }
   });
 

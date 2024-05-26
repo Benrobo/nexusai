@@ -61,3 +61,4 @@
 Couples of things to note:
 
 1. A phone number used in one agent ( t / spam call blocker) cannot be used in another agent.
+2. For Anti-scam protection, users should be able to add multiple phone numbers to a specific agent. (No knowledge base is required for this feature), (No custom prompt is required for this feature), our platform would use internal AI to detect scam calls based on level of prompt engineering.
