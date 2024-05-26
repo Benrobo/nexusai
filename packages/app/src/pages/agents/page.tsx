@@ -89,7 +89,7 @@ function AgentCard({
             </span>
           </FlexColCenter>
           <FlexColStart className="w-auto gap-0 ml-2">
-            <h1 className="text-sm font-ppM text-dark-100">Baaymax</h1>
+            <h1 className="text-sm font-ppM text-dark-100">{name}</h1>
             <span className="text-xs font-ppReg font-light text-white-400">
               {dayjs(date).format("MMM DD, YYYY")}
             </span>
