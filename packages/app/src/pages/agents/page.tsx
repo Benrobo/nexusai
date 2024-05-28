@@ -67,41 +67,39 @@ function AgentCard({
   integrations,
 }: IAgentCardProps) {
   return (
-    <Link
-      to={""}
-      className="flex flex-col items-start justify-start w-full max-w-[400px] pt-4 rounded-md outline outline-[.5px] outline-white-400/80"
-    >
-      <FlexRowStartBtw className="w-full px-6 ">
-        <FlexRowStart>
-          <FlexColCenter className="w-auto border-[2px] border-white-400 rounded-full p-1 relative">
-            <img
-              src={`https://api.dicebear.com/8.x/bottts/svg?seed=${name}`}
-              className="rounded-full scale-[.90]"
-              alt={"agent-avatar"}
-              width={30}
-            />
-            <span className="w-[20px] h-[20px] flex flex-col items-center justify-center text-xs rounded-full absolute -bottom-2 right-[-5px] bg-white-100 border-[2px] border-white-400">
-              {type === "ANTI_SCAM"
-                ? "🚨"
-                : type === "AUTOMATED_CUSTOMER_SUPPORT"
-                  ? "🧠"
-                  : "🔌"}
-            </span>
-          </FlexColCenter>
-          <FlexColStart className="w-auto gap-0 ml-2">
-            <h1 className="text-sm font-ppM text-dark-100">{name}</h1>
-            <span className="text-xs font-ppReg font-light text-white-400">
-              {dayjs(date).format("MMM DD, YYYY")}
-            </span>
-          </FlexColStart>
-        </FlexRowStart>
+    <FlexColStart className="w-full max-w-[380px] pt-4 rounded-md outline outline-[.5px] outline-white-400/80">
+      <Link to={""} className="flex flex-col items-start justify-start w-full">
+        <FlexRowStartBtw className="w-full px-6 ">
+          <FlexRowStart>
+            <FlexColCenter className="w-auto border-[2px] border-white-400 rounded-full p-1 relative">
+              <img
+                src={`https://api.dicebear.com/8.x/bottts/svg?seed=${name}`}
+                className="rounded-full scale-[.90]"
+                alt={"agent-avatar"}
+                width={30}
+              />
+              <span className="w-[20px] h-[20px] flex flex-col items-center justify-center text-xs rounded-full absolute -bottom-2 right-[-5px] bg-white-100 border-[2px] border-white-400">
+                {type === "ANTI_SCAM"
+                  ? "🚨"
+                  : type === "AUTOMATED_CUSTOMER_SUPPORT"
+                    ? "🧠"
+                    : "🔌"}
+              </span>
+            </FlexColCenter>
+            <FlexColStart className="w-auto gap-0 ml-2">
+              <h1 className="text-sm font-ppM text-dark-100">{name}</h1>
+              <span className="text-xs font-ppReg font-light text-white-400">
+                {dayjs(date).format("MMM DD, YYYY")}
+              </span>
+            </FlexColStart>
+          </FlexRowStart>
 
-        {/* type */}
-        <span className="text-[10px] font-jb font-medium text-white-100 px-2 py-1 rounded-sm bg-dark-100">
-          {type}
-        </span>
-      </FlexRowStartBtw>
-
+          {/* type */}
+          <span className="text-[10px] font-jb font-medium text-white-100 px-2 py-1 rounded-sm bg-dark-100">
+            {type}
+          </span>
+        </FlexRowStartBtw>
+      </Link>
       <FlexRowStartBtw className="w-full mt-3 pt-3 pb-2 border-t-[1px] border-t-white-400/20 px-6 ">
         {/* anti-scam section */}
         {type === "ANTI_SCAM" && (
@@ -122,7 +120,7 @@ function AgentCard({
         {type === "AUTOMATED_CUSTOMER_SUPPORT" && contact_number && (
           <FlexRowStartCenter className="w-auto gap-0">
             <Brain size={15} className="stroke-dark-100 " />
-            <span className="text-xs font-jb font-medium text-dark-100 ml-2">
+            <span className="text-xs font-jb font-medium text-dark-100 ml-2 cursor-text">
               {contact_number}
             </span>
           </FlexRowStartCenter>
@@ -136,6 +134,6 @@ function AgentCard({
           </span>
         </FlexRowStartCenter>
       </FlexRowStartBtw>
-    </Link>
+    </FlexColStart>
   );
 }
