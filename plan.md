@@ -5,8 +5,6 @@ A platform which provides 24/7 availability customer supports, act as a spam/sca
 A platform which enables businesses integrate their business and provides a way to automate the process of either:
 
 - Booking an appointment
-- scheduling a meeting
-- Placing an order ( a node base UI would be use to plan the automation. )~~
 - Answer questions and answers based on the resources uploaded from the business or used the data provided by the businesses
 - Provides a chatbot embaddable widget
 - Set available time ( necessary especially if businesses need to prevent user from scheduling a meet on a day they aren’t available )
@@ -96,6 +94,8 @@ This includes both chat messages and call messages (messages extracted from the 
   - call (phone call)
 
 ### Appointments (sync with calendar)
+
+As for appointment, we would need user to create a google booking page which would be sent to the user to book an appointment. This would be used to sync with the calendar.
 
 Contains all the appointments made by the customers.
 
