@@ -86,8 +86,6 @@ export default function Agents() {
     return false;
   };
 
-  console.log(agentPhone);
-
   return (
     <FlexColStart className="w-full relative">
       {/* header */}
