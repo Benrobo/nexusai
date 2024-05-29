@@ -72,7 +72,7 @@ model Agents {
 
     created_at        DateTime                @default(now())
     Conversations     Conversations[]
-    users             Users                   @relation(fields: [userId], references: [uId])
+    users             Users                   @relation(fields: [userId], references: [uId], onDelete: Cascade)
     protected_numbers AgentProtectedNumbers[]
 
     @@index([userId])
@@ -87,7 +87,7 @@ model AgentProtectedNumbers {
     country    String?
     created_at DateTime @default(now())
 
-    agents Agents @relation(fields: [agentId], references: [id])
+    agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
     @@index([agentId])
 }

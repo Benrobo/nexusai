@@ -80,6 +80,10 @@ module.exports = {
           100: "#21B6A2",
           200: "rgba(33, 182, 162, 0.3)",
         },
+        brown: {
+          100: "#303030",
+          102: "#444444",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

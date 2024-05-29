@@ -22,6 +22,16 @@ export default class AgentRoute {
       )
     );
 
+    // get specific agent details
+    this.router.get(
+      `${this.path}`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.getAgent.bind(this.agentController)
+        )
+      )
+    );
+
     // send otp to phone number
     this.router.post(
       `${this.path}/send-otp`,

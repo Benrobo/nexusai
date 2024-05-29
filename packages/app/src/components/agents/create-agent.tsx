@@ -25,6 +25,7 @@ import toast from "react-hot-toast";
 import VerifyPhoneModal from "./verify-phone";
 import type { ResponseData } from "@/types";
 import { X } from "../icons";
+import { agentTypes } from "@/data/agent";
 
 interface ICreateAgentProps {
   setOpenModal: (value: boolean) => void;
@@ -35,39 +36,11 @@ interface ICreateAgentProps {
   refetch: () => void;
 }
 
-interface IagentType {
-  type: AgentType;
-  title: string;
-  desc: string;
-  img: string;
-}
-
 interface IVerifiedNumbers {
   phone: string;
   isInUse: boolean;
   id: string;
 }
-
-const agentTypes = [
-  {
-    type: "ANTI_THEFT",
-    title: "Anti-theft",
-    img: "/assets/images/anti-theft-system.svg",
-    desc: "Protect your phone numbers from scammers.",
-  },
-  {
-    type: "AUTOMATED_CUSTOMER_SUPPORT",
-    title: "Automated Customer Support",
-    img: "/assets/images/help-desk.svg",
-    desc: "Automate your customer support with AI.",
-  },
-  {
-    type: "CHATBOT",
-    title: "Chatbot",
-    img: "/assets/images/chatbot.svg",
-    desc: "Provides 24/7 chatbot for your business.",
-  },
-] satisfies IagentType[];
 
 export default function CreateAgent({
   setOpenModal,
@@ -103,6 +76,7 @@ export default function CreateAgent({
   const getVerifiedNumbersQuery = useQuery({
     queryKey: ["getVerifiedNumbers"],
     queryFn: async () => await getVerifiedNumbers(),
+    enabled: openModal,
   });
   const sendOTPMut = useMutation({
     mutationFn: async (data: any) => await sendOTP(data),

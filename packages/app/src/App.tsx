@@ -13,7 +13,7 @@ import Inbox from "./pages/inbox";
 import KnowledgeBase from "./pages/knowledge-base";
 import Integration from "./pages/integration";
 import Agents from "./pages/agents/page";
-import SelectedAgent from "./pages/agents/agent-id";
+import SelectedAgent from "./pages/agents/selected-agent/page";
 
 // tanstack reqct query
 const queryClient = new QueryClient();

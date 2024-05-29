@@ -171,8 +171,6 @@ export default class AgentController extends BaseController {
       userId: user.id,
     });
 
-    console.log({ agentWithSamePhone });
-
     if (agentWithSamePhone) {
       throw new HttpException(
         RESPONSE_CODE.PHONE_NUMBER_IN_USE,
@@ -180,8 +178,6 @@ export default class AgentController extends BaseController {
         400
       );
     }
-
-    return;
 
     // create agent
     if (["ANTI_THEFT", "AUTOMATED_CUSTOMER_SUPPORT"].includes(type)) {
@@ -277,6 +273,47 @@ export default class AgentController extends BaseController {
       "Agents retrieved successfully",
       200,
       agents
+    );
+  }
+
+  async getAgent(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const agentId = req.query["id"];
+
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: agentId as string,
+        userId: user.id,
+      },
+      select: {
+        id: true,
+        name: true,
+        contact_number: true,
+        type: true,
+        country: true,
+        dial_code: true,
+        protected_numbers: {
+          select: {
+            id: true,
+            phone: true,
+            dial_code: true,
+            country: true,
+          },
+        },
+        created_at: true,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Agent retrieved successfully",
+      200,
+      agent
     );
   }
 
