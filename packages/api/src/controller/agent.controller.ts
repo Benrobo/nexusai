@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import BaseController from "./base.controller";
 import sendResponse from "../lib/sendResponse";
 import { RESPONSE_CODE, IReqObject } from "../types";
-import { type AgentEnum } from "@nexusai/shared/types";
+import { type AgentEnum, type AgentType } from "@nexusai/shared/types";
 import ZodValidation from "../lib/zodValidation";
 import {
   createAgentSchema,
@@ -15,13 +15,15 @@ import {
   formatPhoneNumber,
   validateUsNumber,
 } from "../lib/utils";
-import OTPManager from "lib/otp-manager";
+import OTPManager from "../lib/otp-manager";
 import shortUUID from "short-uuid";
+import prisma from "../prisma/prisma";
+import { checkAgentPhoneNumInUse } from "helpers/agents.helper";
 
 interface ICreateAG {
   name: string;
   phone: string;
-  type: AgentEnum;
+  type: AgentType;
   country: string;
 }
 
@@ -31,7 +33,7 @@ export default class AgentController extends BaseController {
     super();
   }
 
-  async sendOTPToPhone(req: Request & IReqObject, res: Response) {
+  async sendOTP(req: Request & IReqObject, res: Response) {
     const user = req["user"];
     const payload = req.body as { phone: string };
 
@@ -48,7 +50,7 @@ export default class AgentController extends BaseController {
     }
 
     // send OTP to phone number
-    const otpSent = await this.otpManager.sendOTPToPhone(phone, user.id);
+    const otpSent = await this.otpManager.sendOTP(phone, user.id);
 
     if (!otpSent) {
       throw new HttpException(
@@ -163,12 +165,13 @@ export default class AgentController extends BaseController {
 
     // check if other agents of type (anti-scam and automated-customer-support)
     // uses this same number
-    const agentWithSamePhone = await prisma.agents.findFirst({
-      where: {
-        contact_number: phone,
-        type,
-      },
+    const agentWithSamePhone = await checkAgentPhoneNumInUse({
+      phoneNumber: phone,
+      type,
+      userId: user.id,
     });
+
+    console.log({ agentWithSamePhone });
 
     if (agentWithSamePhone) {
       throw new HttpException(
@@ -179,26 +182,64 @@ export default class AgentController extends BaseController {
     }
 
     // create agent
-    const agent = await prisma.agents.create({
-      data: {
-        id: shortUUID.generate(),
-        name,
-        contact_number: phone,
-        type,
-        country,
-        dial_code: _countryExists.dial_code,
-        users: {
-          connect: { uId: user.id },
+    if (["ANTI_THEFT", "AUTOMATED_CUSTOMER_SUPPORT"].includes(type)) {
+      const agent = await prisma.agents.create({
+        data: {
+          id: shortUUID.generate(),
+          name,
+          contact_number: phone,
+          type,
+          country,
+          dial_code: _countryExists.dial_code,
+          users: {
+            connect: { uId: user.id },
+          },
         },
-      },
-    });
+      });
+
+      if (type === "ANTI_THEFT") {
+        // add phone to list of protected numbers
+        await prisma.agentProtectedNumbers.create({
+          data: {
+            id: shortUUID.generate(),
+            agentId: agent.id,
+            phone,
+            country,
+            dial_code: _countryExists.dial_code,
+          },
+        });
+      }
+
+      // update verified phone number to isInUse
+      await prisma.verifiedPhoneNumbers.update({
+        where: {
+          userId: user.id,
+          phone,
+        },
+        data: {
+          isInUse: true,
+        },
+      });
+    } else {
+      // CHATBOT
+      await prisma.agents.create({
+        data: {
+          id: shortUUID.generate(),
+          name,
+          type,
+          country,
+          users: {
+            connect: { uId: user.id },
+          },
+        },
+      });
+    }
 
     sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Agent created successfully",
-      200,
-      agent
+      200
     );
   }
 
@@ -209,6 +250,23 @@ export default class AgentController extends BaseController {
       where: {
         userId: user.id,
       },
+      select: {
+        id: true,
+        name: true,
+        contact_number: true,
+        type: true,
+        country: true,
+        dial_code: true,
+        protected_numbers: {
+          select: {
+            id: true,
+            phone: true,
+            dial_code: true,
+            country: true,
+          },
+        },
+        created_at: true,
+      },
     });
 
     return sendResponse.success(
@@ -217,6 +275,30 @@ export default class AgentController extends BaseController {
       "Agents retrieved successfully",
       200,
       agents
+    );
+  }
+
+  async getVerifiedNumbers(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+
+    const verifiedNumbers = await prisma.verifiedPhoneNumbers.findMany({
+      where: {
+        userId: user.id,
+        isInUse: false,
+      },
+      select: {
+        id: true,
+        isInUse: true,
+        phone: true,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Verified numbers retrieved successfully",
+      200,
+      verifiedNumbers
     );
   }
 }

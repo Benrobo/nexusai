@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { RESPONSE_CODE } from "../types";
-import prisma from "../config/prisma";
+import prisma from "../prisma/prisma";
 import HttpException from "../lib/exception";
 import shortUUID from "short-uuid";
 import env from "../config/env";
@@ -101,7 +101,7 @@ export default class AuthService {
       const msg = e.message || "Google Auth failed";
       // redirect to client with error param
       res.redirect(
-        `${env.CLIENT_URL}/auth?error=google_auth_failed&msg=${msg}`,
+        `${env.CLIENT_URL}/auth?error=google_auth_failed&msg=${msg}`
       );
     }
   }

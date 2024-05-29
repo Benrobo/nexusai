@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import prisma from "../config/prisma";
+import prisma from "../prisma/prisma";
 import isUserPremium from "../lib/isUserPremium";
 import type { SubscriptionStatus } from "@prisma/client";
 import dayjs from "dayjs";

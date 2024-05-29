@@ -81,7 +81,8 @@ export const createAgentSchema = zod.object({
     })
     .refine((data) => data.startsWith("+1"), {
       message: "Phone number must start with country code +1",
-    }),
+    })
+    .optional(),
   type: zod
     .nativeEnum(AgentEnum, {
       required_error: "Agent type is required",

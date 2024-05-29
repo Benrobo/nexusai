@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import HttpException from "../lib/exception";
 import { RESPONSE_CODE, type IReqObject } from "../types";
-import prisma from "../config/prisma";
+import prisma from "../prisma/prisma";
 import GoogleAuth, { googleClient } from "../lib/google.auth";
 import type { TokenInfo, Credentials } from "google-auth-library";
 import env from "../config/env";

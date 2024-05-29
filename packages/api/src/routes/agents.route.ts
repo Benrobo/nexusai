@@ -26,9 +26,7 @@ export default class AgentRoute {
     this.router.post(
       `${this.path}/send-otp`,
       useCatchErrors(
-        isAuthenticated(
-          this.agentController.sendOTPToPhone.bind(this.agentController)
-        )
+        isAuthenticated(this.agentController.sendOTP.bind(this.agentController))
       )
     );
 
@@ -38,6 +36,16 @@ export default class AgentRoute {
       useCatchErrors(
         isAuthenticated(
           this.agentController.verifyPhone.bind(this.agentController)
+        )
+      )
+    );
+
+    // get verified numbers
+    this.router.get(
+      `${this.path}/verified-numbers`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.getVerifiedNumbers.bind(this.agentController)
         )
       )
     );

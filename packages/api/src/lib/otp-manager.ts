@@ -15,7 +15,7 @@ export default class OTPManager {
   }
 
   // send otp to phone number
-  public async sendOTPToPhone(phone: string, userId: string) {
+  public async sendOTP(phone: string, userId: string) {
     if (!phone || phone.length === 0) {
       console.log(`Invalid phone number: ${phone}`);
       return false;

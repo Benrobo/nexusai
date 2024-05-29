@@ -21,3 +21,23 @@ export const getAgents = async () => {
   const req = await $axios.get("/agents");
   return req.data;
 };
+
+export const createAgent = async (data: any) => {
+  const req = await $axios.post("/agent", data);
+  return req.data;
+};
+
+export const getVerifiedNumbers = async () => {
+  const req = await $axios.get("/agent/verified-numbers");
+  return req.data;
+};
+
+export const sendOTP = async (data: any) => {
+  const req = await $axios.post("/agent/send-otp", data);
+  return req.data;
+};
+
+export const verifyPhone = async (data: any) => {
+  const req = await $axios.post("/agent/verify-phone", data);
+  return req.data;
+};
