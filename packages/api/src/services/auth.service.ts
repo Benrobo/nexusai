@@ -101,7 +101,7 @@ export default class AuthService {
       const msg = e.message || "Google Auth failed";
       // redirect to client with error param
       res.redirect(
-        `${env.CLIENT_URL}/auth?error=google_auth_failed&msg=${msg}`
+        `${env.CLIENT_URL}/auth?error=google_auth_failed&msg=${msg}`,
       );
     }
   }
