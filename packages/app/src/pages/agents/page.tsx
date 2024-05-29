@@ -127,20 +127,6 @@ export default function Agents() {
             </p>
           </FlexColCenter>
         )}
-        {/* <AgentCard
-          name="Baaymax"
-          date={new Date()}
-          type="ANTI_THEFT"
-          protected_numbers={["+1 812 345 6789", "+1 555 345 6789"]}
-        />
-
-        <AgentCard
-          name="Pal"
-          date={new Date()}
-          type="AUTOMATED_CUSTOMER_SUPPORT"
-          contact_number="+1 812 489 4789"
-          integrations={4}
-        /> */}
       </FlexRowStart>
 
       {/* create agent modal */}
