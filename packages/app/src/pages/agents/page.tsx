@@ -22,6 +22,7 @@ import { Spinner } from "@/components/Spinner";
 dayjs.extend(relativeTime);
 
 interface IAgents {
+  id: string;
   name: string;
   date: Date;
   type: AgentType;
@@ -92,6 +93,7 @@ export default function Agents() {
                   date={a.created_at}
                   type={a.type}
                   protected_numbers={a.protected_numbers?.map((p) => p.phone)}
+                  id={a.id}
                 />
               );
             }
@@ -104,6 +106,7 @@ export default function Agents() {
                   type={a.type}
                   contact_number={a.contact_number}
                   integrations={a.integrations}
+                  id={a.id}
                 />
               );
             }
@@ -116,6 +119,7 @@ export default function Agents() {
                   type={a.type}
                   contact_number={a.contact_number}
                   integrations={a.integrations}
+                  id={a.id}
                 />
               );
             }
@@ -149,6 +153,7 @@ interface IAgentCardProps {
   protected_numbers?: string[];
   integrations?: number;
   contact_number?: string;
+  id: string;
 }
 
 function AgentCard({
@@ -158,10 +163,14 @@ function AgentCard({
   protected_numbers,
   contact_number,
   integrations,
+  id,
 }: IAgentCardProps) {
   return (
     <FlexColStart className="w-full max-w-[350px] pt-4 rounded-md outline outline-[.5px] outline-white-400/80">
-      <Link to={""} className="flex flex-col items-start justify-start w-full">
+      <Link
+        to={`/agents/${id}`}
+        className="flex flex-col items-start justify-start w-full"
+      >
         <FlexRowStartBtw className="w-full px-6 ">
           <FlexRowStart>
             <FlexColCenter className="w-auto border-[2px] border-white-400 rounded-full p-1 relative">
