@@ -12,46 +12,54 @@ export const checkAgentPhoneNumInUse = async ({
   type,
   userId,
 }: CheckPhoneNumInUse) => {
-  let isPhoneNumberInUse = false;
   if (type === "ANTI_THEFT") {
     const agents = await prisma.agents.findMany({
       where: {
-        type: type,
+        type: "ANTI_THEFT",
         userId: userId,
-      },
-      select: {
-        protected_numbers: true,
-      },
-    });
-
-    if (agents.length > 0) {
-      agents.forEach((agent) => {
-        agent.protected_numbers?.forEach((protectedNumber) => {
-          if (protectedNumber.phone === phoneNumber) {
-            isPhoneNumberInUse = true;
-          }
-        });
-      });
-    }
-    return isPhoneNumberInUse;
-  }
-  if (type === "AUTOMATED_CUSTOMER_SUPPORT") {
-    const agents = await prisma.agents.findMany({
-      where: {
-        AND: {
-          contact_number: phoneNumber,
-          userId: userId,
-          type: type,
+        protected_numbers: {
+          some: {
+            phone: phoneNumber,
+          },
         },
       },
+      select: {
+        id: true,
+      },
     });
 
-    if (agents.length > 0) {
-      isPhoneNumberInUse = true;
-    }
-
-    return isPhoneNumberInUse;
+    return agents.length > 0;
   }
 
-  return isPhoneNumberInUse;
+  if (type === "AUTOMATED_CUSTOMER_SUPPORT") {
+    const [autoAgent, antiAgent] = await Promise.all([
+      prisma.agents.findFirst({
+        where: {
+          type: "AUTOMATED_CUSTOMER_SUPPORT",
+          userId: userId,
+          contact_number: phoneNumber,
+        },
+        select: {
+          id: true,
+        },
+      }),
+      prisma.agents.findMany({
+        where: {
+          type: "ANTI_THEFT",
+          protected_numbers: {
+            some: {
+              phone: phoneNumber,
+            },
+          },
+        },
+        select: {
+          id: true,
+        },
+      }),
+    ]);
+
+    return !!autoAgent || antiAgent.length > 0;
+  }
+
+  return false;
 };

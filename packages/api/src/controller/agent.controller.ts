@@ -181,6 +181,8 @@ export default class AgentController extends BaseController {
       );
     }
 
+    return;
+
     // create agent
     if (["ANTI_THEFT", "AUTOMATED_CUSTOMER_SUPPORT"].includes(type)) {
       const agent = await prisma.agents.create({
@@ -284,7 +286,6 @@ export default class AgentController extends BaseController {
     const verifiedNumbers = await prisma.verifiedPhoneNumbers.findMany({
       where: {
         userId: user.id,
-        isInUse: false,
       },
       select: {
         id: true,

@@ -81,9 +81,7 @@ export default function CreateAgent({
   const [timerStart, setTimerStart] = useState(false);
   const [verifyPhoneModal, setVerifyPhoneModal] = useState(false);
   const [steps, setSteps] = useState(1);
-  const [selectedAgent, setSelectedAgent] = useState<AgentType | null>(
-    "ANTI_THEFT"
-  );
+  const [selectedAgent, setSelectedAgent] = useState<AgentType | null>(null);
   const [agentName, setAgentName] = useState("");
   const [agentPhone, setAgentPhone] = useState({
     dial_code: "+1",
@@ -190,7 +188,7 @@ export default function CreateAgent({
 
   const resetState = () => {
     setSteps(1);
-    setSelectedAgent("ANTI_THEFT");
+    setSelectedAgent(null);
     setAgentName("");
     setAgentPhone({
       dial_code: "+1",
@@ -202,10 +200,12 @@ export default function CreateAgent({
   useEffect(() => {
     // check if ANTI_THEFT agent already exists
     const agentExists = agents && agents.find((a) => a.type === "ANTI_THEFT");
-    if (agentExists && selectedAgent === "ANTI_THEFT") {
-      setSelectedAgent("AUTOMATED_CUSTOMER_SUPPORT");
+    if (agentExists) {
+      selectedAgent === "ANTI_THEFT" || !selectedAgent
+        ? setSelectedAgent("AUTOMATED_CUSTOMER_SUPPORT")
+        : null;
     }
-  }, [agents]);
+  }, [agents, openModal]);
 
   useEffect(() => {
     if (getVerifiedNumbersQuery.error) {
@@ -219,7 +219,7 @@ export default function CreateAgent({
       const data = resp.data as IVerifiedNumbers[];
       setVerifiedNumbers(data);
     }
-  }, [getVerifiedNumbersQuery]);
+  }, [getVerifiedNumbersQuery, openModal]);
 
   return (
     <Modal isBlurBg isOpen={openModal} fixed={false}>
