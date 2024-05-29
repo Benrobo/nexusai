@@ -56,33 +56,38 @@ export default function AgentSidebar({
       </FlexRowStart>
 
       <FlexColStart className="w-full h-full px-3 py-2">
-        {sidebarItems.map((item) => (
-          <button
-            key={item.key}
-            className="w-full"
-            onClick={() => setActiveTab(item.key)}
-          >
-            <FlexRowStart
-              className={cn(
-                "w-full py-3 px-3 rounded-lg ",
-                activeTab === item.key &&
-                  "bg-white-200/50 text-dark-100 stroke-dark-100"
-              )}
+        {sidebarItems.map((item) => {
+          if (item.key === "integrations" && agent_info.type === "ANTI_THEFT")
+            return null;
+
+          return (
+            <button
+              key={item.key}
+              className="w-full"
+              onClick={() => setActiveTab(item.key)}
             >
-              {renderIcons(item.key, activeTab)}
-              <span
+              <FlexRowStart
                 className={cn(
-                  "text-xs",
-                  activeTab === item.key
-                    ? "font-ppL font-bold text-dark-100 "
-                    : "font-ppL font-light text-dark-300/80 "
+                  "w-full py-3 px-3 rounded-lg ",
+                  activeTab === item.key &&
+                    "bg-white-200/50 text-dark-100 stroke-dark-100"
                 )}
               >
-                {item.name}
-              </span>
-            </FlexRowStart>
-          </button>
-        ))}
+                {renderIcons(item.key, activeTab)}
+                <span
+                  className={cn(
+                    "text-xs",
+                    activeTab === item.key
+                      ? "font-ppL font-bold text-dark-100 "
+                      : "font-ppL font-light text-dark-300/80 "
+                  )}
+                >
+                  {item.name}
+                </span>
+              </FlexRowStart>
+            </button>
+          );
+        })}
       </FlexColStart>
     </FlexColStart>
   );
