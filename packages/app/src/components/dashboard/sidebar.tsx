@@ -51,12 +51,12 @@ const sidebarRoutes = [
     path: "/agents",
     isExtensible: true,
   },
-  {
-    title: "Integration",
-    key: "integration",
-    path: "/integration",
-    isExtensible: false,
-  },
+  // {
+  //   title: "Integration",
+  //   key: "integration",
+  //   path: "/integration",
+  //   isExtensible: false,
+  // },
 ];
 
 export default function DashboardSidebar() {

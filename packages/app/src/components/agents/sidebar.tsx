@@ -2,15 +2,36 @@ import React from "react";
 import { FlexColCenter, FlexColStart, FlexRowStart } from "../Flex";
 import type { AgentType } from "@nexusai/shared/types";
 import { agentTypes } from "@/data/agent";
+import { cn } from "@/lib/utils";
+import { Box, Cog, UnPlug } from "../icons";
 
 interface IAgentSidebarProps {
   agent_info: {
     name?: string;
     type?: AgentType;
   };
+  activeTab: string;
 }
 
-export default function AgentSidebar({ agent_info }: IAgentSidebarProps) {
+const sidebarItems = [
+  {
+    name: "General",
+    key: "general",
+  },
+  {
+    name: "Integrations",
+    key: "integrations",
+  },
+  {
+    name: "Settings",
+    key: "settings",
+  },
+];
+
+export default function AgentSidebar({
+  agent_info,
+  activeTab,
+}: IAgentSidebarProps) {
   return (
     <FlexColStart className="w-full h-screen max-w-[250px] bg-white-300/80 border-[.5px] border-white-400/40">
       <FlexRowStart className="w-auto px-3 py-4 border-b-[1px] border-b-white-400/30 bg-white-300">
@@ -26,6 +47,32 @@ export default function AgentSidebar({ agent_info }: IAgentSidebarProps) {
           </p>
         </FlexColStart>
       </FlexRowStart>
+
+      <FlexColStart className="w-full h-full px-3 py-2">
+        {sidebarItems.map((item) => (
+          <button key={item.key} className="w-full">
+            <FlexRowStart
+              className={cn(
+                "w-full py-3 px-3 rounded-lg ",
+                activeTab === item.key &&
+                  "bg-white-200/80 text-dark-100 stroke-dark-100"
+              )}
+            >
+              {renderIcons(item.key, activeTab)}
+              <span
+                className={cn(
+                  "text-xs",
+                  activeTab === item.key
+                    ? "font-ppM text-dark-100 "
+                    : "font-ppL font-light text-dark-300/80 "
+                )}
+              >
+                {item.name}
+              </span>
+            </FlexRowStart>
+          </button>
+        ))}
+      </FlexColStart>
     </FlexColStart>
   );
 }
@@ -44,4 +91,26 @@ function renderMiniAgentIcon(type: AgentType) {
       height={40}
     />
   );
+}
+
+function renderIcons(name: string, active: string) {
+  const mainStyle = active === name ? "stroke-dark-100" : "stroke-dark-300/80";
+  let icon = null;
+
+  switch (name) {
+    case "general":
+      icon = <Box size={15} className={mainStyle} />;
+      break;
+
+    case "integrations":
+      icon = <UnPlug size={15} className={mainStyle} />;
+      break;
+
+    case "settings":
+      icon = <Cog size={15} className={mainStyle} />;
+      break;
+    default:
+      break;
+  }
+  return icon;
 }
