@@ -8,7 +8,7 @@
 */
 -- AlterEnum
 BEGIN;
-CREATE TYPE "AgentPurpose_new" AS ENUM ('ANTI_SCAM', 'AUTOMATED_CUSTOMER_SUPPORT', 'CHATBOT');
+CREATE TYPE "AgentPurpose_new" AS ENUM ('ANTI_THEFT', 'AUTOMATED_CUSTOMER_SUPPORT', 'CHATBOT');
 ALTER TABLE "Agents" ALTER COLUMN "purpose" TYPE "AgentPurpose_new" USING ("purpose"::text::"AgentPurpose_new");
 ALTER TYPE "AgentPurpose" RENAME TO "AgentPurpose_old";
 ALTER TYPE "AgentPurpose_new" RENAME TO "AgentPurpose";

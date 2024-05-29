@@ -5,7 +5,7 @@ CREATE TYPE "Role" AS ENUM ('user', 'admin');
 CREATE TYPE "IntegrationType" AS ENUM ('google_calendar', 'google_meet');
 
 -- CreateEnum
-CREATE TYPE "AgentPurpose" AS ENUM ('ANTI_SCAM', 'CUSTOMER_SUPPORT');
+CREATE TYPE "AgentPurpose" AS ENUM ('ANTI_THEFT', 'CUSTOMER_SUPPORT');
 
 -- CreateEnum
 CREATE TYPE "EntityType" AS ENUM ('AGENT', 'USER', 'CONVERSATION');
