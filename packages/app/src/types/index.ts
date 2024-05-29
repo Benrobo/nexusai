@@ -32,3 +32,9 @@ export interface IAgents {
   custom_prompt: string;
   created_at: string;
 }
+
+export type AgentActiveTabs =
+  | "general"
+  | "integrations"
+  | "protected_numbers"
+  | "settings";
