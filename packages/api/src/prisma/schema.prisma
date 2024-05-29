@@ -19,7 +19,7 @@ enum IntegrationType {
 }
 
 enum AgentType {
-    ANTI_SCAM // requires valid US phonenumber
+    ANTI_THEFT // requires valid US phonenumber
     AUTOMATED_CUSTOMER_SUPPORT // requires valid US phonenumber
     CHATBOT // doesn't require phonenumber
 }
@@ -55,7 +55,7 @@ model Agents {
     name   String
     type   AgentType
 
-    // required! for [ANTI_SCAM, AUTOMATED_CUSTOMER_SUPPORT]
+    // required! for [ANTI_THEFT, AUTOMATED_CUSTOMER_SUPPORT]
     contact_number String? // Must be a US number
 
     dial_code String?
@@ -78,7 +78,7 @@ model Agents {
     @@index([userId])
 }
 
-// ANTI_SCAM Only (TODOS)
+// ANTI_THEFT Only (TODOS)
 model AgentProtectedNumbers {
     id         String   @id @default(cuid())
     agentId    String
