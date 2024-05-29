@@ -20,3 +20,19 @@ export const logout = () => {
   localStorage.removeItem("user");
   window.location.href = `${env.API_URL}/auth/logout`;
 };
+
+export const formatPhoneNumber = (input: string) => {
+  // Remove all non-digit characters
+  const digits = input.replace(/\D/g, "");
+
+  // Group digits in blocks of 3, except the last block of 4 if there are more than 6 digits
+  const match = digits.match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+  if (!match) return digits;
+
+  // Format the number with spaces
+  const formattedValue = [match[1], match[2], match[3]]
+    .filter((part) => part)
+    .join(" ");
+
+  return formattedValue;
+};
