@@ -72,17 +72,6 @@ export const createAgentSchema = zod.object({
     })
     .min(3)
     .max(50),
-  phone: zod
-    .string({
-      required_error: "Phone number is required",
-    })
-    .regex(/^\+1-[0-9]{3}-[0-9]{3}-[0-9]{4}$/, {
-      message: "Invalid US phone number",
-    })
-    .refine((data) => data.startsWith("+1"), {
-      message: "Phone number must start with country code +1",
-    })
-    .optional(),
   type: zod
     .nativeEnum(AgentEnum, {
       required_error: "Agent type is required",
@@ -90,9 +79,6 @@ export const createAgentSchema = zod.object({
     .refine((data) => Object.values(AgentEnum).includes(data), {
       message: "Invalid agent type",
     }),
-  country: zod.string({
-    required_error: "Country is required",
-  }),
 });
 
 // verify US phone number

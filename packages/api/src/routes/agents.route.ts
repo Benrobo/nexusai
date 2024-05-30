@@ -50,12 +50,22 @@ export default class AgentRoute {
       )
     );
 
-    // get verified numbers
+    // get used numbers
     this.router.get(
-      `${this.path}/verified-numbers`,
+      `${this.path}/used-numbers`,
       useCatchErrors(
         isAuthenticated(
-          this.agentController.getVerifiedNumbers.bind(this.agentController)
+          this.agentController.getUsedPhoneNumbers.bind(this.agentController)
+        )
+      )
+    );
+
+    // publish an agent
+    this.router.patch(
+      `${this.path}/publish/:id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.publishAgent.bind(this.agentController)
         )
       )
     );
