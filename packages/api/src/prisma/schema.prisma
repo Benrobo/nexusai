@@ -30,19 +30,28 @@ enum EntityType {
     CONVERSATION
 }
 
+enum KnowledgeBaseType {
+    TXT
+    WEB_PAGES
+    PDF
+    YT_VIDEOS
+    NOTION // COMING SOON
+}
+
 model Users {
-    id                     String                 @id @default(cuid())
-    uId                    String                 @unique @default(cuid())
-    username               String?
-    fullname               String?
-    email                  String
-    avatar                 String?
-    role                   Role                   @default(user)
-    google_ref_token       String?
-    createdAt              DateTime               @default(now())
-    conversations          Conversations[]
-    verified_phone_numbers VerifiedPhoneNumbers[]
-    agents                 Agents[]
+    id                String                  @id @default(cuid())
+    uId               String                  @unique @default(cuid())
+    username          String?
+    fullname          String?
+    email             String
+    avatar            String?
+    role              Role                    @default(user)
+    google_ref_token  String?
+    createdAt         DateTime                @default(now())
+    conversations     Conversations[]
+    used_numbers      UsedPhoneNumbers[]
+    purchased_numbers PurchasedPhoneNumbers[]
+    agents            Agents[]
 
     @@map(name: "users")
 }
@@ -55,12 +64,6 @@ model Agents {
     name   String
     type   AgentType
 
-    // required! for [ANTI_THEFT, AUTOMATED_CUSTOMER_SUPPORT]
-    contact_number String? // Must be a US number
-
-    dial_code String?
-    country   String?
-
     // welcome message for the agent 
     welcome_message String?
 
@@ -70,22 +73,69 @@ model Agents {
     // custom settings
     custom_prompt String?
 
-    created_at        DateTime                @default(now())
+    // by default , every agent remains deactivated
+    published Boolean @default(false)
+
+    created_at        DateTime           @default(now())
     Conversations     Conversations[]
-    users             Users                   @relation(fields: [userId], references: [uId], onDelete: Cascade)
-    protected_numbers AgentProtectedNumbers[]
+    users             Users              @relation(fields: [userId], references: [uId], onDelete: Cascade)
+    protected_numbers ProtectedNumbers[]
+    used_numbers      UsedPhoneNumbers[]
+    knowledge_base    KnowledgeBase[]
 
     @@index([userId])
 }
 
 // ANTI_THEFT Only (TODOS)
-model AgentProtectedNumbers {
+model ProtectedNumbers {
     id         String   @id @default(cuid())
     agentId    String
     phone      String   @unique
     dial_code  String?
     country    String?
     created_at DateTime @default(now())
+
+    agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+    @@index([agentId])
+}
+
+// Table to store users purchased phone numbers
+model PurchasedPhoneNumbers {
+    id         String   @id @default(cuid())
+    userId     String
+    phone      String   @unique
+    dial_code  String?
+    country    String?
+    created_at DateTime @default(now())
+
+    users Users @relation(fields: [userId], references: [uId], onDelete: Cascade)
+
+    @@index([userId])
+}
+
+model UsedPhoneNumbers {
+    id         String   @id @default(cuid())
+    agentId    String
+    userId     String
+    phone      String   @unique
+    dial_code  String?
+    country    String?
+    created_at DateTime @default(now())
+
+    agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
+    users  Users  @relation(fields: [userId], references: [uId], onDelete: Cascade)
+
+    @@index([agentId])
+    @@index([userId])
+}
+
+model KnowledgeBase {
+    id         String            @id @default(cuid())
+    agentId    String
+    type       KnowledgeBaseType
+    created_at DateTime          @default(now())
+    updated_at DateTime          @updatedAt
 
     agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
@@ -161,16 +211,4 @@ model Messages {
     @@index([entityId])
     @@index([agentsId])
     @@index([convId])
-}
-
-model VerifiedPhoneNumbers {
-    id         String   @id @default(cuid())
-    userId     String
-    phone      String   @unique
-    isInUse    Boolean  @default(false)
-    created_at DateTime @default(now())
-
-    users Users @relation(fields: [userId], references: [uId])
-
-    @@index([userId])
 }
