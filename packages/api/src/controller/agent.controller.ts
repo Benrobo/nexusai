@@ -104,6 +104,24 @@ export default class AgentController extends BaseController {
       );
     }
 
+    // prevent user from creating more than 1 ANTI_THEFT agent
+    if (type === "ANTI_THEFT") {
+      const antiTheftAgent = await prisma.agents.findFirst({
+        where: {
+          type: "ANTI_THEFT",
+          userId: user.id,
+        },
+      });
+
+      if (antiTheftAgent) {
+        throw new HttpException(
+          RESPONSE_CODE.DUPLICATE_ENTRY,
+          "You can only have one Anti-theft agent",
+          400
+        );
+      }
+    }
+
     // create agent
     await prisma.agents.create({
       data: {
@@ -140,13 +158,12 @@ export default class AgentController extends BaseController {
     //! PERFORM SOME CHECKS BEFORE ACTIVATING AGENT
     // * AUTOMATED_CUSTOMER_SUPPORT
     /**
-     * - Purchased a number
+     * - contact number is available
      * - Check if user added at least one knowledge base
      *
      **/
     // * ANTI_THEFT
     /**
-     * - Purchased a number
      * - Check if user linked at least one protected number
      *
      **/
