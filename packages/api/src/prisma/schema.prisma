@@ -39,19 +39,19 @@ enum KnowledgeBaseType {
 }
 
 model Users {
-    id                String                  @id @default(cuid())
-    uId               String                  @unique @default(cuid())
-    username          String?
-    fullname          String?
-    email             String
-    avatar            String?
-    role              Role                    @default(user)
-    google_ref_token  String?
-    createdAt         DateTime                @default(now())
-    conversations     Conversations[]
-    used_numbers      UsedPhoneNumbers[]
-    purchased_numbers PurchasedPhoneNumbers[]
-    agents            Agents[]
+    id               String             @id @default(cuid())
+    uId              String             @unique @default(cuid())
+    username         String?
+    fullname         String?
+    email            String
+    avatar           String?
+    role             Role               @default(user)
+    google_ref_token String?
+    createdAt        DateTime           @default(now())
+    conversations    Conversations[]
+    used_numbers     UsedPhoneNumbers[]
+    // purchased_numbers PurchasedPhoneNumbers[]
+    agents           Agents[]
 
     @@map(name: "users")
 }
@@ -76,6 +76,9 @@ model Agents {
     // by default , every agent remains deactivated
     published Boolean @default(false)
 
+    // contact number (AUTOMATED CUSTOMER SUPPORT ONly)
+    contact_number ContactNumber?
+
     created_at        DateTime           @default(now())
     Conversations     Conversations[]
     users             Users              @relation(fields: [userId], references: [uId], onDelete: Cascade)
@@ -84,6 +87,19 @@ model Agents {
     knowledge_base    KnowledgeBase[]
 
     @@index([userId])
+}
+
+model ContactNumber {
+    id         String   @id @default(cuid())
+    agentId    String   @unique
+    phone      String   @unique
+    dial_code  String?
+    country    String?
+    created_at DateTime @default(now())
+
+    agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+    @@index([agentId])
 }
 
 // ANTI_THEFT Only (TODOS)
@@ -101,23 +117,23 @@ model ProtectedNumbers {
 }
 
 // Table to store users purchased phone numbers
-model PurchasedPhoneNumbers {
-    id        String  @id @default(cuid())
-    userId    String
-    phone     String  @unique
-    dial_code String?
-    country   String?
+// model PurchasedPhoneNumbers {
+//     id        String  @id @default(cuid())
+//     userId    String
+//     phone     String  @unique
+//     dial_code String?
+//     country   String?
 
-    // twilio config
-    phone_number_sid String?
-    bundle_sid       String?
+//     // twilio config
+//     phone_number_sid String?
+//     bundle_sid       String?
 
-    created_at DateTime @default(now())
+//     created_at DateTime @default(now())
 
-    users Users @relation(fields: [userId], references: [uId], onDelete: Cascade)
+//     users Users @relation(fields: [userId], references: [uId], onDelete: Cascade)
 
-    @@index([userId])
-}
+//     @@index([userId])
+// }
 
 model UsedPhoneNumbers {
     id         String   @id @default(cuid())
