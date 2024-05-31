@@ -8,9 +8,17 @@ import HandleErrors from "./middlewares/error";
 import { Routes } from "./types";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import { TwilioService } from "services/twilio.service";
 
 // init dot env
 dotenv.config();
+
+(async () => {
+  // TEST ALL SERVICES METHOD
+  const twService = new TwilioService();
+
+  // console.log(await twService.getAvailableNumbersForPurchase());
+})();
 
 export default class App {
   public app: express.Application;
