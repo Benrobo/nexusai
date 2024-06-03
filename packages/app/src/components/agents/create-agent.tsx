@@ -4,26 +4,15 @@ import {
   FlexColStart,
   FlexRowStart,
   FlexRowStartBtw,
-  FlexRowStartCenter,
 } from "@/components/Flex";
 import Button from "@/components/ui/button";
 import Modal from "@/components/Modal";
-import { cn, formatPhoneNumber } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import SUPPORTED_COUNTRIES from "@nexusai/shared/config/supported-countries";
 import type { AgentType } from "@nexusai/shared/types";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { createAgent, getVerifiedNumbers, sendOTP } from "@/http/requests";
+import { useMutation } from "@tanstack/react-query";
+import { createAgent } from "@/http/requests";
 import toast from "react-hot-toast";
-import VerifyPhoneModal from "./verify-phone";
-import type { ResponseData } from "@/types";
 import { X } from "../icons";
 import { agentTypes } from "@/data/agent";
 
@@ -36,31 +25,15 @@ interface ICreateAgentProps {
   refetch: () => void;
 }
 
-interface IVerifiedNumbers {
-  phone: string;
-  isInUse: boolean;
-  id: string;
-}
-
 export default function CreateAgent({
   setOpenModal,
   openModal,
   agents,
   refetch,
 }: ICreateAgentProps) {
-  const [verifiedNumbers, setVerifiedNumbers] = useState<IVerifiedNumbers[]>(
-    []
-  );
-  const [timerStart, setTimerStart] = useState(false);
-  const [verifyPhoneModal, setVerifyPhoneModal] = useState(false);
   const [steps, setSteps] = useState(1);
   const [selectedAgent, setSelectedAgent] = useState<AgentType | null>(null);
   const [agentName, setAgentName] = useState("");
-  const [agentPhone, setAgentPhone] = useState({
-    dial_code: "+1",
-    number: "",
-    country: "US",
-  });
   const createAgentMut = useMutation({
     mutationFn: async (data: any) => await createAgent(data),
     onSuccess: () => {
@@ -73,43 +46,11 @@ export default function CreateAgent({
       toast.error(err.response.data.message ?? "Failed to create agent");
     },
   });
-  const getVerifiedNumbersQuery = useQuery({
-    queryKey: ["getVerifiedNumbers"],
-    queryFn: async () => await getVerifiedNumbers(),
-    enabled: openModal,
-  });
-  const sendOTPMut = useMutation({
-    mutationFn: async (data: any) => await sendOTP(data),
-    onSuccess: () => {
-      setVerifyPhoneModal(true);
-    },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.message || "Failed to send OTP.";
-      toast.error(msg);
-    },
-  });
-
-  const formatted_phone_num = `${agentPhone.dial_code}-${agentPhone.number.replace(/\D/g, "-")}`;
-
-  const isPhoneNumberVerified = verifiedNumbers.find(
-    (v) => v.phone === formatted_phone_num
-  );
 
   const shouldDisableNextBtn = () => {
     if (steps === 1 && !selectedAgent) return true;
     if (steps === 2) {
       if (!agentName || agentName.length === 0) return true;
-      if (
-        ["AUTOMATED_CUSTOMER_SUPPORT", "ANTI_THEFT"].includes(selectedAgent!)
-      ) {
-        if (
-          !agentPhone.number ||
-          agentPhone.number.split(" ").join("").length !== 10
-        )
-          return true;
-        if (!isPhoneNumberVerified) return true;
-      }
-
       return false;
     }
     if (createAgentMut.isPending) return true;
@@ -117,58 +58,22 @@ export default function CreateAgent({
   };
 
   const _createAgent = () => {
-    let payload = {};
+    let payload = {
+      name: agentName,
+      type: selectedAgent,
+    };
 
     if (!agentName || agentName.length === 0) {
       toast.error("Agent name is required");
       return;
     }
-    if (["AUTOMATED_CUSTOMER_SUPPORT", "ANTI_THEFT"].includes(selectedAgent!)) {
-      if (
-        !agentPhone.number ||
-        agentPhone.number.length === 0 ||
-        agentPhone.number.split(" ").join("").length !== 10
-      ) {
-        toast.error("Invalid phone number");
-        return;
-      }
-    }
-
-    if (selectedAgent === "CHATBOT") {
-      payload = {
-        name: agentName,
-        type: selectedAgent,
-        country: agentPhone.country,
-      };
-    } else {
-      payload = {
-        name: agentName,
-        type: selectedAgent,
-        country: agentPhone.country,
-        phone: formatted_phone_num,
-      };
-    }
-
     createAgentMut.mutate(payload);
-  };
-
-  const handlePhoneVerification = () => {
-    // send otp to phobne number
-    sendOTPMut.mutate({
-      phone: formatted_phone_num,
-    });
-    setTimerStart(true);
   };
 
   const resetState = () => {
     setSteps(1);
     setSelectedAgent(null);
     setAgentName("");
-    setAgentPhone({
-      dial_code: "+1",
-      number: "",
-      country: "US",
-    });
   };
 
   useEffect(() => {
@@ -180,20 +85,6 @@ export default function CreateAgent({
         : null;
     }
   }, [agents, openModal]);
-
-  useEffect(() => {
-    if (getVerifiedNumbersQuery.error) {
-      const msg =
-        getVerifiedNumbersQuery.error?.message ||
-        "Failed fetching verified numbers";
-      toast.error(msg);
-    }
-    if (getVerifiedNumbersQuery.data) {
-      const resp = getVerifiedNumbersQuery.data as ResponseData;
-      const data = resp.data as IVerifiedNumbers[];
-      setVerifiedNumbers(data);
-    }
-  }, [getVerifiedNumbersQuery, openModal]);
 
   return (
     <Modal isBlurBg isOpen={openModal} fixed={false}>
@@ -290,7 +181,7 @@ export default function CreateAgent({
                 readOnly={createAgentMut.isPending}
               />
 
-              {["AUTOMATED_CUSTOMER_SUPPORT", "ANTI_THEFT"].includes(
+              {/* {["AUTOMATED_CUSTOMER_SUPPORT", "ANTI_THEFT"].includes(
                 selectedAgent!
               ) && (
                 <FlexColStart className="w-full gap-0 mt-3">
@@ -358,7 +249,7 @@ export default function CreateAgent({
                     />
                   </FlexRowStartCenter>
                 </FlexColStart>
-              )}
+              )} */}
             </FlexColStart>
           )}
 
@@ -392,35 +283,6 @@ export default function CreateAgent({
           </FlexRowStartBtw>
         </FlexColStart>
       </FlexColStart>
-
-      {/* Verify number modal */}
-      <VerifyPhoneModal
-        isOpen={verifyPhoneModal}
-        closeModal={() => setVerifyPhoneModal(false)}
-        refetchVerifiedPhone={() => {
-          setTimerStart(false);
-          getVerifiedNumbersQuery.refetch();
-        }}
-      />
     </Modal>
   );
 }
-
-const Timer = ({ revert }: { revert: () => void }) => {
-  const [time, setTime] = useState(20);
-  useEffect(() => {
-    if (time <= 0) {
-      revert();
-      return;
-    }
-    const interval = setInterval(() => {
-      setTime((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [time]);
-  return (
-    <span className="text-[10px] font-jb font-bold text-white-400 cursor-not-allowed">
-      Resend in 00:{time < 10 ? `0${time}` : time}
-    </span>
-  );
-};
