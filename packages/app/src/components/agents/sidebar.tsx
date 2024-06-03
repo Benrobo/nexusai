@@ -34,11 +34,29 @@ const sidebarItems = [
   },
 ] as { name: string; key: AgentActiveTabs }[];
 
+interface IAgentInfo {
+  id?: string;
+  name?: string;
+  date?: Date;
+  type?: AgentType;
+  protected_numbers?: {
+    id: string;
+    phone: string;
+    dial_code: string;
+    country: string;
+  }[];
+  integrations?: number;
+  contact_number?: string;
+  created_at?: Date;
+}
+
 export default function AgentSidebar({
   agent_info,
   activeTab,
   setActiveTab,
 }: IAgentSidebarProps) {
+  if (!agent_info) return null;
+
   return (
     <FlexColStart className="w-full h-screen max-w-[250px] bg-white-300/80 border-[.5px] border-white-400/40">
       <FlexRowStart className="w-auto px-3 py-4 border-b-[1px] border-b-white-400/30 bg-white-300">
@@ -58,6 +76,12 @@ export default function AgentSidebar({
       <FlexColStart className="w-full h-full px-3 py-2">
         {sidebarItems.map((item) => {
           if (item.key === "integrations" && agent_info.type === "ANTI_THEFT")
+            return null;
+
+          if (
+            item.key === "protected_numbers" &&
+            agent_info.type !== "ANTI_THEFT"
+          )
             return null;
 
           return (
