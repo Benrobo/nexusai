@@ -103,4 +103,7 @@ export const VerifyOTPCode = zod.object({
     .regex(/^[0-9]{6}$/, {
       message: "Invalid OTP code",
     }),
+  agentId: zod.string({
+    required_error: "Agent ID is required",
+  }),
 });
