@@ -238,12 +238,13 @@ export default class AgentController extends BaseController {
 
   async getAgent(req: Request & IReqObject, res: Response) {
     const user = req["user"];
-    const agentId = req.query["id"];
-
+    const agentId = req.params["id"];
     const agent = await prisma.agents.findFirst({
       where: {
-        id: agentId as string,
-        userId: user.id,
+        AND: {
+          id: agentId as string,
+          userId: user.id,
+        },
       },
       select: {
         id: true,
