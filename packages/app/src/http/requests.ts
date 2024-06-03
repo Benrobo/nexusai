@@ -22,6 +22,11 @@ export const getAgents = async () => {
   return req.data;
 };
 
+export const getAgent = async (id: string) => {
+  const req = await $axios.get(`/agent/${id}`);
+  return req.data;
+};
+
 export const createAgent = async (data: any) => {
   const req = await $axios.post("/agent", data);
   return req.data;
