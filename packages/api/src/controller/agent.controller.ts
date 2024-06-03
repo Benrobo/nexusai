@@ -64,9 +64,21 @@ export default class AgentController extends BaseController {
   // make sure phone number starts with +1 for US.
   async verifyPhone(req: Request & IReqObject, res: Response) {
     const user = req["user"];
-    const payload = req.body as { otp: string };
+    const payload = req.body as { otp: string; agentId: string };
 
     await ZodValidation(VerifyOTPCode, payload, req.serverUrl!);
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: payload.agentId,
+        userId: user.id,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
 
     const otpcode = payload.otp;
 
