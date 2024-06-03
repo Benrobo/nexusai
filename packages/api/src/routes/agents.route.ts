@@ -24,7 +24,7 @@ export default class AgentRoute {
 
     // get specific agent details
     this.router.get(
-      `${this.path}`,
+      `${this.path}/:id`,
       useCatchErrors(
         isAuthenticated(
           this.agentController.getAgent.bind(this.agentController)
@@ -52,7 +52,7 @@ export default class AgentRoute {
 
     // get used numbers
     this.router.get(
-      `${this.path}/used-numbers`,
+      `${this.path}/pn/used`,
       useCatchErrors(
         isAuthenticated(
           this.agentController.getUsedPhoneNumbers.bind(this.agentController)
