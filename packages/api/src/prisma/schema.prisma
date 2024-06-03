@@ -76,8 +76,8 @@ model Agents {
     // by default , every agent remains deactivated
     published Boolean @default(false)
 
-    // contact number (AUTOMATED CUSTOMER SUPPORT ONly)
-    contact_number ContactNumber?
+    // forwarding number (AUTOMATED CUSTOMER SUPPORT ONly)
+    forwarding_number ForwardingNumber?
 
     created_at        DateTime           @default(now())
     Conversations     Conversations[]
@@ -89,7 +89,7 @@ model Agents {
     @@index([userId])
 }
 
-model ContactNumber {
+model ForwardingNumber {
     id         String   @id @default(cuid())
     agentId    String   @unique
     phone      String   @unique
