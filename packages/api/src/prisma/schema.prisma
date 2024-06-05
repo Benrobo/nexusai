@@ -2,10 +2,12 @@ datasource db {
     provider     = "postgresql"
     url          = env("DATABASE_URL")
     relationMode = "prisma"
+    extensions   = [pgvector(map: "vector")]
 }
 
 generator client {
-    provider = "prisma-client-js"
+    provider        = "prisma-client-js"
+    previewFeatures = ["postgresqlExtensions"]
 }
 
 enum Role {
@@ -79,12 +81,12 @@ model Agents {
     // forwarding number (AUTOMATED CUSTOMER SUPPORT ONly)
     forwarding_number ForwardingNumber?
 
-    created_at        DateTime           @default(now())
-    Conversations     Conversations[]
-    users             Users              @relation(fields: [userId], references: [uId], onDelete: Cascade)
-    protected_numbers ProtectedNumbers[]
-    used_numbers      UsedPhoneNumbers[]
-    knowledge_base    KnowledgeBase[]
+    created_at            DateTime              @default(now())
+    Conversations         Conversations[]
+    users                 Users                 @relation(fields: [userId], references: [uId], onDelete: Cascade)
+    protected_numbers     ProtectedNumbers[]
+    used_numbers          UsedPhoneNumbers[]
+    linked_knowledge_base LinkedKnowledgeBase[]
 
     @@index([userId])
 }
@@ -151,16 +153,44 @@ model UsedPhoneNumbers {
     @@index([userId])
 }
 
+// Knowledge base (serves as the knowledgebase bucket to store data)
 model KnowledgeBase {
-    id         String            @id @default(cuid())
-    agentId    String
-    type       KnowledgeBaseType
-    created_at DateTime          @default(now())
-    updated_at DateTime          @updatedAt
+    id         String   @id @default(cuid())
+    name       String
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
 
-    agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
+    data                  KnowledgeBaseData[]
+    linked_knowledge_base LinkedKnowledgeBase[]
+}
+
+// Knowledge base data (TXT, WEB_PAGES, PDF, YT_VIDEOS)
+model KnowledgeBaseData {
+    id         String                 @id @default(cuid())
+    type       KnowledgeBaseType
+    title      String
+    embedding  Unsupported("vector")?
+    kbId       String
+    created_at DateTime               @default(now())
+    updated_at DateTime               @updatedAt
+
+    kb KnowledgeBase @relation(fields: [kbId], references: [id], onDelete: Cascade)
+
+    @@index([kbId])
+}
+
+// Linked Knowledge base to agents
+model LinkedKnowledgeBase {
+    id         String   @id @default(cuid())
+    agentId    String
+    kbId       String
+    created_at DateTime @default(now())
+
+    agents Agents        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+    kb     KnowledgeBase @relation(fields: [kbId], references: [id], onDelete: Cascade)
 
     @@index([agentId])
+    @@index([kbId])
 }
 
 // integrations added by user
