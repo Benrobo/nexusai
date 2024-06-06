@@ -153,44 +153,30 @@ model UsedPhoneNumbers {
     @@index([userId])
 }
 
-// Knowledge base (serves as the knowledgebase bucket to store data)
-model KnowledgeBase {
-    id         String   @id @default(cuid())
-    name       String
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
-
-    data                  KnowledgeBaseData[]
-    linked_knowledge_base LinkedKnowledgeBase[]
-}
-
 // Knowledge base data (TXT, WEB_PAGES, PDF, YT_VIDEOS)
 model KnowledgeBaseData {
     id         String                 @id @default(cuid())
     type       KnowledgeBaseType
-    title      String
+    title      String?
     embedding  Unsupported("vector")?
-    kbId       String
     created_at DateTime               @default(now())
     updated_at DateTime               @updatedAt
 
-    kb KnowledgeBase @relation(fields: [kbId], references: [id], onDelete: Cascade)
-
-    @@index([kbId])
+    linked_knowledge_base LinkedKnowledgeBase[]
 }
 
 // Linked Knowledge base to agents
 model LinkedKnowledgeBase {
     id         String   @id @default(cuid())
     agentId    String
-    kbId       String
+    kb_data_id String
     created_at DateTime @default(now())
 
-    agents Agents        @relation(fields: [agentId], references: [id], onDelete: Cascade)
-    kb     KnowledgeBase @relation(fields: [kbId], references: [id], onDelete: Cascade)
+    agents Agents            @relation(fields: [agentId], references: [id], onDelete: Cascade)
+    kb     KnowledgeBaseData @relation(fields: [kb_data_id], references: [id], onDelete: Cascade)
 
     @@index([agentId])
-    @@index([kbId])
+    @@index([kb_data_id])
 }
 
 // integrations added by user

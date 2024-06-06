@@ -16,7 +16,7 @@ export default class KnowledgeBaseRoute {
     this.router.post(
       `${this.path}`,
       useCatchErrors(
-        isAuthenticated(this.kbController.createKb.bind(this.kbController))
+        isAuthenticated(this.kbController.addKb.bind(this.kbController))
       )
     );
   }

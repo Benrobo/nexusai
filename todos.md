@@ -18,6 +18,7 @@
   - [ ] Create a knowledge base
 
     - [ ] pdf
+          https://stackoverflow.com/questions/30733690/pdf-to-text-extractor-in-nodejs-without-os-dependencies
       - [ ] upload pdf (max 4mb)
       - [ ] extract text from pdf.
     - [ ] webpages

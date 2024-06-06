@@ -7,5 +7,6 @@ export default class KnowledgeBaseController extends BaseController {
     super();
   }
 
-  public async createKb(req: Request & IReqObject, res: Response) {}
+  // add knowledge base
+  public async addKb(req: Request & IReqObject, res: Response) {}
 }
