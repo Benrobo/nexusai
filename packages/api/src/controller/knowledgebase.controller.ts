@@ -9,8 +9,7 @@ import GeminiService from "../services/gemini.service.js";
 import shortUUID from "short-uuid";
 import prisma from "../prisma/prisma.js";
 import sendResponse from "../lib/sendResponse.js";
-import type { KnowledgeBaseType } from "@prisma/client";
-// import type GeminiService from "../services/gemini.service.js";
+import KbHelper from "../helpers/kb.helper.js";
 
 export default class KnowledgeBaseController extends BaseController {
   private fileHelper: FileHelper;
@@ -61,22 +60,15 @@ export default class KnowledgeBaseController extends BaseController {
 
       // save kb data
       const kbId = shortUUID.generate();
-
-      if (embedding.length > 0) {
-        // update kb data with embeddings
-        await prisma.$executeRaw`
-          INSERT INTO public."knowledge_base_data" (id,"user_id", "type", title, embedding, created_at, updated_at) 
-          VALUES (
-            ${kbId},
-            ${req.user.id},
-            ${payload.type}::"KnowledgeBaseType",
-            ${payload.title ?? filename},
-            ${embedding}::numeric[],
-            now(),
-            now()
-          )
-        `;
-      }
+      await KbHelper.addKnowledgeBaseData({
+        id: kbId,
+        user_id: req.user.id,
+        title: payload.title ?? filename,
+        type: payload.type,
+        embedding,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
 
       return sendResponse.success(
         res,
