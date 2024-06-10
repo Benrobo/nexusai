@@ -89,6 +89,7 @@ model Agents {
     linked_knowledge_base LinkedKnowledgeBase[]
 
     @@index([userId])
+    @@map(name: "agents")
 }
 
 model ForwardingNumber {
@@ -102,6 +103,7 @@ model ForwardingNumber {
     agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
     @@index([agentId])
+    @@map(name: "forwarding_numbers")
 }
 
 // ANTI_THEFT Only (TODOS)
@@ -116,6 +118,7 @@ model ProtectedNumbers {
     agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
     @@index([agentId])
+    @@map(name: "protected_numbers")
 }
 
 // Table to store users purchased phone numbers
@@ -151,11 +154,13 @@ model UsedPhoneNumbers {
 
     @@index([agentId])
     @@index([userId])
+    @@map(name: "used_phone_numbers")
 }
 
 // Knowledge base data (TXT, WEB_PAGES, PDF, YT_VIDEOS)
 model KnowledgeBaseData {
     id         String                 @id @default(cuid())
+    user_id    String
     type       KnowledgeBaseType
     title      String?
     embedding  Unsupported("vector")?
@@ -163,6 +168,8 @@ model KnowledgeBaseData {
     updated_at DateTime               @updatedAt
 
     linked_knowledge_base LinkedKnowledgeBase[]
+
+    @@map(name: "knowledge_base_data")
 }
 
 // Linked Knowledge base to agents
@@ -177,6 +184,7 @@ model LinkedKnowledgeBase {
 
     @@index([agentId])
     @@index([kb_data_id])
+    @@map(name: "linked_knowledge_base")
 }
 
 // integrations added by user
@@ -207,6 +215,7 @@ model Conversations {
     @@index([wsId])
     @@index([agentId])
     @@index([userId])
+    @@map(name: "conversations")
 }
 
 // Only mean't for users using the chatbot widget
@@ -223,6 +232,7 @@ model ConversationAccount {
 
     @@index([wsId])
     @@index([con_user_id])
+    @@map(name: "conversation_account")
 }
 
 model MessageEntity {
@@ -232,6 +242,7 @@ model MessageEntity {
     message    Messages[]
 
     @@unique([entityId])
+    @@map(name: "message_entity")
 }
 
 model Messages {
@@ -248,4 +259,5 @@ model Messages {
     @@index([entityId])
     @@index([agentsId])
     @@index([convId])
+    @@map(name: "messages")
 }
