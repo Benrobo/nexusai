@@ -1,19 +1,19 @@
 import { Request, Response } from "express";
-import BaseController from "./base.controller";
-import sendResponse from "../lib/sendResponse";
-import { RESPONSE_CODE, IReqObject } from "../types";
-import { type AgentEnum, type AgentType } from "@nexusai/shared/types";
-import ZodValidation from "../lib/zodValidation";
+import BaseController from "./base.controller.js";
+import sendResponse from "../lib/sendResponse.js";
+import { RESPONSE_CODE, IReqObject } from "../types/index.js";
+import { type AgentEnum, type AgentType } from "../types/index.js";
+import ZodValidation from "../lib/zodValidation.js";
 import {
   createAgentSchema,
   VerifyOTPCode,
   verifyUsPhoneSchema,
-} from "../lib/schema_validation";
-import HttpException from "../lib/exception";
-import { formatPhoneNumber, validateUsNumber } from "../lib/utils";
-import OTPManager from "../lib/otp-manager";
+} from "../lib/schema_validation.js";
+import HttpException from "../lib/exception.js";
+import { formatPhoneNumber, validateUsNumber } from "../lib/utils.js";
+import OTPManager from "../lib/otp-manager.js";
 import shortUUID from "short-uuid";
-import prisma from "../prisma/prisma";
+import prisma from "../prisma/prisma.js";
 
 interface ICreateAG {
   name: string;

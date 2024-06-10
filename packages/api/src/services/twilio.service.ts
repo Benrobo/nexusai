@@ -1,5 +1,5 @@
-import env from "../config/env";
-import twClient from "../config/twillio/twilio_client";
+import env from "../config/env.js";
+import twClient from "../config/twillio/twilio_client.js";
 
 export class TwilioService {
   constructor() {}

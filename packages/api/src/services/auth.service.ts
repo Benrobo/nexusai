@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
-import { RESPONSE_CODE } from "../types";
-import prisma from "../prisma/prisma";
-import HttpException from "../lib/exception";
+import prisma from "../prisma/prisma.js";
 import shortUUID from "short-uuid";
-import env from "../config/env";
-import GoogleAuth, { googleClient } from "../lib/google.auth";
+import env from "../config/env.js";
+import GoogleAuth, { googleClient } from "../lib/google.auth.js";
 
 export default class AuthService {
   constructor() {}

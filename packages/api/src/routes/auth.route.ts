@@ -1,7 +1,7 @@
 import express from "express";
-import useCatchErrors from "../lib/error";
-import UserController from "../controller/user.controller";
-import AuthService from "../services/auth.service";
+import useCatchErrors from "../lib/error.js";
+import UserController from "../controller/user.controller.js";
+import AuthService from "../services/auth.service.js";
 
 export default class AuthRoute {
   router = express.Router();

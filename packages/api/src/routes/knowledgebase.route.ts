@@ -1,7 +1,8 @@
 import express from "express";
-import useCatchErrors from "../lib/error";
-import KbController from "../controller/knowledgebase.controller";
-import { isAuthenticated } from "../middlewares/auth";
+import useCatchErrors from "../lib/error.js";
+import KbController from "../controller/knowledgebase.controller.js";
+import { isAuthenticated } from "../middlewares/auth.js";
+import { multerUpload } from "../config/multer.js";
 
 export default class KnowledgeBaseRoute {
   router = express.Router();
@@ -15,6 +16,7 @@ export default class KnowledgeBaseRoute {
   initializeRoutes() {
     this.router.post(
       `${this.path}`,
+      multerUpload.single("file"),
       useCatchErrors(
         isAuthenticated(this.kbController.addKb.bind(this.kbController))
       )

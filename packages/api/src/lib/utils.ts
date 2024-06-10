@@ -1,4 +1,4 @@
-import SUPPORTED_COUNTRIES from "@nexusai/shared/config/supported-countries";
+import SUPPORTED_COUNTRIES from "../config/supported-countries.js";
 
 // verify US number
 export const validateUsNumber = (phone: string) => {

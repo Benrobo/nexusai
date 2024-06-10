@@ -1,4 +1,3 @@
-// supported countries
 const SUPPORTED_COUNTRIES = [
   {
     name: "United States",

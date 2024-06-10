@@ -1,6 +1,6 @@
-import redis from "config/redis";
-import HttpException from "./exception";
-import { RESPONSE_CODE } from "types";
+import redis from "../config/redis.js";
+import HttpException from "./exception.js";
+import { RESPONSE_CODE } from "../types/index.js";
 
 interface IStoredOTP {
   otp: number;

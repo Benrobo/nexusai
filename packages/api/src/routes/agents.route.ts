@@ -1,7 +1,7 @@
 import express from "express";
-import useCatchErrors from "../lib/error";
-import AgentController from "../controller/agent.controller";
-import { isAuthenticated } from "../middlewares/auth";
+import useCatchErrors from "../lib/error.js";
+import AgentController from "../controller/agent.controller.js";
+import { isAuthenticated } from "../middlewares/auth.js";
 
 export default class AgentRoute {
   router = express.Router();

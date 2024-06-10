@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { RESPONSE_CODE } from "../types";
+import { RESPONSE_CODE } from "../types/index.js";
 
 class SendResponse {
   private capitalizeWord(word: string) {

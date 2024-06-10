@@ -1,6 +1,6 @@
-import { RESPONSE_CODE } from "../types";
-import HttpException from "./exception";
-import sendResponse from "./sendResponse";
+import { RESPONSE_CODE } from "../types/index.js";
+import HttpException from "./exception.js";
+import sendResponse from "./sendResponse.js";
 import { Request, Response } from "express";
 
 export default function useCatchErrors(fn: Function) {

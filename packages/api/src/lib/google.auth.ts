@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 import { Request, Response } from "express";
-import env from "../config/env";
+import env from "../config/env.js";
 import shortUUID from "short-uuid";
 
 interface ISignIn {

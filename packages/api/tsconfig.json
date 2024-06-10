@@ -1,44 +1,27 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compileOnSave": false,
   "compilerOptions": {
-    "jsx": "react",
-    "target": "es2017",
-    "lib": ["es2017", "esnext.asynciterable"],
+    "target": "es6",
+    "lib": ["es2017", "esnext.asynciterable", "DOM"],
     "typeRoots": ["node_modules/@types"],
+    "module": "es6",
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "module": "commonjs",
     // "module": "ES2022", // "ES2022" etc
     // "moduleResolution": "Node16", // "Node", "Node16"
-    "rootDir": "./",
-    "pretty": true,
-    "sourceMap": true,
-    "declaration": true,
-    "outDir": "dist",
-    "allowJs": true,
-    "noEmit": false,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "importHelpers": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
     "baseUrl": "./src",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["./**/*", "./src/**/*", "../shared/types/og-temp.ts"],
-  "exclude": [
-    "node_modules",
-    "src/http",
-    "src/logs",
-    "src/tests",
-    "./dist/**/*"
-  ],
+  "include": ["./**/*", "./src/**/*"],
+  "exclude": ["node_modules", "./dist/**/*"],
   "ts-node": {
     "require": ["tsconfig-paths/register"],
     // enable typescript to compile faster
-    "swc": true
+    "swc": true,
+    "esm": true
   }
 }

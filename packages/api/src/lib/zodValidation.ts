@@ -1,6 +1,6 @@
-import { RESPONSE_CODE } from "../types";
+import { RESPONSE_CODE } from "../types/index.js";
 import { AnyZodObject, ZodError } from "zod";
-import HttpException from "./exception";
+import HttpException from "./exception.js";
 
 export default async function ZodValidation(
   schema: AnyZodObject,

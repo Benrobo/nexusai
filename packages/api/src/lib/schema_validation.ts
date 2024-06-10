@@ -1,5 +1,5 @@
-import { AgentEnum } from "@nexusai/shared/types";
-import zod from "zod";
+import { AgentEnum, KBType } from "../types/index.js";
+import * as zod from "zod";
 
 // Declare all your api server schema validations here
 
@@ -106,4 +106,15 @@ export const VerifyOTPCode = zod.object({
   agentId: zod.string({
     required_error: "Agent ID is required",
   }),
+});
+
+// add knowledge base schema
+export const addKbSchema = zod.object({
+  type: zod
+    .nativeEnum(KBType, {
+      required_error: "Knowledge base type is required",
+    })
+    .refine((data) => Object.values(KBType).includes(data), {
+      message: "Invalid knowledge base type",
+    }),
 });

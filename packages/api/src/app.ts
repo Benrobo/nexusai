@@ -1,14 +1,14 @@
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import cors from "cors";
-import { requestLogger } from "./middlewares/logger";
+import { requestLogger } from "./middlewares/logger.js";
 import bodyParser from "body-parser";
-import logger from "./config/logger";
-import HandleErrors from "./middlewares/error";
+import logger from "./config/logger.js";
+import HandleErrors from "./middlewares/error.js";
 import { Routes } from "./types";
 import cookieParser from "cookie-parser";
 import session from "express-session";
-import { TwilioService } from "services/twilio.service";
+import { TwilioService } from "./services/twilio.service.js";
 
 // init dot env
 dotenv.config();
@@ -45,6 +45,7 @@ export default class App {
       })
     );
     this.app.options("*", cors()); // enable pre-flight?
+    this.app.use(bodyParser.urlencoded({ extended: false }));
     this.app.use(
       bodyParser.json({
         // @ts-ignore
@@ -52,7 +53,6 @@ export default class App {
         verify: (req: Request, res: Response, buf) => (req["rawBody"] = buf),
       })
     );
-    this.app.use(bodyParser.urlencoded({ extended: false }));
     this.app.use(cookieParser());
     this.app.set("trust proxy", 1);
     this.app.use(

@@ -29,6 +29,8 @@ export enum RESPONSE_CODE {
   INVALID_PHONE_NUMBER,
   PHONE_NUMBER_IN_USE,
   UNSUPPORTED_COUNTRY,
+  INVALID_FILE_TYPE,
+  INVALID_FILE_SIZE,
 }
 
 export interface IReqObject {
@@ -39,4 +41,20 @@ export interface IReqObject {
   };
 
   serverUrl?: string;
+}
+
+export type AgentType = "ANTI_THEFT" | "AUTOMATED_CUSTOMER_SUPPORT" | "CHATBOT";
+
+export enum AgentEnum {
+  ANTI_THEFT = "ANTI_THEFT",
+  AUTOMATED_CUSTOMER_SUPPORT = "AUTOMATED_CUSTOMER_SUPPORT",
+  CHATBOT = "CHATBOT",
+}
+
+export enum KBType {
+  TXT = "TXT",
+  WEB_PAGES = "WEB_PAGES",
+  PDF = "PDF",
+  YT_VIDEOS = "YT_VIDEOS",
+  NOTION = "NOTION",
 }

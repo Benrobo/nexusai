@@ -1,8 +1,8 @@
-import App from "./app";
-import UserRoute from "./routes/user.route";
-import AuthRoute from "./routes/auth.route";
-import AgentRoute from "./routes/agents.route";
-import KnowledgeBaseRoute from "./routes/knowledgebase.route";
+import App from "./app.js";
+import UserRoute from "./routes/user.route.js";
+import AuthRoute from "./routes/auth.route.js";
+import AgentRoute from "./routes/agents.route.js";
+import KnowledgeBaseRoute from "./routes/knowledgebase.route.js";
 
 const server = new App();
 

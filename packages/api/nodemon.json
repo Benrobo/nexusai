@@ -2,6 +2,6 @@
   "watch": ["src", ".env"],
   "ext": "ts,json,tsx,jsx,js",
   "ignore": ["src/**/*.spec.ts"],
-  "exec": "ts-node ./src/server.ts",
+  "exec": "ts-node/esm ./src/server",
   "restartable": "rs"
 }

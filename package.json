@@ -3,5 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-  "workspaces": ["./packages/*"]
+  "private": true,
+  "workspaces": [
+    "./packages/*"
+  ],
+  "scripts": {
+    "compile": "tsc  --build --force tsconfig.json"
+  }
 }

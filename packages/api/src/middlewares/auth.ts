@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import HttpException from "../lib/exception";
-import { RESPONSE_CODE, type IReqObject } from "../types";
-import prisma from "../prisma/prisma";
-import GoogleAuth, { googleClient } from "../lib/google.auth";
+import HttpException from "../lib/exception.js";
+import { RESPONSE_CODE, type IReqObject } from "../types/index.js";
+import prisma from "../prisma/prisma.js";
+import GoogleAuth, { googleClient } from "../lib/google.auth.js";
 import type { TokenInfo, Credentials } from "google-auth-library";
-import env from "../config/env";
+import env from "../config/env.js";
 
 export function isAuthenticated(fn: Function) {
   return async (req: Request & IReqObject, res: Response) => {
@@ -40,8 +40,6 @@ export function isAuthenticated(fn: Function) {
       }
 
       const refToken = user.google_ref_token;
-
-      console.log({ user });
 
       // refresh token
       googleClient.setCredentials({

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import BaseController from "./base.controller";
-import sendResponse from "../lib/sendResponse";
-import { RESPONSE_CODE, IReqObject } from "../types";
+import BaseController from "./base.controller.js";
+import sendResponse from "../lib/sendResponse.js";
+import { RESPONSE_CODE, IReqObject } from "../types/index.js";
 
 export default class UserController extends BaseController {
   constructor() {
