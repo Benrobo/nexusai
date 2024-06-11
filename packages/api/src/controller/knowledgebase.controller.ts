@@ -66,25 +66,24 @@ export default class KnowledgeBaseController extends BaseController {
       const embedding = await this.googleService.generateEmbedding(pdfText);
 
       // save kb data
-      const kbId = shortUUID.generate();
-      await KbHelper.addKnowledgeBaseData({
-        id: kbId,
-        user_id: req.user.id,
-        title: payload.title ?? filename,
-        type: payload.type,
-        embedding,
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+      for (const emb of embedding) {
+        await KbHelper.addKnowledgeBaseData({
+          id: shortUUID.generate(),
+          user_id: req.user.id,
+          title: payload.title ?? filename,
+          type: payload.type,
+          embedding: emb.embedding,
+          content: emb.content,
+          created_at: new Date(),
+          updated_at: new Date(),
+        });
+      }
 
       return sendResponse.success(
         res,
         RESPONSE_CODE.SUCCESS,
         "Knowledge base added successfully",
-        200,
-        {
-          id: kbId,
-        }
+        200
       );
     }
 
