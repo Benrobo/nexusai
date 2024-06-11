@@ -118,3 +118,15 @@ export const addKbSchema = zod.object({
       message: "Invalid knowledge base type",
     }),
 });
+
+// link agent to kb
+export const linkKbSchema = zod.object({
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
+  }),
+  kb_ids: zod
+    .string({
+      required_error: "Knowledge base ID is required",
+    })
+    .array(),
+});

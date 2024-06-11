@@ -21,5 +21,12 @@ export default class KnowledgeBaseRoute {
         isAuthenticated(this.kbController.addKb.bind(this.kbController))
       )
     );
+
+    this.router.post(
+      `${this.path}/link`,
+      useCatchErrors(
+        isAuthenticated(this.kbController.linkKbToAgent.bind(this.kbController))
+      )
+    );
   }
 }

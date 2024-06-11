@@ -31,6 +31,7 @@ export enum RESPONSE_CODE {
   UNSUPPORTED_COUNTRY,
   INVALID_FILE_TYPE,
   INVALID_FILE_SIZE,
+  AGENT_ALREADY_LINKED,
 }
 
 export interface IReqObject {
