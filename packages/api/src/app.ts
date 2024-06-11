@@ -9,13 +9,25 @@ import { Routes } from "./types";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import { TwilioService } from "./services/twilio.service.js";
+import GeminiService from "./services/gemini.service.js";
+import fs from "fs";
 
 // init dot env
 dotenv.config();
 
 (async () => {
   // TEST ALL SERVICES METHOD
-  const twService = new TwilioService();
+  // const twService = new TwilioService();
+  const geminiService = new GeminiService();
+
+  const query = "alumonabenaiah71@gmail.com";
+  // const embedding = await geminiService.generateEmbedding(query);
+
+  // // save embedding in .txt file
+  // fs.writeFileSync(
+  //   "embedding.txt",
+  //   JSON.stringify(embedding.map((e) => e.embedding)[0])
+  // );
 
   // console.log(await twService.getAvailableNumbersForPurchase());
 })();
