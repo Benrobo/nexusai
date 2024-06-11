@@ -164,6 +164,7 @@ model KnowledgeBaseData {
     type       KnowledgeBaseType
     title      String?
     embedding  Unsupported("vector")?
+    content    String
     created_at DateTime               @default(now())
     updated_at DateTime               @updatedAt
 
