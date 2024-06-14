@@ -17,16 +17,16 @@
 
   - [ ] Create a knowledge base
 
-    - [ ] pdf
+    - [x] pdf
           https://stackoverflow.com/questions/30733690/pdf-to-text-extractor-in-nodejs-without-os-dependencies
-      - [ ] upload pdf (max 4mb)
-      - [ ] extract text from pdf.
+      - [x] upload pdf (max 4mb)
+      - [x] extract text from pdf.
     - [ ] webpages
       - [ ] scrape webpage data
       - [ ] convert html -> markdown
 
   - [ ] Embedding
-    - [ ] Convert each resource to embeddings.
+    - [x] Convert each resource to embeddings.
 
 - Twillio Implementation
 
