@@ -19,6 +19,7 @@ dotenv.config();
   // TEST ALL SERVICES METHOD
   // const twService = new TwilioService();
   const geminiService = new GeminiService();
+  const twService = new TwilioService();
 
   const query = "alumonabenaiah71@gmail.com";
   // const embedding = await geminiService.generateEmbedding(query);
@@ -30,6 +31,8 @@ dotenv.config();
   // );
 
   // console.log(await twService.getAvailableNumbersForPurchase());
+
+  // console.log(await twService.retrievePhonePrice("US"));
 })();
 
 export default class App {
