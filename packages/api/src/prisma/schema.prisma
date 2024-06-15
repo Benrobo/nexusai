@@ -40,6 +40,34 @@ enum KnowledgeBaseType {
     NOTION // COMING SOON
 }
 
+enum SubscriptionStatus {
+    // Currently in a trial period.
+    on_trial
+
+    // Active with ongoing payments.
+    active
+
+    // Payment collection paused.
+    paused
+
+    // Renewal payment failed, with retries.
+    past_due
+
+    // Unsuccessful payment recovery after 4 attempts.
+    unpaid
+
+    // Future payments cancelled, but still on a grace period.
+    cancelled
+
+    // Subscription has expired.
+    expired
+}
+
+enum SubscriptionType {
+    IN_APP // handle the in-app subscription for premium features
+    TWILIO_PHONE_NUMBERS // handle the twilio phone numbers subscription
+}
+
 model Users {
     id                String                  @id @default(cuid())
     uId               String                  @unique @default(cuid())
@@ -54,6 +82,7 @@ model Users {
     used_numbers      UsedPhoneNumbers[]
     purchased_numbers PurchasedPhoneNumbers[]
     agents            Agents[]
+    subscriptions     Subscriptions[]
 
     @@map(name: "users")
 }
@@ -261,4 +290,41 @@ model Messages {
     @@index([agentsId])
     @@index([convId])
     @@map(name: "messages")
+}
+
+// Subscriptions
+
+model Subscriptions {
+    id         String  @id @default(cuid())
+    uId        String  @unique
+    user_name  String?
+    user_email String?
+
+    type SubscriptionType
+
+    product_id   String
+    product_name String?
+    variant_id   String?
+    variant_name String?
+
+    order_id String
+    store_id String
+
+    subscription_id String?
+    customer_id     String?
+
+    card_brand     String?
+    card_last_four String?
+
+    status SubscriptionStatus @default(on_trial)
+
+    ends_at   DateTime?
+    renews_at DateTime?
+    createdAt DateTime  @default(now())
+
+    test_mode Boolean @default(false)
+
+    user Users @relation(fields: [uId], references: [uId])
+
+    @@map(name: "subscriptions")
 }
