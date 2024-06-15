@@ -36,5 +36,15 @@ export default class WebhookRoute {
         this.twWebhookHandler.incomingCall.bind(this.twWebhookHandler)
       )
     );
+
+    // twilio phone numbeer subscription
+    this.router.all(
+      `${this.path}/twilio/subscription`,
+      useCatchErrors(
+        this.twWebhookHandler.phoneNumberSubscription.bind(
+          this.twWebhookHandler
+        )
+      )
+    );
   }
 }
