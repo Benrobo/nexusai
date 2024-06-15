@@ -37,5 +37,19 @@ export class TwilioService {
     }
   }
 
+  async retrievePhonePrice(country: string = "US") {
+    try {
+      const phonePrice = await twClient.pricing.v1.phoneNumbers
+        .countries(country)
+        .fetch();
+      return phonePrice;
+    } catch (e: any) {
+      console.log("error", e);
+      return null;
+    }
+  }
+
   async handleIncomingCall(props: IncomingCallParams) {}
+
+  // Twilio Phone number Subscriptions
 }
