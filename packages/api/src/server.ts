@@ -4,6 +4,8 @@ import AuthRoute from "./routes/auth.route.js";
 import AgentRoute from "./routes/agents.route.js";
 import KnowledgeBaseRoute from "./routes/knowledgebase.route.js";
 import WebhookRoute from "./routes/webhook.route.js";
+import CheckoutRoute from "./routes/checkout.route.js";
+import SubscriptionRoute from "./routes/subscription.route.js";
 
 const server = new App();
 
@@ -13,6 +15,8 @@ server.initializedRoutes([
   new AgentRoute(),
   new KnowledgeBaseRoute(),
   new WebhookRoute(),
+  new CheckoutRoute(),
+  new SubscriptionRoute(),
 ]);
 server.listen();
 

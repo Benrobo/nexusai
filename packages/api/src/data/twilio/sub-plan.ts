@@ -5,8 +5,14 @@ type TwilioSubPlanInfo = {
   [key in TwilioSubPlan]: {
     name: string;
     description: string;
-    product_id: number;
-    variant_id?: number;
+    product: {
+      test_id: number;
+      prod_id: number;
+    };
+    variant: {
+      test_id: number;
+      prod_id: number;
+    };
     recommended: boolean;
     supported: boolean;
   };
@@ -16,10 +22,14 @@ const TwilioSubPlanInfo = {
   local: {
     name: "Local",
     description: "Local phone numbers are specific to a city or region.",
-    product_id: 292219,
-    variant_id: 417672,
-    recommended: true,
-    supported: true,
+    product: {
+      test_id: 292219, // IN DEV MODE
+      prod_id: 292219,
+    },
+    variant: {
+      test_id: 417672, // IN DEV MODE
+      prod_id: 417672,
+    },
   },
 } as TwilioSubPlanInfo;
 

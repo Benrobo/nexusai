@@ -21,6 +21,10 @@ const env = {
     ANTI_THEFT_NUMBER: process.env.TWILIO_ATHEFT_NUMBER!,
     AUTOMATED_CUSTOMER_SUPPORT_NUMBER: process.env.TWILIO_ACSUP_NUMBER!,
   },
+  LS: {
+    STORE_ID: process.env.LS_STORE_ID!,
+    API_KEY: process.env.LS_API_KEY!,
+  },
 };
 
 export default env;
