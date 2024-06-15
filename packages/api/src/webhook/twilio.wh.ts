@@ -11,4 +11,13 @@ export default class TwilioWebhookHandler {
 
     console.log(body);
   }
+
+  // PHONE NUMBER SUBSCRIPTIONS
+  public async phoneNumberSubscription(req: Request, res: Response) {
+    const body = req.body;
+
+    logger.info("Incoming call webhook received");
+
+    console.log(body);
+  }
 }
