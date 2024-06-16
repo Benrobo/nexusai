@@ -78,5 +78,15 @@ export default class AgentRoute {
         )
       )
     );
+
+    // Link agent to a phone number
+    this.router.post(
+      `${this.path}/link-phone`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.linkPhoneToAgent.bind(this.agentController)
+        )
+      )
+    );
   }
 }

@@ -25,8 +25,8 @@ export default async () => {
     // console.log(await twService.retrievePhonePrice("US"));
 
     // await twService.provisionPhoneNumber({
-    //   subscription_id: "418084",
-    //   user_id: "uL1PyCAkDiE6SvCvSwKrPi",
+    //   subscription_id: "418270",
+    //   user_id: "aPxukqftvAKwNTqZnW2bFG",
     //   phone_number: "+18582074861",
     // });
   } catch (e: any) {

@@ -2,6 +2,7 @@ import prisma from "../prisma/prisma.js";
 
 interface AddKbData {
   id: string;
+  kb_id: string;
   user_id: string;
   title: string;
   type: string;
@@ -21,12 +22,14 @@ export default class KbHelper {
       embedding,
       created_at,
       updated_at,
+      kb_id,
       content,
     } = props;
     await prisma.$executeRaw`
-          INSERT INTO public."knowledge_base_data" (id,"user_id", "type", title, embedding,content, created_at, updated_at) 
+          INSERT INTO public."knowledge_base_data" (id,"kb_id","user_id", "type", title, embedding,content, created_at, updated_at) 
           VALUES (
             ${id},
+            ${kb_id},
             ${user_id},
             ${type}::"KnowledgeBaseType",
             ${title},

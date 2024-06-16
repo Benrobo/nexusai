@@ -31,7 +31,7 @@ const env = {
 
     // WEBHOOK
     WH_VOICE_URL: IN_DEV
-      ? "https://e756-105-112-180-20.ngrok-free.app/api/webhook/twilio/voice"
+      ? "https://0853-102-88-69-136.ngrok-free.app/api/webhook/twilio/voice"
       : process.env.TWILIO_WH_VOICE_URL!,
   },
   LS: {

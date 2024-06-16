@@ -1,14 +1,29 @@
+import { Response } from "express";
 import HttpException from "../lib/exception.js";
 import env from "../config/env.js";
 import twClient from "../config/twillio/twilio_client.js";
 import prisma from "../prisma/prisma.js";
-import { RESPONSE_CODE } from "../types/index.js";
+import {
+  RESPONSE_CODE,
+  type AgentType,
+  type TwilioIncomingCallVoiceResponse,
+} from "../types/index.js";
 import dotenv from "dotenv";
 import logger from "../config/logger.js";
+import { twimlPrompt } from "../data/twilio/prompt.js";
+import { sendXMLResponse } from "../helpers/twilio.helper.js";
+import VoiceResponse from "twilio/lib/twiml/VoiceResponse.js";
 
 dotenv.config();
 
-interface IncomingCallParams {}
+interface IncomingCallParams extends TwilioIncomingCallVoiceResponse {}
+
+interface InitConvRestProps {
+  agent_type: AgentType;
+  agent_id: string;
+  user_id: string;
+  caller: string;
+}
 
 interface ProvisioningPhoneNumberProps {
   user_id: string;
@@ -26,7 +41,123 @@ export class TwilioService {
   constructor() {}
 
   // INCOMING CALLS
-  async handleIncomingCall(props: IncomingCallParams) {}
+  async handleIncomingCall(body: IncomingCallParams, res: Response) {
+    const { To, Caller, CallerCountry, CalledState } = body;
+    const twiMl = new VoiceResponse();
+
+    // check if "TO" phone is in db.
+    const calledPhone = await prisma.purchasedPhoneNumbers.findFirst({
+      where: {
+        phone: To,
+      },
+      include: {
+        users: {
+          select: {
+            uId: true,
+            agents: true,
+          },
+        },
+      },
+    });
+
+    if (!calledPhone) {
+      logger.error(`Phone number ${To ?? ""} not found in database`);
+
+      // return twiml response
+      const prompt = twimlPrompt.find(
+        (p) => p.type === "CALLED_PHONE_NOT_FOUND"
+      );
+
+      twiMl.say(prompt.msg);
+      twiMl.hangup();
+
+      const xml = twiMl.toString();
+
+      sendXMLResponse(res, xml);
+      return;
+    }
+
+    // check if user has agents
+    if (!calledPhone.users?.agents || calledPhone.users?.agents.length === 0) {
+      logger.error(`User ${calledPhone.users?.uId} has no agents`);
+
+      // return twiml response
+      const prompt = twimlPrompt.find((p) => p.type === "NO_AGENT_AVAILABLE");
+
+      twiMl.say(prompt.msg);
+      twiMl.hangup();
+
+      const xml = twiMl.toString();
+
+      sendXMLResponse(res, xml);
+      return;
+    }
+
+    // check if phone is linked to an agent
+    const agentLinked = await prisma.usedPhoneNumbers.findFirst({
+      where: {
+        phone: To,
+      },
+      select: {
+        agentId: true,
+        id: true,
+      },
+    });
+
+    if (!agentLinked) {
+      logger.error(`Phone number ${To} not linked to an agent`);
+
+      // return twiml response
+      const prompt = twimlPrompt.find((p) => p.type === "AGENT_NOT_LINKED");
+
+      twiMl.say(prompt.msg);
+      twiMl.hangup();
+
+      const xml = twiMl.toString();
+
+      sendXMLResponse(res, xml);
+      return;
+    }
+
+    // check if agent has knowledge base
+    const agent = calledPhone.users?.agents.find(
+      (a) => a.id === agentLinked.agentId
+    );
+
+    await this.initConversation(res, {
+      agent_type: agent.type,
+      agent_id: agent.id,
+      user_id: calledPhone.users?.uId,
+      caller: Caller,
+    });
+  }
+
+  /**
+   *
+   * @param res express response object
+   * @param rest agent_type, caller
+   */
+  private async initConversation(res: Response, rest: InitConvRestProps) {
+    const { agent_type, user_id, agent_id, caller } = rest;
+    const twiMl = new VoiceResponse();
+
+    if (agent_type === "ANTI_THEFT") {
+      const prompt = twimlPrompt.find((p) => p.type === "INIT_ANTI_THEFT");
+
+      twiMl.gather({
+        input: ["speech"],
+        action: env.TWILIO.WH_VOICE_URL + "/process",
+        method: "POST",
+        timeout: 3,
+      });
+      twiMl.say(prompt.msg);
+
+      sendXMLResponse(res, twiMl.toString());
+    }
+  }
+
+  // CONTINUE CONVERSATION
+  async processVoiceConversation(body: IncomingCallParams, res: Response) {}
 
   // send sms
   async sendSMS(to: string, body: string) {

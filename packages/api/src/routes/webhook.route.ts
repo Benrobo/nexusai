@@ -39,6 +39,15 @@ export default class WebhookRoute {
       )
     );
 
+    this.router.all(
+      `${this.path}/twilio/voice/process`,
+      useCatchErrors(
+        this.twWebhookHandler.processOngoingVoiceConv.bind(
+          this.twWebhookHandler
+        )
+      )
+    );
+
     // twilio phone number subscription (Lemonsqueezy)
     this.router.all(
       `${this.path}/tw-phone/subscription`,

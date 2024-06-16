@@ -61,3 +61,33 @@ export enum KBType {
   YT_VIDEOS = "YT_VIDEOS",
   NOTION = "NOTION",
 }
+
+export interface TwilioIncomingCallVoiceResponse {
+  Called: string;
+  ToState: string;
+  CallerCountry: string;
+  Direction: "inbound" | "outbound";
+  CallerState: string;
+  ToZip: string;
+  CallSid: string;
+  To: string;
+  CallerZip: string;
+  ToCountry: string;
+  StirVerstat: string;
+  CallToken: string;
+  CalledZip: string;
+  ApiVersion: string;
+  CalledCity: string;
+  CallStatus: string;
+  From: string;
+  AccountSid: string;
+  CalledCountry: string;
+  CallerCity: string;
+  ToCity: string;
+  FromCountry: string;
+  Caller: string;
+  FromCity: string;
+  CalledState: string;
+  FromZip: string;
+  FromState: string;
+}

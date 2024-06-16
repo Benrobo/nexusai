@@ -143,3 +143,13 @@ export const buyTwilioNumberSchema = zod.object({
       message: "Invalid phone number",
     }),
 });
+
+export const LinkPhoneNumberSchema = zod.object({
+  purchased_phone_id: zod.string({
+    required_error: "Purchased phone number ID is required",
+  }),
+
+  agentId: zod.string({
+    required_error: "Agent ID is required",
+  }),
+});

@@ -13,15 +13,16 @@ export default class TwilioWebhookHandler {
 
     console.log(body);
 
-    await this.twService.handleIncomingCall(body);
+    await this.twService.handleIncomingCall(body, res);
   }
 
-  // PHONE NUMBER SUBSCRIPTIONS (LS)
-  public async phoneNumberSubscription(req: Request, res: Response) {
+  public async processOngoingVoiceConv(req: Request, res: Response) {
     const body = req.body;
 
-    logger.info("Incoming call webhook received");
+    logger.info("Processing ongoing voice conversation webhook received");
 
     console.log(body);
+
+    await this.twService.processVoiceConversation(body, res);
   }
 }

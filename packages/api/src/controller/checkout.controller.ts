@@ -24,7 +24,7 @@ export default class CheckoutController extends BaseController {
     // store phone number in cache for 5 minutes
     const phoneNumber = payload["phone_number"];
     const uId = user.id;
-    const expireTime = 60 * 5;
+    const expireTime = 60 * 10; // 10min
 
     await redis.set(
       uId,

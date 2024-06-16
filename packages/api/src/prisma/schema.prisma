@@ -83,6 +83,7 @@ model Users {
     purchased_numbers PurchasedPhoneNumbers[]
     agents            Agents[]
     subscriptions     Subscriptions[]
+    knowledge_base    KnowledgeBase[]
 
     @@map(name: "users")
 }
@@ -186,9 +187,24 @@ model UsedPhoneNumbers {
     @@map(name: "used_phone_numbers")
 }
 
+model KnowledgeBase {
+    id     String @id @default(cuid())
+    userId String
+
+    created_at DateTime @default(now())
+
+    kb_data               KnowledgeBaseData[]
+    user                  Users                 @relation(fields: [userId], references: [uId], onDelete: Cascade)
+    linked_knowledge_base LinkedKnowledgeBase[]
+
+    @@index([userId])
+    @@map("knowledge_base")
+}
+
 // Knowledge base data (TXT, WEB_PAGES, PDF, YT_VIDEOS)
 model KnowledgeBaseData {
     id         String                 @id @default(cuid())
+    kb_id      String
     user_id    String
     type       KnowledgeBaseType
     title      String?
@@ -197,8 +213,9 @@ model KnowledgeBaseData {
     created_at DateTime               @default(now())
     updated_at DateTime               @updatedAt
 
-    linked_knowledge_base LinkedKnowledgeBase[]
+    kb KnowledgeBase @relation(fields: [kb_id], references: [id], onDelete: Cascade)
 
+    @@index([kb_id])
     @@map(name: "knowledge_base_data")
 }
 
@@ -206,14 +223,14 @@ model KnowledgeBaseData {
 model LinkedKnowledgeBase {
     id         String   @id @default(cuid())
     agentId    String
-    kb_data_id String
+    kb_id      String
     created_at DateTime @default(now())
 
-    agents Agents            @relation(fields: [agentId], references: [id], onDelete: Cascade)
-    kb     KnowledgeBaseData @relation(fields: [kb_data_id], references: [id], onDelete: Cascade)
+    agents Agents        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+    kb     KnowledgeBase @relation(fields: [kb_id], references: [id], onDelete: Cascade)
 
     @@index([agentId])
-    @@index([kb_data_id])
+    @@index([kb_id])
     @@map(name: "linked_knowledge_base")
 }
 

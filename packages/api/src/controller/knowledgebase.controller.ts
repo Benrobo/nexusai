@@ -65,10 +65,27 @@ export default class KnowledgeBaseController extends BaseController {
       // generate embedding
       const embedding = await this.googleService.generateEmbedding(pdfText);
 
+      // create knowledgebase
+      const kb = await prisma.knowledgeBase.create({
+        data: {
+          id: shortUUID.generate(),
+          userId: req.user.id,
+        },
+      });
+
+      if (!kb) {
+        throw new HttpException(
+          RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+          "Error adding knowledge base, try again later.",
+          500
+        );
+      }
+
       // save kb data
       for (const emb of embedding) {
         await KbHelper.addKnowledgeBaseData({
           id: shortUUID.generate(),
+          kb_id: kb.id,
           user_id: req.user.id,
           title: payload.title ?? filename,
           type: payload.type,
@@ -113,12 +130,15 @@ export default class KnowledgeBaseController extends BaseController {
     }
 
     // check if kb exists
-    const kb = await prisma.knowledgeBaseData.findMany({
+    const kb = await prisma.knowledgeBase.findMany({
       where: {
         id: {
           in: kb_ids,
         },
-        user_id: userId,
+        userId,
+      },
+      include: {
+        kb_data: true,
       },
     });
 
@@ -132,19 +152,22 @@ export default class KnowledgeBaseController extends BaseController {
 
     // check if kb is already linked
     for (const k of kb) {
-      const isLinked = await prisma.linkedKnowledgeBase.findFirst({
-        where: {
-          agentId: agent_id,
-          kb_data_id: k.id,
-        },
-      });
+      const kbData = k.kb_data;
+      for (const data of kbData) {
+        const isLinked = await prisma.linkedKnowledgeBase.findFirst({
+          where: {
+            agentId: agent_id,
+            kb_id: data.id,
+          },
+        });
 
-      if (isLinked) {
-        throw new HttpException(
-          RESPONSE_CODE.AGENT_ALREADY_LINKED,
-          `Knowledge base "${k.title}" is already linked to agent "${agent.name}"`,
-          400
-        );
+        if (isLinked) {
+          throw new HttpException(
+            RESPONSE_CODE.AGENT_ALREADY_LINKED,
+            `Knowledge base "${data.title}" is already linked to agent "${agent.name}"`,
+            400
+          );
+        }
       }
     }
 
@@ -152,7 +175,7 @@ export default class KnowledgeBaseController extends BaseController {
     const linkKb = kb.map((k) => {
       return {
         agentId: agent_id,
-        kb_data_id: k.id,
+        kb_id: k.id,
       };
     });
 

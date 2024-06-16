@@ -6,6 +6,7 @@ import { type AgentEnum, type AgentType } from "../types/index.js";
 import ZodValidation from "../lib/zodValidation.js";
 import {
   createAgentSchema,
+  LinkPhoneNumberSchema,
   VerifyOTPCode,
   verifyUsPhoneSchema,
 } from "../lib/schema_validation.js";
@@ -294,6 +295,77 @@ export default class AgentController extends BaseController {
       "Used phone numbers retrieved successfully",
       200,
       usedNumbers
+    );
+  }
+
+  // Link purchased phone number to agent
+  async linkPhoneToAgent(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const payload = req.body as {
+      purchased_phone_id: string;
+      agentId: string;
+    };
+
+    await ZodValidation(LinkPhoneNumberSchema, payload, req.serverUrl!);
+
+    // check if purchased phone number exists
+    const phone = await prisma.purchasedPhoneNumbers.findFirst({
+      where: {
+        id: payload.purchased_phone_id,
+        userId: user.id,
+      },
+    });
+
+    if (!phone) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Phone number not found",
+        404
+      );
+    }
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: payload.agentId,
+        userId: user.id,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    // check if phone number has been linked to an agent
+    const linkedPhone = await prisma.usedPhoneNumbers.findFirst({
+      where: {
+        phone: phone.phone,
+      },
+    });
+
+    if (linkedPhone) {
+      throw new HttpException(
+        RESPONSE_CODE.DUPLICATE_ENTRY,
+        "Phone number already linked to an agent",
+        400
+      );
+    }
+
+    // link phone number to agent
+    // Add phone number to used phone numbers
+    await prisma.usedPhoneNumbers.create({
+      data: {
+        phone: phone.phone,
+        userId: user.id,
+        agentId: agent.id,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Phone number linked to agent successfully",
+      200
     );
   }
 }

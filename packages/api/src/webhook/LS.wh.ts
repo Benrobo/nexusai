@@ -134,8 +134,9 @@ export default class LSWebhookHandler {
         // provision phone number
         logger.info("PROVISIONING PHONE NUMBER INITIATED");
 
+        const twilioService = new TwilioService();
         await retry({
-          fn: new TwilioService().provisionPhoneNumber,
+          fn: twilioService.provisionPhoneNumber.bind(twilioService),
           args: [
             {
               subscription_id: data.id,
