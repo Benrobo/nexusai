@@ -31,7 +31,7 @@ export class TwilioService {
     }
   }
 
-  async getAvailableNumbersForPurchase(country?: string) {
+  static async getAvailableNumbersForPurchase(country?: string) {
     try {
       const numbers = await twClient
         .availablePhoneNumbers(country ?? "US")
@@ -60,13 +60,21 @@ export class TwilioService {
 
   async handleIncomingCall(props: IncomingCallParams) {}
 
+  static async findPhoneNumber(phoneNumber: string) {
+    try {
+      const number = await twClient.availablePhoneNumbers("US").local.list({
+        limit: 1,
+        contains: phoneNumber,
+      });
+      return number;
+    } catch (e: any) {
+      console.log("error", e);
+      return null;
+    }
+  }
   // Twilio Phone number Subscriptions
   static async provisionPhoneNumber(props: ProvisioningPhoneNumberProps) {
     const { subscription_id, user_id, phone_number } = props;
-
-    console.log({
-      props,
-    });
 
     // check if subscription exists with that user
     const subExists = await prisma.subscriptions.findFirst({
