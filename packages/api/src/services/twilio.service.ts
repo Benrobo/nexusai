@@ -1,7 +1,16 @@
+import HttpException from "../lib/exception.js";
 import env from "../config/env.js";
 import twClient from "../config/twillio/twilio_client.js";
+import prisma from "../prisma/prisma.js";
+import { RESPONSE_CODE } from "../types/index.js";
 
 interface IncomingCallParams {}
+
+interface ProvisioningPhoneNumberProps {
+  user_id: string;
+  subscription_id: string;
+  phone_number: string;
+}
 
 export class TwilioService {
   constructor() {}
@@ -52,4 +61,38 @@ export class TwilioService {
   async handleIncomingCall(props: IncomingCallParams) {}
 
   // Twilio Phone number Subscriptions
+  static async provisionPhoneNumber(props: ProvisioningPhoneNumberProps) {
+    const { subscription_id, user_id, phone_number } = props;
+
+    console.log({
+      props,
+    });
+
+    // check if subscription exists with that user
+    const subExists = await prisma.subscriptions.findFirst({
+      where: {
+        subscription_id,
+        uId: user_id,
+      },
+    });
+
+    if (!subExists) {
+      throw new HttpException(
+        RESPONSE_CODE.ERROR_PROVISIONING_NUMBER,
+        `Error provisioning number. Invalid subscription. `,
+        400
+      );
+    }
+
+    // check the status of subscription if it has expired
+    if (subExists.status === "expired") {
+      throw new HttpException(
+        RESPONSE_CODE.ERROR_PROVISIONING_NUMBER,
+        `Error provisioning number. Subscription has expired. Renew subscription to provision number. `,
+        400
+      );
+    }
+
+    // provision phone number
+  }
 }
