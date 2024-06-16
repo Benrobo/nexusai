@@ -24,5 +24,14 @@ export default class CheckoutRoute {
         )
       )
     );
+
+    this.router.post(
+      `${this.path}/tw-phone/buy`,
+      useCatchErrors(
+        isAuthenticated(
+          this.checkoutController.buyTwilioNumber.bind(this.checkoutController)
+        )
+      )
+    );
   }
 }
