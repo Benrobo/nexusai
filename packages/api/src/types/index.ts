@@ -72,6 +72,7 @@ export interface TwilioIncomingCallVoiceResponse {
   CallSid: string;
   To: string;
   CallerZip: string;
+  SpeechResult?: string;
   ToCountry: string;
   StirVerstat: string;
   CallToken: string;

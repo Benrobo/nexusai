@@ -31,6 +31,10 @@ interface ProvisioningPhoneNumberProps {
   phone_number: string;
 }
 
+/**
+ * Note: TwiMl instance is being used multiple times in the class to prevent stack response.
+ */
+
 export class TwilioService {
   prod_tw_client = twClient(env.TWILIO.ACCT_SID, env.TWILIO.AUTH_TOKEN);
   test_tw_client = twClient(
@@ -43,7 +47,7 @@ export class TwilioService {
   // INCOMING CALLS
   async handleIncomingCall(body: IncomingCallParams, res: Response) {
     const { To, Caller, CallerCountry, CalledState } = body;
-    const twiMl = new VoiceResponse();
+    const twiml = new VoiceResponse();
 
     // check if "TO" phone is in db.
     const calledPhone = await prisma.purchasedPhoneNumbers.findFirst({
@@ -68,10 +72,10 @@ export class TwilioService {
         (p) => p.type === "CALLED_PHONE_NOT_FOUND"
       );
 
-      twiMl.say(prompt.msg);
-      twiMl.hangup();
+      twiml.say(prompt.msg);
+      twiml.hangup();
 
-      const xml = twiMl.toString();
+      const xml = twiml.toString();
 
       sendXMLResponse(res, xml);
       return;
@@ -84,10 +88,10 @@ export class TwilioService {
       // return twiml response
       const prompt = twimlPrompt.find((p) => p.type === "NO_AGENT_AVAILABLE");
 
-      twiMl.say(prompt.msg);
-      twiMl.hangup();
+      twiml.say(prompt.msg);
+      twiml.hangup();
 
-      const xml = twiMl.toString();
+      const xml = twiml.toString();
 
       sendXMLResponse(res, xml);
       return;
@@ -110,10 +114,10 @@ export class TwilioService {
       // return twiml response
       const prompt = twimlPrompt.find((p) => p.type === "AGENT_NOT_LINKED");
 
-      twiMl.say(prompt.msg);
-      twiMl.hangup();
+      twiml.say(prompt.msg);
+      twiml.hangup();
 
-      const xml = twiMl.toString();
+      const xml = twiml.toString();
 
       sendXMLResponse(res, xml);
       return;
@@ -139,25 +143,34 @@ export class TwilioService {
    */
   private async initConversation(res: Response, rest: InitConvRestProps) {
     const { agent_type, user_id, agent_id, caller } = rest;
-    const twiMl = new VoiceResponse();
+    const twiml = new VoiceResponse();
 
     if (agent_type === "ANTI_THEFT") {
       const prompt = twimlPrompt.find((p) => p.type === "INIT_ANTI_THEFT");
 
-      twiMl.gather({
+      twiml.say(prompt.msg);
+      twiml.gather({
         input: ["speech"],
-        action: env.TWILIO.WH_VOICE_URL + "/process",
+        action: `${env.TWILIO.WH_VOICE_URL}/process`,
         method: "POST",
         timeout: 3,
       });
-      twiMl.say(prompt.msg);
 
-      sendXMLResponse(res, twiMl.toString());
+      sendXMLResponse(res, twiml.toString());
     }
   }
 
   // CONTINUE CONVERSATION
-  async processVoiceConversation(body: IncomingCallParams, res: Response) {}
+  async processVoiceConversation(body: IncomingCallParams, res: Response) {
+    const userInput = body["SpeechResult"] as any;
+    const twiml = new VoiceResponse();
+
+    // console.log("userInput", userInput);
+    twiml.say("Hi Kindness, how areb you?");
+    twiml.hangup();
+
+    sendXMLResponse(res, twiml.toString());
+  }
 
   // send sms
   async sendSMS(to: string, body: string) {
