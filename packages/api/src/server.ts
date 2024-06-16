@@ -6,6 +6,7 @@ import KnowledgeBaseRoute from "./routes/knowledgebase.route.js";
 import WebhookRoute from "./routes/webhook.route.js";
 import CheckoutRoute from "./routes/checkout.route.js";
 import SubscriptionRoute from "./routes/subscription.route.js";
+import internalTest from "./test.js";
 
 const server = new App();
 
@@ -24,4 +25,6 @@ server.listen();
 // for code readability
 setTimeout(() => {
   console.log("\n");
+
+  internalTest();
 }, 100);
