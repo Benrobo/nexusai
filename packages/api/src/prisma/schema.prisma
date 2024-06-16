@@ -302,6 +302,8 @@ model Subscriptions {
 
     type SubscriptionType
 
+    grace_period DateTime? // 3 days grace period for (TWILIO_PHONE_NUMBERS)
+
     product_id   String
     product_name String?
     variant_id   String?
