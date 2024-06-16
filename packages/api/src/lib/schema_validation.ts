@@ -130,3 +130,16 @@ export const linkKbSchema = zod.object({
     })
     .array(),
 });
+
+// When user clicks on "Buy Number"
+// we store selected phone number in redis to be retrieve later
+// when creating checkout
+export const buyTwilioNumberSchema = zod.object({
+  phone_number: zod
+    .string({
+      required_error: "Phone number is required",
+    })
+    .regex(/^\+1[0-9]{10}$/, {
+      message: "Invalid phone number",
+    }),
+});
