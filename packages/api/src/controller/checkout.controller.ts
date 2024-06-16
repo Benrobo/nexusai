@@ -7,6 +7,7 @@ import ZodValidation from "../lib/zodValidation.js";
 import { buyTwilioNumberSchema } from "../lib/schema_validation.js";
 import redis from "../config/redis.js";
 import HttpException from "../lib/exception.js";
+import { TwilioService } from "../services/twilio.service.js";
 
 export default class CheckoutController extends BaseController {
   constructor() {
@@ -58,9 +59,22 @@ export default class CheckoutController extends BaseController {
       );
     }
 
+    const phone_number = JSON.parse(phoneData).phone_number;
+
+    // check if phone number exists among lists of available twilio numbers
+    const phoneExists = await TwilioService.findPhoneNumber(phone_number);
+
+    if (!phoneExists || phoneExists.length === 0) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        `Phone number not found. Return to "buy number page" and select a number.`,
+        400
+      );
+    }
+
     const checkUrl = await LemonsqueezyServices.createTwSubCheckout({
       user_id: user.id,
-      phone_number: JSON.parse(phoneData).phone_number,
+      phone_number,
     });
 
     return sendResponse.success(
