@@ -22,7 +22,7 @@ export default class CheckoutController extends BaseController {
       "Checkout created successfully",
       200,
       {
-        url: checkUrl,
+        url: checkUrl.data.url,
       }
     );
   }

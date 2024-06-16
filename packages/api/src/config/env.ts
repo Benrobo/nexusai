@@ -24,6 +24,7 @@ const env = {
   LS: {
     STORE_ID: process.env.LS_STORE_ID!,
     API_KEY: process.env.LS_API_KEY!,
+    WH_SECRET: process.env.LS_WH_SECRET!,
   },
 };
 

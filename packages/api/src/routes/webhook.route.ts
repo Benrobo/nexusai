@@ -4,11 +4,13 @@ import KbController from "../controller/knowledgebase.controller.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 import { multerUpload } from "../config/multer.js";
 import TwilioWebhookHandler from "../webhook/twilio.wh.js";
+import LSWebhookHandler from "../webhook/LS.wh.js";
 
 export default class WebhookRoute {
   router = express.Router();
   path = "/webhook";
   twWebhookHandler = new TwilioWebhookHandler();
+  lsWebhookHandler = new LSWebhookHandler();
 
   constructor() {
     this.initializeRoutes();
@@ -37,12 +39,12 @@ export default class WebhookRoute {
       )
     );
 
-    // twilio phone numbeer subscription
+    // twilio phone number subscription (Lemonsqueezy)
     this.router.all(
-      `${this.path}/twilio/subscription`,
+      `${this.path}/tw-phone/subscription`,
       useCatchErrors(
-        this.twWebhookHandler.phoneNumberSubscription.bind(
-          this.twWebhookHandler
+        this.lsWebhookHandler.twilioPhoneSubscription.bind(
+          this.lsWebhookHandler
         )
       )
     );
