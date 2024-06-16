@@ -42,11 +42,7 @@ export default class WebhookRoute {
     // twilio phone number subscription (Lemonsqueezy)
     this.router.all(
       `${this.path}/tw-phone/subscription`,
-      useCatchErrors(
-        this.lsWebhookHandler.twilioPhoneSubscription.bind(
-          this.lsWebhookHandler
-        )
-      )
+      this.lsWebhookHandler.twilioPhoneSubscription.bind(this.lsWebhookHandler)
     );
   }
 }

@@ -28,3 +28,5 @@ package-lock.json
 
 .env
 .env.local
+
+dump.rdb
