@@ -166,6 +166,7 @@ model PurchasedPhoneNumbers {
     users Users @relation(fields: [userId], references: [uId], onDelete: Cascade)
 
     @@index([userId])
+    @@map("purchased_phone_numbers")
 }
 
 model UsedPhoneNumbers {

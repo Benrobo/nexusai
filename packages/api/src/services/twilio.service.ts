@@ -25,6 +25,9 @@ export class TwilioService {
 
   constructor() {}
 
+  // INCOMING CALLS
+  async handleIncomingCall(props: IncomingCallParams) {}
+
   // send sms
   async sendSMS(to: string, body: string) {
     try {
@@ -67,8 +70,6 @@ export class TwilioService {
       return null;
     }
   }
-
-  async handleIncomingCall(props: IncomingCallParams) {}
 
   async findPhoneNumber(phoneNumber: string) {
     try {
