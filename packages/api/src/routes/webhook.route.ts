@@ -33,7 +33,7 @@ export default class WebhookRoute {
 
     // twilio incoming call (TIC)
     this.router.all(
-      `${this.path}/twilio/tic`,
+      `${this.path}/twilio/voice`,
       useCatchErrors(
         this.twWebhookHandler.incomingCall.bind(this.twWebhookHandler)
       )

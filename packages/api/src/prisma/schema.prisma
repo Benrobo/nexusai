@@ -152,11 +152,10 @@ model ProtectedNumbers {
 
 // Table to store users purchased phone numbers
 model PurchasedPhoneNumbers {
-    id        String  @id @default(cuid())
-    userId    String
-    phone     String  @unique
-    dial_code String?
-    country   String?
+    id      String  @id @default(cuid())
+    userId  String
+    phone   String  @unique
+    country String?
 
     // twilio config
     phone_number_sid String?

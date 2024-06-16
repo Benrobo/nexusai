@@ -10,6 +10,7 @@ import HttpException from "../lib/exception.js";
 import { TwilioService } from "../services/twilio.service.js";
 
 export default class CheckoutController extends BaseController {
+  twService = new TwilioService();
   constructor() {
     super();
   }
@@ -62,7 +63,7 @@ export default class CheckoutController extends BaseController {
     const phone_number = JSON.parse(phoneData).phone_number;
 
     // check if phone number exists among lists of available twilio numbers
-    const phoneExists = await TwilioService.findPhoneNumber(phone_number);
+    const phoneExists = await this.twService.findPhoneNumber(phone_number);
 
     if (!phoneExists || phoneExists.length === 0) {
       throw new HttpException(

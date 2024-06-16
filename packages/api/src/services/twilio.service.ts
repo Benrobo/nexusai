@@ -3,6 +3,10 @@ import env from "../config/env.js";
 import twClient from "../config/twillio/twilio_client.js";
 import prisma from "../prisma/prisma.js";
 import { RESPONSE_CODE } from "../types/index.js";
+import dotenv from "dotenv";
+import logger from "../config/logger.js";
+
+dotenv.config();
 
 interface IncomingCallParams {}
 
@@ -13,12 +17,18 @@ interface ProvisioningPhoneNumberProps {
 }
 
 export class TwilioService {
+  prod_tw_client = twClient(env.TWILIO.ACCT_SID, env.TWILIO.AUTH_TOKEN);
+  test_tw_client = twClient(
+    env.TWILIO.TEST_ACCT_SID,
+    env.TWILIO.TEST_AUTH_TOKEN
+  );
+
   constructor() {}
 
   // send sms
   async sendSMS(to: string, body: string) {
     try {
-      const msg = await twClient.messages.create({
+      const msg = await this.prod_tw_client.messages.create({
         body,
         to,
         from: env.TWILIO.PHONE_NUMBER,
@@ -31,9 +41,9 @@ export class TwilioService {
     }
   }
 
-  static async getAvailableNumbersForPurchase(country?: string) {
+  async getAvailableNumbersForPurchase(country?: string) {
     try {
-      const numbers = await twClient
+      const numbers = await this.prod_tw_client
         .availablePhoneNumbers(country ?? "US")
         .local.list({
           limit: 20,
@@ -48,7 +58,7 @@ export class TwilioService {
 
   async retrievePhonePrice(country: string = "US") {
     try {
-      const phonePrice = await twClient.pricing.v1.phoneNumbers
+      const phonePrice = await this.prod_tw_client.pricing.v1.phoneNumbers
         .countries(country)
         .fetch();
       return phonePrice;
@@ -60,12 +70,14 @@ export class TwilioService {
 
   async handleIncomingCall(props: IncomingCallParams) {}
 
-  static async findPhoneNumber(phoneNumber: string) {
+  async findPhoneNumber(phoneNumber: string) {
     try {
-      const number = await twClient.availablePhoneNumbers("US").local.list({
-        limit: 1,
-        contains: phoneNumber,
-      });
+      const number = await this.prod_tw_client
+        .availablePhoneNumbers("US")
+        .local.list({
+          limit: 1,
+          contains: phoneNumber,
+        });
       return number;
     } catch (e: any) {
       console.log("error", e);
@@ -73,8 +85,9 @@ export class TwilioService {
     }
   }
   // Twilio Phone number Subscriptions
-  static async provisionPhoneNumber(props: ProvisioningPhoneNumberProps) {
+  async provisionPhoneNumber(props: ProvisioningPhoneNumberProps) {
     const { subscription_id, user_id, phone_number } = props;
+    const IN_DEV_MODE = process.env.NODE_ENV === "development";
 
     // check if subscription exists with that user
     const subExists = await prisma.subscriptions.findFirst({
@@ -101,6 +114,55 @@ export class TwilioService {
       );
     }
 
-    // provision phone number
+    // In dev mode, use default Twilio number to get "in-use" status without charges.
+    // which makes "bundle_sid" null in response
+
+    const resp = await this.prod_tw_client.incomingPhoneNumbers.create({
+      phoneNumber: IN_DEV_MODE ? env.TWILIO.ANTI_THEFT_NUMBER : phone_number,
+      voiceUrl: env.TWILIO.WH_VOICE_URL,
+      friendlyName: phone_number,
+      voiceMethod: "POST",
+    });
+
+    console.log("resp", resp);
+
+    // check if user has a phone number already purchased
+    const phoneExists = await prisma.purchasedPhoneNumbers.findFirst({
+      where: {
+        userId: user_id,
+        phone: phone_number,
+      },
+    });
+
+    if (phoneExists) {
+      // update
+      logger.info(`Updating phone number ${phone_number} for user ${user_id}`);
+      await prisma.purchasedPhoneNumbers.update({
+        where: {
+          id: phoneExists.id,
+          userId: user_id,
+        },
+        data: {
+          phone: phone_number,
+          phone_number_sid: resp.sid,
+          bundle_sid: resp.bundleSid,
+        },
+      });
+    } else {
+      // create
+      logger.info(`Creating phone number ${phone_number} for user ${user_id}`);
+      await prisma.purchasedPhoneNumbers.create({
+        data: {
+          userId: user_id,
+          phone: phone_number,
+          phone_number_sid: resp.sid,
+          bundle_sid: resp.bundleSid,
+        },
+      });
+    }
+
+    logger.info(
+      `✅ Phone number ${phone_number} provisioned for user ${user_id}`
+    );
   }
 }

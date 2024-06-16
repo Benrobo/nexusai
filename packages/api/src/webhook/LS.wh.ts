@@ -36,117 +36,122 @@ export default class LSWebhookHandler {
   }
 
   private async handleSubscriptionState(body: LS_WebhookPayload) {
-    const { data, meta } = body;
-    const { event_name, custom_data } = meta;
-    const {
-      status,
-      user_email,
-      user_name,
-      test_mode,
-      ends_at,
-      renews_at,
-      customer_id,
-      order_id,
-      product_name,
-      variant_id,
-      variant_name,
-      store_id,
-      card_brand,
-      card_last_four,
-      product_id,
-    } = (data as LS_Subscription)?.attributes;
-    const { user_id } = custom_data;
+    try {
+      const { data, meta } = body;
+      const { event_name, custom_data } = meta;
+      const {
+        status,
+        user_email,
+        user_name,
+        test_mode,
+        ends_at,
+        renews_at,
+        customer_id,
+        order_id,
+        product_name,
+        variant_id,
+        variant_name,
+        store_id,
+        card_brand,
+        card_last_four,
+        product_id,
+      } = (data as LS_Subscription)?.attributes;
+      const { user_id } = custom_data;
 
-    const user = await prisma.users.findFirst({ where: { uId: user_id } });
+      const user = await prisma.users.findFirst({ where: { uId: user_id } });
 
-    if (!user) {
-      console.log(`${event_name.toUpperCase()} EVENT`);
-      const msg = `User ${user_email} with id ${user_id} not found`;
-      console.log(`❌ ${msg}`);
-      throw new HttpException(RESPONSE_CODE.USER_NOT_FOUND, msg, 404);
-    }
+      if (!user) {
+        console.log(`${event_name.toUpperCase()} EVENT`);
+        const msg = `User ${user_email} with id ${user_id} not found`;
+        console.log(`❌ ${msg}`);
+        throw new HttpException(RESPONSE_CODE.USER_NOT_FOUND, msg, 404);
+      }
 
-    // Prevent duplicate subscription
-    const userSubscription = await prisma.subscriptions.findFirst({
-      where: {
-        uId: user_id,
-      },
-    });
-
-    if (!userSubscription) {
-      // Update
-      logger.info("Subscription Created");
-
-      // Check if subscription exists
-      const subscriptionExists = await prisma.subscriptions.findFirst({
+      // Prevent duplicate subscription
+      const userSubscription = await prisma.subscriptions.findFirst({
         where: {
-          subscription_id: data.id,
+          uId: user_id,
         },
       });
 
-      if (subscriptionExists) {
-        const msg = `Duplicate subscription with id ${data.id}`;
-        console.log(`❌ ${msg}`);
-        throw new HttpException(RESPONSE_CODE.ERROR, msg, 400);
-      }
+      if (!userSubscription) {
+        // Update
+        logger.info("Subscription Created");
 
-      const gracePeriodStart = new Date();
+        // Check if subscription exists
+        const subscriptionExists = await prisma.subscriptions.findFirst({
+          where: {
+            subscription_id: data.id,
+          },
+        });
 
-      const subscription = await prisma.subscriptions.create({
-        data: {
-          status,
-          user_email,
-          user_name,
-          test_mode,
-          ends_at,
-          renews_at,
-          type: "TWILIO_PHONE_NUMBERS",
-          customer_id: String(customer_id),
-          order_id: String(order_id),
-          product_id: String(product_id),
-          product_name,
-          variant_id: String(variant_id),
-          variant_name,
-          store_id: String(store_id),
-          card_brand,
-          card_last_four,
-          subscription_id: data.id,
-          grace_period: gracePeriodStart,
-          user: {
-            connect: {
-              uId: user_id,
+        if (subscriptionExists) {
+          const msg = `Duplicate subscription with id ${data.id}`;
+          console.log(`❌ ${msg}`);
+          throw new HttpException(RESPONSE_CODE.ERROR, msg, 400);
+        }
+
+        const gracePeriodStart = new Date();
+
+        const subscription = await prisma.subscriptions.create({
+          data: {
+            status,
+            user_email,
+            user_name,
+            test_mode,
+            ends_at,
+            renews_at,
+            type: "TWILIO_PHONE_NUMBERS",
+            customer_id: String(customer_id),
+            order_id: String(order_id),
+            product_id: String(product_id),
+            product_name,
+            variant_id: String(variant_id),
+            variant_name,
+            store_id: String(store_id),
+            card_brand,
+            card_last_four,
+            subscription_id: data.id,
+            grace_period: gracePeriodStart,
+            user: {
+              connect: {
+                uId: user_id,
+              },
             },
           },
-        },
-      });
+        });
 
-      if (!subscription) {
-        const msg = `Error creating subscription for user ${user_email} with id ${user_id}`;
-        console.log(`❌ ${msg}`);
-        throw new HttpException(RESPONSE_CODE.ERROR, msg, 400);
+        if (!subscription) {
+          const msg = `Error creating subscription for user ${user_email} with id ${user_id}`;
+          console.log(`❌ ${msg}`);
+          throw new HttpException(RESPONSE_CODE.ERROR, msg, 400);
+        }
+
+        console.log(
+          `✅ [TWILIO_PHONE_NUMBERS]: Subscription created for user ${user_email}`
+        );
+
+        // provision phone number
+        logger.info("PROVISIONING PHONE NUMBER INITIATED");
+
+        await retry({
+          fn: new TwilioService().provisionPhoneNumber,
+          args: [
+            {
+              subscription_id: data.id,
+              user_id: custom_data.user_id,
+              phone_number: custom_data.phone_number,
+            },
+          ],
+          functionName: "ProvisionPhoneNumber",
+          retries: 3,
+        });
+      } else {
+        logger.info("Subscription Updated");
       }
-
-      console.log(
-        `✅ [TWILIO_PHONE_NUMBERS]: Subscription created for user ${user_email}`
-      );
-
-      // provision phone number
-      logger.info("PROVISIONING PHONE NUMBER INITIATED");
-
-      await retry({
-        fn: TwilioService.provisionPhoneNumber,
-        args: [
-          {
-            subscription_id: data.id,
-            user_id: custom_data.user_id,
-            phone_number: custom_data.phone_number,
-          },
-        ],
-        functionName: "ProvisionPhoneNumber",
-        retries: 3,
-      });
-    } else {
-      logger.info("Subscription Updated");
+    } catch (e: any) {
+      console.log(e);
+      throw new HttpException(RESPONSE_CODE.ERROR, e.message, 400);
     }
   }
 
