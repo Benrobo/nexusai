@@ -92,39 +92,39 @@ export default class LSWebhookHandler {
 
       const gracePeriodStart = new Date();
 
-      // const subscription = await prisma.subscriptions.create({
-      //   data: {
-      //     status,
-      //     user_email,
-      //     user_name,
-      //     test_mode,
-      //     ends_at,
-      //     renews_at,
-      //     type: "TWILIO_PHONE_NUMBERS",
-      //     customer_id: String(customer_id),
-      //     order_id: String(order_id),
-      //     product_id: String(product_id),
-      //     product_name,
-      //     variant_id: String(variant_id),
-      //     variant_name,
-      //     store_id: String(store_id),
-      //     card_brand,
-      //     card_last_four,
-      //     subscription_id: data.id,
-      //     grace_period: gracePeriodStart,
-      //     user: {
-      //       connect: {
-      //         uId: user_id,
-      //       },
-      //     },
-      //   },
-      // });
+      const subscription = await prisma.subscriptions.create({
+        data: {
+          status,
+          user_email,
+          user_name,
+          test_mode,
+          ends_at,
+          renews_at,
+          type: "TWILIO_PHONE_NUMBERS",
+          customer_id: String(customer_id),
+          order_id: String(order_id),
+          product_id: String(product_id),
+          product_name,
+          variant_id: String(variant_id),
+          variant_name,
+          store_id: String(store_id),
+          card_brand,
+          card_last_four,
+          subscription_id: data.id,
+          grace_period: gracePeriodStart,
+          user: {
+            connect: {
+              uId: user_id,
+            },
+          },
+        },
+      });
 
-      // if (!subscription) {
-      //   const msg = `Error creating subscription for user ${user_email} with id ${user_id}`;
-      //   console.log(`❌ ${msg}`);
-      //   throw new HttpException(RESPONSE_CODE.ERROR, msg, 400);
-      // }
+      if (!subscription) {
+        const msg = `Error creating subscription for user ${user_email} with id ${user_id}`;
+        console.log(`❌ ${msg}`);
+        throw new HttpException(RESPONSE_CODE.ERROR, msg, 400);
+      }
 
       console.log(
         `✅ [TWILIO_PHONE_NUMBERS]: Subscription created for user ${user_email}`
