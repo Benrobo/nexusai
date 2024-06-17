@@ -25,6 +25,7 @@ import type { AgentType, ResponseData } from "@/types";
 import toast from "react-hot-toast";
 import { Spinner } from "@/components/Spinner";
 import Button from "@/components/ui/button";
+import ManagePhoneNumber from "@/components/agents/settings/manage-pn";
 
 const handoverConditions = [
   {
@@ -135,9 +136,9 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
   }
 
   return (
-    <div className="w-full max-w-[100%] h-full px-20 py-10">
+    <div className="w-full max-w-[100%] h-full px-10 py-10">
       <FlexColStart className="w-full h-full ">
-        <FlexRowStartBtw className="w-full">
+        <FlexRowStartBtw className="w-full px-3">
           <FlexColStart className="gap-0 w-full">
             <h1 className="text-3xl font-semibold text-dark-100">Settings</h1>
             <p className="text-sm font-ppL text-white-400 mt-1">
@@ -157,12 +158,18 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
           </Button>
         </FlexRowStartBtw>
 
+        <br />
+
+        <span className="w-full p-[.2px] h-auto bg-white-400/20"></span>
+
+        <ManagePhoneNumber />
+
         {/* settings sections (ANTI-THEFT)  */}
-        <FlexColStart className={cn("w-full mt-10 relative")}>
+        <FlexColStart className={cn("w-full mt-10 relative px-3")}>
           {type !== "ANTI_THEFT" && <NotSupportedOverlay type="Anti-Theft" />}
           {/* handover settings */}
           <FlexColStart className="w-auto gap-0">
-            <h1 className="text-xl font-semibold font-ppM text-dark-100">
+            <h1 className="text-lg font-bold font-jb text-dark-100">
               Handover
             </h1>
             <p className="text-xs font-ppReg text-white-400/80 mt-1">
@@ -225,7 +232,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
               </FlexColStart>
             </FlexRowStart>
             <Input
-              className="w-[150px] text-md font-ppM placeholder:text-white-400/50 tracking-wide "
+              className="w-[150px] text-md font-jb placeholder:text-white-400/50 tracking-wide "
               type="number"
               placeholder="456234"
               value={settingsDetails?.security_code ?? ""}
@@ -246,7 +253,7 @@ function NotSupportedOverlay({ type }: { type: string }) {
   return (
     <button disabled className="w-full h-full">
       <FlexColCenter className="w-full h-full backdrop-blur-md absolute top-0 left-0 bg-white-300 z-[10]">
-        <p className="text-dark-100 font-ppM">Not Supported</p>
+        <p className="text-dark-100 font-jb">Not Supported</p>
         <p className="text-white-400 text-xs font-ppReg">
           Only for {type ?? "Anti-Theft"} agent
         </p>
