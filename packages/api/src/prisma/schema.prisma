@@ -128,7 +128,7 @@ model AgentSettings {
 
     // ANTI-THEFT seetings (ONLY)
     allow_handover     Boolean            @default(false)
-    handover_condition HandoverCondition?
+    handover_condition HandoverCondition? @default(emergency)
     security_code      String? // if it an emergency, this code would be required.
 
     agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)

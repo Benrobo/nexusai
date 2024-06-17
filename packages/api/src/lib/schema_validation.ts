@@ -153,3 +153,12 @@ export const LinkPhoneNumberSchema = zod.object({
     required_error: "Agent ID is required",
   }),
 });
+
+export const updateAgentSettingsSchema = zod.object({
+  allow_handover: zod.boolean().optional(),
+  handover_condition: zod.string().optional(),
+  security_code: zod.string().max(6).min(6).optional(),
+  agent_id: zod.string({
+    required_error: "agent is ID required",
+  }),
+});

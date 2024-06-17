@@ -20,7 +20,7 @@ import { ShieldCheck } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getAgentSettings } from "@/http/requests";
+import { getAgentSettings, updateAgentSettings } from "@/http/requests";
 import type { AgentType, ResponseData } from "@/types";
 import toast from "react-hot-toast";
 import { Spinner } from "@/components/Spinner";
@@ -63,12 +63,25 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
     onSuccess: (data) => {
       const resp = data as ResponseData;
       setAgentSettings(resp.data);
+      setSettingsDetails(resp.data);
       setTabLoading(false);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
       setError(err.message);
       setTabLoading(false);
+      toast.error(err.message);
+    },
+  });
+
+  const updateAgentSettingsMut = useMutation({
+    mutationFn: async (data: any) => updateAgentSettings(data),
+    onSuccess: (data) => {
+      toast.success("Settings updated");
+      window.location.reload();
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
       toast.error(err.message);
     },
   });
@@ -88,18 +101,15 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
   };
 
   const enableSaveChangesButton = () => {
-    for (const key of Object.keys(agentSettings!)) {
-      // @ts-expect-error
-      const agentVal = agentSettings[key as keyof AgentSettings];
-      if (agentVal === settingsDetails[key as keyof AgentSettings]) {
-        return true;
-      }
-      if (!settingsDetails[key as keyof AgentSettings]) {
-        return true;
-      }
-
+    if (agentSettings?.allow_handover !== settingsDetails?.allow_handover)
       return false;
-    }
+    if (
+      agentSettings?.handover_condition !== settingsDetails?.handover_condition
+    )
+      return false;
+    if (agentSettings?.security_code !== settingsDetails?.security_code)
+      return false;
+    return true;
   };
 
   const saveChanges = async () => {
@@ -110,7 +120,10 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
         delete settingsDetails[key];
       }
     }
-    console.log(settingsDetails);
+    updateAgentSettingsMut.mutate({
+      ...settingsDetails,
+      agent_id,
+    });
   };
 
   if (tabLoading) {
@@ -138,6 +151,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
             disabled={enableSaveChangesButton()}
             onClick={saveChanges}
             enableBounceEffect={true}
+            isLoading={updateAgentSettingsMut.isPending || tabLoading}
           >
             Save Changes
           </Button>
@@ -181,10 +195,6 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                 onValueChange={(val) => {
                   handleFormChange("handover_condition", val);
                 }}
-                disabled={
-                  !settingsDetails?.allow_handover ??
-                  !agentSettings?.allow_handover
-                }
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue

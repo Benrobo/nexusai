@@ -41,6 +41,15 @@ export default class AgentRoute {
       )
     );
 
+    this.router.patch(
+      `${this.path}/settings`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.updateAgentSettings.bind(this.agentController)
+        )
+      )
+    );
+
     // send otp to phone number
     this.router.post(
       `${this.path}/send-otp`,

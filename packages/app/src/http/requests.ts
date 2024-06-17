@@ -32,6 +32,11 @@ export const getAgentSettings = async (id: string) => {
   return req.data;
 };
 
+export const updateAgentSettings = async (data: any) => {
+  const req = await $axios.patch(`/agent/settings`, data);
+  return req.data;
+};
+
 export const createAgent = async (data: any) => {
   const req = await $axios.post("/agent", data);
   return req.data;

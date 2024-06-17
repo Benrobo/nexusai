@@ -7,6 +7,7 @@ import ZodValidation from "../lib/zodValidation.js";
 import {
   createAgentSchema,
   LinkPhoneNumberSchema,
+  updateAgentSettingsSchema,
   VerifyOTPCode,
   verifyUsPhoneSchema,
 } from "../lib/schema_validation.js";
@@ -19,6 +20,13 @@ import prisma from "../prisma/prisma.js";
 interface ICreateAG {
   name: string;
   type: AgentType;
+}
+
+interface IUpdateAgentSettings {
+  allow_handover: boolean;
+  handover_condition: "emergency" | "help";
+  security_code: string;
+  agent_id: string;
 }
 
 export default class AgentController extends BaseController {
@@ -136,12 +144,23 @@ export default class AgentController extends BaseController {
     }
 
     // create agent
+    const agentId = shortUUID.generate();
     await prisma.agents.create({
       data: {
-        id: shortUUID.generate(),
+        id: agentId,
         name,
         type: type as AgentEnum,
         userId: user.id,
+      },
+    });
+
+    // create default settings
+    await prisma.agentSettings.create({
+      data: {
+        agentId,
+        allow_handover: false,
+        security_code: "",
+        handover_condition: "emergency",
       },
     });
 
@@ -346,6 +365,103 @@ export default class AgentController extends BaseController {
       "Used phone numbers retrieved successfully",
       200,
       usedNumbers
+    );
+  }
+
+  async updateAgentSettings(req: Request & IReqObject, res: Response) {
+    const user = req.user;
+    const payload = req.body as IUpdateAgentSettings;
+
+    await ZodValidation(updateAgentSettingsSchema, payload, req.serverUrl);
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: payload.agent_id,
+        userId: user.id,
+      },
+      select: {
+        agent_settings: {
+          select: {
+            allow_handover: true,
+            handover_condition: true,
+            security_code: true,
+          },
+        },
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    // check if handover condition is valid
+    const validCondition = ["emergency", "help"];
+
+    if (
+      payload?.handover_condition === "emergency" &&
+      !payload?.security_code
+    ) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Security code is needed.",
+        404
+      );
+    }
+
+    if (
+      payload?.handover_condition &&
+      !validCondition.includes(payload?.handover_condition)
+    ) {
+      throw new HttpException(
+        RESPONSE_CODE.INVALID_HANDOVER_CONDITION,
+        "Handover condition is invalid",
+        404
+      );
+    }
+
+    // update
+    const agentSettingsAvailable = await prisma.agentSettings.findFirst({
+      where: {
+        agentId: payload.agent_id,
+      },
+    });
+
+    if (agentSettingsAvailable) {
+      await prisma.agentSettings.update({
+        where: {
+          agentId: payload.agent_id,
+        },
+        data: {
+          allow_handover:
+            payload?.allow_handover ?? agent.agent_settings?.allow_handover,
+          security_code:
+            payload?.security_code ?? agent.agent_settings?.security_code,
+          handover_condition:
+            payload?.handover_condition ??
+            agent.agent_settings?.handover_condition,
+        },
+      });
+    } else {
+      await prisma.agentSettings.create({
+        data: {
+          agentId: payload.agent_id,
+          allow_handover:
+            payload?.allow_handover ?? agent.agent_settings?.allow_handover,
+          security_code:
+            payload?.security_code ?? agent.agent_settings?.security_code,
+          handover_condition:
+            payload?.handover_condition ??
+            agent.agent_settings?.handover_condition,
+        },
+      });
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Agent settings updated successfully",
+      200
     );
   }
 
