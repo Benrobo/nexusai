@@ -36,7 +36,7 @@ export interface IAgents {
 export type AgentActiveTabs =
   | "general"
   | "integrations"
-  | "protected_numbers"
+  | "protected-numbers"
   | "settings";
 
 export type AgentType = "ANTI_THEFT" | "AUTOMATED_CUSTOMER_SUPPORT" | "CHATBOT";
