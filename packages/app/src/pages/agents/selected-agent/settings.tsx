@@ -145,7 +145,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
 
         {/* settings sections (ANTI-THEFT)  */}
         <FlexColStart className={cn("w-full mt-10 relative")}>
-          {type === "ANTI_THEFT" && <NotSupportedOverlay type="Anti-Theft" />}
+          {type !== "ANTI_THEFT" && <NotSupportedOverlay type="Anti-Theft" />}
           {/* handover settings */}
           <FlexColStart className="w-auto gap-0">
             <h1 className="text-xl font-semibold font-ppM text-dark-100">
