@@ -153,7 +153,7 @@ export default class AgentController extends BaseController {
     );
   }
 
-  async publishAgent(req: Request & IReqObject, res: Response) {
+  async activateAgent(req: Request & IReqObject, res: Response) {
     const user = req["user"];
     const agentId = req.query["id"];
 
@@ -193,7 +193,7 @@ export default class AgentController extends BaseController {
     //     id: agentId as string,
     //   },
     //   data: {
-    //     published: true
+    //     activated: true
     //   },
     // });
 
@@ -216,6 +216,14 @@ export default class AgentController extends BaseController {
         id: true,
         name: true,
         type: true,
+        used_number: {
+          select: {
+            phone: true,
+            dial_code: true,
+            country: true,
+            created_at: true,
+          },
+        },
         protected_numbers: {
           select: {
             id: true,
@@ -224,6 +232,7 @@ export default class AgentController extends BaseController {
             country: true,
           },
         },
+        agent_settings: true,
         created_at: true,
       },
     });
@@ -273,6 +282,48 @@ export default class AgentController extends BaseController {
       "Agent retrieved successfully",
       200,
       agent
+    );
+  }
+
+  async getAgentSettings(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const agentId = req.params["id"];
+    const agentSettings = await prisma.agents.findFirst({
+      where: {
+        AND: {
+          id: agentId as string,
+          userId: user.id,
+        },
+      },
+      select: {
+        agent_settings: {
+          select: {
+            allow_handover: true,
+            handover_condition: true,
+            security_code: true,
+          },
+        },
+      },
+    });
+
+    if (!agentSettings) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    const settings = agentSettings.agent_settings;
+
+    const formattedSettings = {
+      allow_handover: settings?.allow_handover ?? false,
+      handover_condition: settings?.handover_condition ?? null,
+      security_code: settings?.security_code ?? null,
+    };
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Agent settings retrieved successfully",
+      200,
+      formattedSettings
     );
   }
 

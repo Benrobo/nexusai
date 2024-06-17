@@ -52,6 +52,7 @@ export interface ButtonProps extends ButtonVariants {
   spinnerColor?: string;
   spinnerSize?: string | number;
   childrenClass?: React.ComponentProps<"div">["className"];
+  enableBounceEffect?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -65,9 +66,16 @@ const Button: React.FC<ButtonProps> = ({
   spinnerColor,
   spinnerSize,
   childrenClass,
+  enableBounceEffect,
   ...props
 }) => {
-  const classNames = twMerge(buttonVariants(props), className);
+  const classNames = twMerge(
+    buttonVariants(props),
+    className,
+    enableBounceEffect
+      ? "active:scale-[.95] target:scale-[.90] scale-1 transition-all"
+      : ""
+  );
 
   if (href) {
     return (

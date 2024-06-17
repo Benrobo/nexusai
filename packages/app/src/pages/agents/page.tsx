@@ -6,7 +6,7 @@ import {
   FlexRowStartCenter,
 } from "@/components/Flex";
 import { Brain, ShieldCheck, UnPlug } from "@/components/icons";
-import { AgentType } from "@nexusai/shared/types";
+import { AgentType } from "@/types";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";

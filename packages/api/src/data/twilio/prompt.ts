@@ -8,7 +8,8 @@ type TypeResponse =
   | "NO_AGENT_AVAILABLE"
   | "KNOWLEDGE_BASE_NOT_FOUND"
   | "AGENT_NOT_LINKED"
-  | "INIT_ANTI_THEFT";
+  | "INIT_ANTI_THEFT"
+  | "INACTIVE_AGENT"; // if agent isn't activated
 
 interface TwiMlResponse {
   type: TypeResponse;
@@ -23,6 +24,11 @@ export const twimlPrompt = [
   {
     // This happen when users purchase
     type: "NO_AGENT_AVAILABLE",
+    msg: `Hi, I'm currently unable to assist you. Please try again later. Thank you for your understanding.`,
+  },
+  {
+    // This happen when users purchase
+    type: "INACTIVE_AGENT",
     msg: `Hi, I'm currently unable to assist you. Please try again later. Thank you for your understanding.`,
   },
   {

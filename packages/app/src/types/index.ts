@@ -38,3 +38,5 @@ export type AgentActiveTabs =
   | "integrations"
   | "protected_numbers"
   | "settings";
+
+export type AgentType = "ANTI_THEFT" | "AUTOMATED_CUSTOMER_SUPPORT" | "CHATBOT";

@@ -32,6 +32,15 @@ export default class AgentRoute {
       )
     );
 
+    this.router.get(
+      `${this.path}/settings/:id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.getAgentSettings.bind(this.agentController)
+        )
+      )
+    );
+
     // send otp to phone number
     this.router.post(
       `${this.path}/send-otp`,
@@ -65,7 +74,7 @@ export default class AgentRoute {
       `${this.path}/publish/:id`,
       useCatchErrors(
         isAuthenticated(
-          this.agentController.publishAgent.bind(this.agentController)
+          this.agentController.activateAgent.bind(this.agentController)
         )
       )
     );

@@ -97,6 +97,26 @@ export class TwilioService {
       return;
     }
 
+    // check if agent is activated
+    const activeAgents = calledPhone.users?.agents.filter((a) => a.activated);
+
+    if (!activeAgents || activeAgents.length === 0) {
+      logger.error(
+        `User ${calledPhone.users?.uId} has no active agents [INACTIVE_AGENT]`
+      );
+
+      // return twiml response
+      const prompt = twimlPrompt.find((p) => p.type === "INACTIVE_AGENT");
+
+      twiml.say(prompt.msg);
+      twiml.hangup();
+
+      const xml = twiml.toString();
+
+      sendXMLResponse(res, xml);
+      return;
+    }
+
     // check if phone is linked to an agent
     const agentLinked = await prisma.usedPhoneNumbers.findFirst({
       where: {
@@ -166,7 +186,7 @@ export class TwilioService {
     const twiml = new VoiceResponse();
 
     // console.log("userInput", userInput);
-    twiml.say("Hi Kindness, how areb you?");
+    twiml.say("Hi Benaiah, how are you?");
     twiml.hangup();
 
     sendXMLResponse(res, twiml.toString());

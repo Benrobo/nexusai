@@ -27,6 +27,11 @@ export const getAgent = async (id: string) => {
   return req.data;
 };
 
+export const getAgentSettings = async (id: string) => {
+  const req = await $axios.get(`/agent/settings/${id}`);
+  return req.data;
+};
+
 export const createAgent = async (data: any) => {
   const req = await $axios.post("/agent", data);
   return req.data;

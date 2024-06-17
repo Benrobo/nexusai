@@ -68,6 +68,11 @@ enum SubscriptionType {
     TWILIO_PHONE_NUMBERS // handle the twilio phone numbers subscription
 }
 
+enum HandoverCondition {
+    emergency
+    help
+}
+
 model Users {
     id                String                  @id @default(cuid())
     uId               String                  @unique @default(cuid())
@@ -96,17 +101,8 @@ model Agents {
     name   String
     type   AgentType
 
-    // welcome message for the agent 
-    welcome_message String?
-
-    // Protection mean't for anti-scam agents
-    seed_phrase String?
-
-    // custom settings
-    custom_prompt String?
-
     // by default , every agent remains deactivated
-    published Boolean @default(false)
+    activated Boolean @default(false)
 
     // forwarding number (AUTOMATED CUSTOMER SUPPORT ONly)
     forwarding_number ForwardingNumber?
@@ -115,11 +111,30 @@ model Agents {
     Conversations         Conversations[]
     users                 Users                 @relation(fields: [userId], references: [uId], onDelete: Cascade)
     protected_numbers     ProtectedNumbers[]
-    used_numbers          UsedPhoneNumbers[]
+    used_number           UsedPhoneNumbers?
     linked_knowledge_base LinkedKnowledgeBase[]
+    agent_settings        AgentSettings?
 
     @@index([userId])
     @@map(name: "agents")
+}
+
+model AgentSettings {
+    id      String @id @default(cuid())
+    agentId String @unique
+
+    // GENERAL (ALL Agents)
+    welcome_message String?
+
+    // ANTI-THEFT seetings (ONLY)
+    allow_handover     Boolean            @default(false)
+    handover_condition HandoverCondition?
+    security_code      String? // if it an emergency, this code would be required.
+
+    agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+    @@index([agentId])
+    @@map(name: "agent_settings")
 }
 
 model ForwardingNumber {
@@ -172,7 +187,7 @@ model PurchasedPhoneNumbers {
 
 model UsedPhoneNumbers {
     id         String   @id @default(cuid())
-    agentId    String
+    agentId    String   @unique
     userId     String
     phone      String   @unique
     dial_code  String?

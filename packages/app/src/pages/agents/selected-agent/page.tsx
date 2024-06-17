@@ -1,14 +1,15 @@
 import AgentSidebar from "@/components/agents/sidebar";
 import { FlexColCenter, FlexRowCenter, FlexRowStart } from "@/components/Flex";
-import type { AgentType } from "@nexusai/shared/types";
+import type { AgentType } from "@/types";
 import { useEffect, useState } from "react";
 import GeneralPage from "./general";
 import type { AgentActiveTabs, ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getAgent } from "@/http/requests";
 import { Spinner } from "@/components/Spinner";
 import toast from "react-hot-toast";
+import SettingsPage from "./settings";
 
 interface IAgentInfo {
   id?: string;
@@ -28,7 +29,12 @@ interface IAgentInfo {
 
 export default function SelectedAgent() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<AgentActiveTabs>("general");
+  const location = useLocation();
+  const search = location.search.split("=");
+  const query = search[search.length - 1];
+  const [activeTab, setActiveTab] = useState<AgentActiveTabs>(
+    (query as AgentActiveTabs) ?? "general"
+  );
   const params = useParams();
   const agentId = params.id;
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +82,7 @@ export default function SelectedAgent() {
   }
 
   return (
-    <FlexRowStart className="w-full bg-white-200/20">
+    <FlexRowStart className="w-full h-full bg-white-200/20">
       {/* sidebar */}
       <AgentSidebar
         agent_info={agentInfo!}
@@ -85,7 +91,12 @@ export default function SelectedAgent() {
       />
 
       {/* main content */}
-      {activeTab === "general" && <GeneralPage />}
+      <div className="w-full h-full overflow-auto">
+        {activeTab === "general" && <GeneralPage />}
+        {activeTab === "settings" && (
+          <SettingsPage agent_id={agentId!} type={agentInfo.type!} />
+        )}
+      </div>
     </FlexRowStart>
   );
 }
