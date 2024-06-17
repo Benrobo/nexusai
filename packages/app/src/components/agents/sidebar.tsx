@@ -1,10 +1,10 @@
-import React from "react";
 import { FlexColCenter, FlexColStart, FlexRowStart } from "../Flex";
-import type { AgentType } from "@nexusai/shared/types";
+import type { AgentType } from "@/types";
 import { agentTypes } from "@/data/agent";
 import { cn } from "@/lib/utils";
 import { Box, Cog, ShieldCheck, UnPlug } from "../icons";
 import type { AgentActiveTabs } from "@/types";
+import { Link, useLocation } from "react-router-dom";
 
 interface IAgentSidebarProps {
   agent_info: {
@@ -26,7 +26,7 @@ const sidebarItems = [
   },
   {
     name: "Protected Numbers",
-    key: "protected_numbers",
+    key: "protected-numbers",
   },
   {
     name: "Settings",
@@ -79,15 +79,25 @@ export default function AgentSidebar({
             return null;
 
           if (
-            item.key === "protected_numbers" &&
+            item.key === "protected-numbers" &&
             agent_info.type !== "ANTI_THEFT"
           )
             return null;
 
+          const location = useLocation();
+          const search = location.search;
+          const param = new URLSearchParams(search);
+
+          param.delete("tab");
+          param.set("tab", item.key);
+
+          const url = `${location.pathname}?${param.toString()}`;
+
           return (
-            <button
+            <Link
               key={item.key}
               className="w-full"
+              to={url}
               onClick={() => setActiveTab(item.key)}
             >
               <FlexRowStart
@@ -109,7 +119,7 @@ export default function AgentSidebar({
                   {item.name}
                 </span>
               </FlexRowStart>
-            </button>
+            </Link>
           );
         })}
       </FlexColStart>
@@ -133,7 +143,7 @@ function renderMiniAgentIcon(type: AgentType) {
   );
 }
 
-function renderIcons(name: string, active: string) {
+function renderIcons(name: AgentActiveTabs, active: string) {
   const mainStyle = active === name ? "stroke-dark-100" : "stroke-dark-300/80";
   let icon = null;
 
@@ -146,7 +156,7 @@ function renderIcons(name: string, active: string) {
       icon = <UnPlug size={15} className={mainStyle} />;
       break;
 
-    case "protected_numbers":
+    case "protected-numbers":
       icon = <ShieldCheck size={15} className={mainStyle} />;
       break;
 
