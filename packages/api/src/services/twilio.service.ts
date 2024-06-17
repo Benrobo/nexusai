@@ -311,6 +311,7 @@ export class TwilioService {
           phone: phone_number,
           phone_number_sid: resp.sid,
           bundle_sid: resp.bundleSid,
+          sub_id: subscription_id,
         },
       });
     } else {
@@ -322,6 +323,7 @@ export class TwilioService {
           phone: phone_number,
           phone_number_sid: resp.sid,
           bundle_sid: resp.bundleSid,
+          sub_id: subscription_id,
         },
       });
     }
