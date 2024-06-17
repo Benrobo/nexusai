@@ -172,6 +172,7 @@ model PurchasedPhoneNumbers {
     userId  String
     phone   String  @unique
     country String?
+    sub_id  String? @unique // subscription id
 
     // twilio config
     phone_number_sid String?
@@ -179,7 +180,8 @@ model PurchasedPhoneNumbers {
 
     created_at DateTime @default(now())
 
-    users Users @relation(fields: [userId], references: [uId], onDelete: Cascade)
+    users        Users          @relation(fields: [userId], references: [uId], onDelete: Cascade)
+    subscription Subscriptions?
 
     @@index([userId])
     @@map("purchased_phone_numbers")
@@ -344,7 +346,7 @@ model Subscriptions {
     order_id String
     store_id String
 
-    subscription_id String?
+    subscription_id String  @unique
     customer_id     String?
 
     card_brand     String?
@@ -358,7 +360,8 @@ model Subscriptions {
 
     test_mode Boolean @default(false)
 
-    user Users @relation(fields: [uId], references: [uId])
+    user          Users                 @relation(fields: [uId], references: [uId])
+    active_number PurchasedPhoneNumbers @relation(fields: [subscription_id], references: [sub_id])
 
     @@map(name: "subscriptions")
 }
