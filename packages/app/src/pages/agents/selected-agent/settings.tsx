@@ -228,11 +228,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
               className="w-[150px] text-md font-ppM placeholder:text-white-400/50 tracking-wide "
               type="number"
               placeholder="456234"
-              value={
-                agentSettings?.security_code ??
-                settingsDetails?.security_code ??
-                ""
-              }
+              value={settingsDetails?.security_code ?? ""}
               onChange={(e: any) => {
                 const val = (e.target as any).value;
                 if (val.length > 6) return;
