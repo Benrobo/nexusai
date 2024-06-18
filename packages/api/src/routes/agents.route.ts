@@ -116,5 +116,17 @@ export default class AgentRoute {
         )
       )
     );
+
+    // twilio available numbers
+    this.router.get(
+      `${this.path}/tw/available-numbers`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.getTwilioAvailableNumber.bind(
+            this.agentController
+          )
+        )
+      )
+    );
   }
 }

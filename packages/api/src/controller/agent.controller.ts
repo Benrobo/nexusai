@@ -16,6 +16,7 @@ import { formatPhoneNumber, validateUsNumber } from "../lib/utils.js";
 import OTPManager from "../lib/otp-manager.js";
 import shortUUID from "short-uuid";
 import prisma from "../prisma/prisma.js";
+import { TwilioService } from "../services/twilio.service.js";
 
 interface ICreateAG {
   name: string;
@@ -31,6 +32,7 @@ interface IUpdateAgentSettings {
 
 export default class AgentController extends BaseController {
   otpManager = new OTPManager();
+  twService = new TwilioService();
   constructor() {
     super();
   }
@@ -512,6 +514,19 @@ export default class AgentController extends BaseController {
       RESPONSE_CODE.SUCCESS,
       "Agent settings updated successfully",
       200
+    );
+  }
+
+  async getTwilioAvailableNumber(req: Request & IReqObject, res: Response) {
+    const availableNumbers =
+      await this.twService.getAvailableNumbersForPurchase("US");
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Available numbers retrieved successfully",
+      200,
+      availableNumbers
     );
   }
 

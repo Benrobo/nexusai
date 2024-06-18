@@ -29,3 +29,11 @@ export function FullPageLoader({ showText, text, fixed, blur }: Props) {
     </FlexColCenter>
   );
 }
+
+export function ChildLoader({ color }: { color?: string }) {
+  return (
+    <FlexColCenter className="w-full h-full">
+      <Spinner size={20} color={color ?? "#000"} />
+    </FlexColCenter>
+  );
+}

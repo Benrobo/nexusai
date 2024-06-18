@@ -61,3 +61,8 @@ export const getAgentPhoneNumbers = async (id: string) => {
   const req = await $axios.get(`/agent/active-number/${id}`);
   return req.data;
 };
+
+export const getTwAvailableNumbers = async () => {
+  const req = await $axios.get(`/agent/tw/available-numbers`);
+  return req.data;
+};

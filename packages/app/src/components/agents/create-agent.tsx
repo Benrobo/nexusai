@@ -9,7 +9,7 @@ import Button from "@/components/ui/button";
 import Modal from "@/components/Modal";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import type { AgentType } from "@nexusai/shared/types";
+import { AgentType } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import { createAgent } from "@/http/requests";
 import toast from "react-hot-toast";
@@ -137,7 +137,7 @@ export default function CreateAgent({
                       t.type === "ANTI_THEFT"
                     )
                       return;
-                    setSelectedAgent(t.type);
+                    setSelectedAgent(t.type as AgentType);
                   }}
                   disabled={
                     agents

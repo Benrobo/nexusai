@@ -90,7 +90,7 @@ const Modal = ({
         )}
         <div
           ref={childModalRef}
-          className="w-auto h-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          className="w-auto h-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[999]"
         >
           {children}
         </div>

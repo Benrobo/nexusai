@@ -88,7 +88,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
   });
 
   useEffect(() => {
-    if (agent_id) getAgentSettingsQuery.mutate(agent_id!);
+    if (agent_id && !agentSettings) getAgentSettingsQuery.mutate(agent_id!);
   }, [agent_id]);
 
   const handleFormChange = (
