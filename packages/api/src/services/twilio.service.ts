@@ -47,7 +47,7 @@ export class TwilioService {
 
   // INCOMING CALLS
   async handleIncomingCall(body: IncomingCallParams, res: Response) {
-    const { To, Caller, CallerCountry, CalledState } = body;
+    const { To, Caller, CallerCountry, CalledState, CallStatus } = body;
     const twiml = new VoiceResponse();
 
     // check if "TO" phone is in db.
@@ -178,6 +178,17 @@ export class TwilioService {
       });
 
       sendXMLResponse(res, twiml.toString());
+    }
+
+    if (agent_type === "AUTOMATED_CUSTOMER_SUPPORT") {
+      // twiml.say("Hello Benaiah, how may I help you today?");
+      // twiml.gather({
+      //   input: ["speech"],
+      //   action: `${env.TWILIO.WH_VOICE_URL}/process`,
+      //   method: "POST",
+      //   timeout: 3,
+      // });
+      // sendXMLResponse(res, twiml.toString());
     }
   }
 

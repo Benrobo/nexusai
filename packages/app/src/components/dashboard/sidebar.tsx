@@ -28,7 +28,6 @@ import { useDataContext } from "@/context/DataContext";
 import { useMutation } from "@tanstack/react-query";
 import { getAgents } from "@/http/requests";
 import toast from "react-hot-toast";
-import { Spinner } from "../Spinner";
 import type { ResponseData } from "@/types";
 import usePathname from "@/hooks/usePathname";
 
@@ -51,6 +50,12 @@ const sidebarRoutes = [
     path: "/agents",
     isExtensible: true,
   },
+  // {
+  //   title: "Knowledge Base",
+  //   key: "knowledge-base",
+  //   path: "/knowledge-base",
+  //   isExtensible: false,
+  // },
   // {
   //   title: "Integration",
   //   key: "integration",
@@ -311,7 +316,7 @@ function renderIcons(name: string, active: string) {
       icon = <Inbox size={20} className={cn(mainStyle, "")} />;
       break;
 
-    case "knowledge_base":
+    case "knowledge-base":
       icon = <Library size={20} className={cn(mainStyle, "")} />;
       break;
 

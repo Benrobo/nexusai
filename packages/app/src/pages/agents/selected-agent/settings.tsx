@@ -140,8 +140,10 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
       <FlexColStart className="w-full h-full ">
         <FlexRowStartBtw className="w-full px-3">
           <FlexColStart className="gap-0 w-full">
-            <h1 className="text-3xl font-semibold text-dark-100">Settings</h1>
-            <p className="text-sm font-ppL text-white-400 mt-1">
+            <h1 className="text-2xl font-jb font-extrabold text-dark-100">
+              Settings
+            </h1>
+            <p className="text-sm font-jb text-white-400 mt-1">
               Manage configurations and settings for the agent.
             </p>
           </FlexColStart>
