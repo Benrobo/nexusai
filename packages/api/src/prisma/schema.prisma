@@ -107,13 +107,14 @@ model Agents {
     // forwarding number (AUTOMATED CUSTOMER SUPPORT ONly)
     forwarding_number ForwardingNumber?
 
-    created_at            DateTime              @default(now())
+    created_at            DateTime               @default(now())
     Conversations         Conversations[]
-    users                 Users                 @relation(fields: [userId], references: [uId], onDelete: Cascade)
+    users                 Users                  @relation(fields: [userId], references: [uId], onDelete: Cascade)
     protected_numbers     ProtectedNumbers[]
     used_number           UsedPhoneNumbers?
     linked_knowledge_base LinkedKnowledgeBase[]
     agent_settings        AgentSettings?
+    purchased_number      PurchasedPhoneNumbers?
 
     @@index([userId])
     @@map(name: "agents")
@@ -168,20 +169,23 @@ model ProtectedNumbers {
 
 // Table to store users purchased phone numbers
 model PurchasedPhoneNumbers {
-    id      String  @id @default(cuid())
-    userId  String
-    phone   String  @unique
-    country String?
-    sub_id  String? @unique // subscription id
+    id       String  @id @default(cuid())
+    userId   String
+    phone    String  @unique
+    country  String?
+    sub_id   String? @unique // subscription id
+    agent_id String? @unique // agent id
 
     // twilio config
     phone_number_sid String?
     bundle_sid       String?
 
+    is_deleted Boolean? @default(false)
+
     created_at DateTime @default(now())
 
-    users        Users          @relation(fields: [userId], references: [uId], onDelete: Cascade)
-    subscription Subscriptions?
+    users  Users   @relation(fields: [userId], references: [uId], onDelete: Cascade)
+    agents Agents? @relation(fields: [agent_id], references: [id], onDelete: Cascade)
 
     @@index([userId])
     @@map("purchased_phone_numbers")
@@ -195,6 +199,8 @@ model UsedPhoneNumbers {
     dial_code  String?
     country    String?
     created_at DateTime @default(now())
+
+    is_deleted Boolean? @default(false)
 
     agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
     users  Users  @relation(fields: [userId], references: [uId], onDelete: Cascade)
@@ -346,7 +352,9 @@ model Subscriptions {
     order_id String
     store_id String
 
-    subscription_id String  @unique
+    is_deleted Boolean? @default(false)
+
+    subscription_id String? @unique
     customer_id     String?
 
     card_brand     String?
@@ -360,8 +368,7 @@ model Subscriptions {
 
     test_mode Boolean @default(false)
 
-    user          Users                 @relation(fields: [uId], references: [uId])
-    active_number PurchasedPhoneNumbers @relation(fields: [subscription_id], references: [sub_id])
+    user Users @relation(fields: [uId], references: [uId])
 
     @@map(name: "subscriptions")
 }

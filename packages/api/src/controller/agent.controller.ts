@@ -356,6 +356,8 @@ export default class AgentController extends BaseController {
       select: {
         id: true,
         phone: true,
+        country: true,
+        dial_code: true,
       },
     });
 
@@ -365,6 +367,54 @@ export default class AgentController extends BaseController {
       "Used phone numbers retrieved successfully",
       200,
       usedNumbers
+    );
+  }
+
+  async getActiveAgentNumber(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const agentId = req.params["id"];
+
+    const purchasedNumber = await prisma.purchasedPhoneNumbers.findFirst({
+      where: {
+        userId: user.id,
+        agent_id: agentId,
+        is_deleted: false,
+      },
+      select: {
+        id: true,
+        phone: true,
+        country: true,
+        sub_id: true,
+      },
+    });
+
+    let subscription;
+    if (purchasedNumber) {
+      subscription = await prisma.subscriptions.findFirst({
+        where: {
+          subscription_id: purchasedNumber.sub_id,
+          is_deleted: false,
+        },
+      });
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Active agent phone number retrieved successfully",
+      200,
+      purchasedNumber && subscription
+        ? {
+            phone: purchasedNumber?.phone,
+            country: purchasedNumber?.country,
+            subscription: {
+              renews_at: subscription?.renews_at,
+              ends_at: subscription?.ends_at,
+              status: subscription?.status,
+              variant: subscription.variant_name,
+            },
+          }
+        : null
     );
   }
 

@@ -13,7 +13,7 @@ export function FullPageLoader({ showText, text, fixed, blur }: Props) {
   return (
     <FlexColCenter
       className={cn(
-        "w-full min-h-full bg-white-100 z-[999]",
+        "w-full min-h-full z-[999]",
         fixed && "fixed top-0 left-0",
         blur && "backdrop-blur-lg bg-white-100/50"
       )}

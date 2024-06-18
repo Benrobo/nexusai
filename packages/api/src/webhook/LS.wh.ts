@@ -11,6 +11,7 @@ import type {
 import prisma from "../prisma/prisma.js";
 import retry from "../lib/retry.js";
 import { TwilioService } from "../services/twilio.service.js";
+import shortUUID from "short-uuid";
 
 // Lemonsuqeezy Webhook Handler
 export default class LSWebhookHandler {
@@ -95,6 +96,7 @@ export default class LSWebhookHandler {
 
         const subscription = await prisma.subscriptions.create({
           data: {
+            id: shortUUID.generate(),
             status,
             user_email,
             user_name,
@@ -132,7 +134,7 @@ export default class LSWebhookHandler {
         );
 
         // provision phone number
-        logger.info("PROVISIONING PHONE NUMBER INITIATED");
+        logger.info("PROVISIONING PHONE NUMBER INITIATED...");
 
         const twilioService = new TwilioService();
         await retry({
@@ -142,6 +144,7 @@ export default class LSWebhookHandler {
               subscription_id: data.id,
               user_id: custom_data.user_id,
               phone_number: custom_data.phone_number,
+              agent_id: custom_data.agent_id,
             },
           ],
           functionName: "ProvisionPhoneNumber",

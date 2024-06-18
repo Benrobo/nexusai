@@ -56,3 +56,8 @@ export const verifyPhone = async (data: any) => {
   const req = await $axios.post("/agent/verify-phone", data);
   return req.data;
 };
+
+export const getAgentPhoneNumbers = async (id: string) => {
+  const req = await $axios.get(`/agent/active-number/${id}`);
+  return req.data;
+};

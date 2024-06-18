@@ -9,6 +9,12 @@ import redis from "../config/redis.js";
 import HttpException from "../lib/exception.js";
 import { TwilioService } from "../services/twilio.service.js";
 
+interface IStoredPhoneData {
+  phone_number: string;
+  user_id: string;
+  agent_id: string;
+}
+
 export default class CheckoutController extends BaseController {
   twService = new TwilioService();
   constructor() {
@@ -23,14 +29,35 @@ export default class CheckoutController extends BaseController {
 
     // store phone number in cache for 5 minutes
     const phoneNumber = payload["phone_number"];
+    const agent_id = payload["agent_id"];
     const uId = user.id;
-    const expireTime = 60 * 10; // 10min
+    const expireTime = 60 * 20; // 10min
+
+    // check if agent exists
+    const agentExists = await prisma.agents.findFirst({
+      where: {
+        id: agent_id,
+        userId: uId,
+      },
+    });
+
+    if (!agentExists) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        `Agent not found. Return to "buy number page" and select a number.`,
+        400
+      );
+    }
+
+    // clear existing phone number
+    await redis.del(uId);
 
     await redis.set(
       uId,
       JSON.stringify({
         phone_number: phoneNumber,
         user_id: uId,
+        agent_id,
       })
     );
     await redis.expireat(uId, Math.floor(Date.now() / 1000) + expireTime);
@@ -52,7 +79,7 @@ export default class CheckoutController extends BaseController {
     // get phone number from cache
     const phoneData = await redis.get(user.id);
 
-    if (!phoneData) {
+    if (!phoneData || phoneData === null) {
       throw new HttpException(
         RESPONSE_CODE.BAD_REQUEST,
         `Phone number not found. Return to buy number page to select a number.`,
@@ -60,7 +87,8 @@ export default class CheckoutController extends BaseController {
       );
     }
 
-    const phone_number = JSON.parse(phoneData).phone_number;
+    const storedData = JSON.parse(phoneData) as IStoredPhoneData;
+    const { phone_number, agent_id } = storedData;
 
     // check if phone number exists among lists of available twilio numbers
     const phoneExists = await this.twService.findPhoneNumber(phone_number);
@@ -76,6 +104,7 @@ export default class CheckoutController extends BaseController {
     const checkUrl = await LemonsqueezyServices.createTwSubCheckout({
       user_id: user.id,
       phone_number,
+      agent_id: agent_id,
     });
 
     return sendResponse.success(

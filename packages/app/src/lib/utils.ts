@@ -36,3 +36,7 @@ export const formatPhoneNumber = (input: string) => {
 
   return formattedValue;
 };
+
+export const formatNumber = (number: string) => {
+  return number.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, "$1 ($2) $3-$4");
+};

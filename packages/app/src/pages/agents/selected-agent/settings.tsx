@@ -162,7 +162,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
 
         <span className="w-full p-[.2px] h-auto bg-white-400/20"></span>
 
-        <ManagePhoneNumber />
+        <ManagePhoneNumber agent_id={agent_id} />
 
         {/* settings sections (ANTI-THEFT)  */}
         <FlexColStart className={cn("w-full mt-10 relative px-3")}>

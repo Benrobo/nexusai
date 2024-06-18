@@ -142,6 +142,9 @@ export const buyTwilioNumberSchema = zod.object({
     .regex(/^\+1[0-9]{10}$/, {
       message: "Invalid phone number",
     }),
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
+  }),
 });
 
 export const LinkPhoneNumberSchema = zod.object({

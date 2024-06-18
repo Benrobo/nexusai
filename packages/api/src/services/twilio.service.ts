@@ -29,6 +29,7 @@ interface ProvisioningPhoneNumberProps {
   user_id: string;
   subscription_id: string;
   phone_number: string;
+  agent_id: string;
 }
 
 /**
@@ -251,8 +252,23 @@ export class TwilioService {
   }
   // Twilio Phone number Subscriptions
   async provisionPhoneNumber(props: ProvisioningPhoneNumberProps) {
-    const { subscription_id, user_id, phone_number } = props;
+    const { subscription_id, user_id, phone_number, agent_id } = props;
     const IN_DEV_MODE = process.env.NODE_ENV === "development";
+
+    // check if agent exists
+    const agentExists = await prisma.agents.findFirst({
+      where: {
+        id: agent_id,
+      },
+    });
+
+    if (!agentExists) {
+      throw new HttpException(
+        RESPONSE_CODE.ERROR_PROVISIONING_NUMBER,
+        `Error provisioning number. Agent not found. `,
+        400
+      );
+    }
 
     // check if subscription exists with that user
     const subExists = await prisma.subscriptions.findFirst({
@@ -312,6 +328,8 @@ export class TwilioService {
           phone_number_sid: resp.sid,
           bundle_sid: resp.bundleSid,
           sub_id: subscription_id,
+          agent_id,
+          country: "US",
         },
       });
     } else {
@@ -324,6 +342,8 @@ export class TwilioService {
           phone_number_sid: resp.sid,
           bundle_sid: resp.bundleSid,
           sub_id: subscription_id,
+          agent_id,
+          country: "US",
         },
       });
     }
