@@ -90,45 +90,57 @@ export default function Agents() {
           </FlexColCenter>
         ) : agents.length > 0 ? (
           agents.map((a, idx) => {
-            if (a.type === "ANTI_THEFT") {
-              return (
-                <AgentCard
-                  key={idx}
-                  name={a.name}
-                  date={a.created_at}
-                  type={a.type}
-                  protected_numbers={a.protected_numbers?.map((p) => p.phone)}
-                  id={a.id}
-                />
-              );
-            }
-            if (a.type === "AUTOMATED_CUSTOMER_SUPPORT") {
-              return (
-                <AgentCard
-                  key={idx}
-                  name={a.name}
-                  date={a.created_at}
-                  type={a.type}
-                  contact_number={a.used_number?.phone}
-                  integrations={a.integrations}
-                  id={a.id}
-                  active_number={a.used_number?.phone}
-                />
-              );
-            }
-            if (a.type === "CHATBOT") {
-              return (
-                <AgentCard
-                  key={idx}
-                  name={a.name}
-                  date={a.created_at}
-                  type={a.type}
-                  contact_number={a.contact_number}
-                  integrations={a.integrations}
-                  id={a.id}
-                />
-              );
-            }
+            return (
+              <AgentCard
+                key={idx}
+                name={a.name}
+                date={a.created_at}
+                type={a.type}
+                contact_number={a.used_number?.phone}
+                integrations={a.integrations}
+                id={a.id}
+                active_number={a.used_number?.phone}
+              />
+            );
+            // if (a.type === "ANTI_THEFT") {
+            //   return (
+            //     <AgentCard
+            //       key={idx}
+            //       name={a.name}
+            //       date={a.created_at}
+            //       type={a.type}
+            //       protected_numbers={a.protected_numbers?.map((p) => p.phone)}
+            //       id={a.id}
+            //     />
+            //   );
+            // }
+            // if (a.type === "AUTOMATED_CUSTOMER_SUPPORT") {
+            //   return (
+            //     <AgentCard
+            //       key={idx}
+            //       name={a.name}
+            //       date={a.created_at}
+            //       type={a.type}
+            //       contact_number={a.used_number?.phone}
+            //       integrations={a.integrations}
+            //       id={a.id}
+            //       active_number={a.used_number?.phone}
+            //     />
+            //   );
+            // }
+            // if (a.type === "CHATBOT") {
+            //   return (
+            //     <AgentCard
+            //       key={idx}
+            //       name={a.name}
+            //       date={a.created_at}
+            //       type={a.type}
+            //       contact_number={a.used_number?.phone}
+            //       integrations={a.integrations}
+            //       id={a.id}
+            //     />
+            //   );
+            // }
           })
         ) : (
           <FlexColCenter className="w-full h-full">
@@ -213,7 +225,7 @@ function AgentCard({
       </Link>
       <FlexRowStartBtw className="w-full mt-3 pt-3 pb-2 border-t-[1px] border-t-white-400/20 px-6 ">
         {/* anti-scam section */}
-        {type === "ANTI_THEFT" && (
+        {/* {type === "ANTI_THEFT" && (
           <FlexRowStartCenter className="w-auto gap-0">
             <ShieldCheck size={15} className="stroke-green-100 " />
             <span className="text-xs font-jb font-medium text-dark-100 ml-2">
@@ -225,17 +237,18 @@ function AgentCard({
                 : protected_numbers?.length}
             </span>
           </FlexRowStartCenter>
-        )}
+        )} */}
 
-        {/* Automated customer support */}
-        {type === "AUTOMATED_CUSTOMER_SUPPORT" && contact_number && (
-          <FlexRowStartCenter className="w-auto gap-0">
+        <FlexRowStartCenter className="w-auto gap-0">
+          {type === "ANTI_THEFT" ? (
+            <ShieldCheck size={15} className="stroke-green-100 " />
+          ) : (
             <Brain size={15} className="stroke-dark-100 " />
-            <span className="text-xs font-jb font-medium text-dark-100 ml-2 cursor-text">
-              {formatNumber(contact_number)}
-            </span>
-          </FlexRowStartCenter>
-        )}
+          )}
+          <span className="text-xs font-jb font-medium text-dark-100 ml-2 cursor-text">
+            {formatNumber(contact_number!)}
+          </span>
+        </FlexRowStartCenter>
 
         {/* integrations */}
         <FlexRowStartCenter className="w-auto gap-0">

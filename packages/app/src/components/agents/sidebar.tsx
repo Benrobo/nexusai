@@ -2,7 +2,7 @@ import { FlexColCenter, FlexColStart, FlexRowStart } from "../Flex";
 import type { AgentType } from "@/types";
 import { agentTypes } from "@/data/agent";
 import { cn } from "@/lib/utils";
-import { Box, Cog, ShieldCheck, UnPlug } from "../icons";
+import { Box, Cog, Library, ShieldCheck, UnPlug } from "../icons";
 import type { AgentActiveTabs } from "@/types";
 import { Link, useLocation } from "react-router-dom";
 
@@ -24,9 +24,14 @@ const sidebarItems = [
     name: "Integrations",
     key: "integrations",
   },
+  // No longer needed since users are now purchasing their own phone number
+  // {
+  //   name: "Protected Numbers",
+  //   key: "protected-numbers",
+  // },
   {
-    name: "Protected Numbers",
-    key: "protected-numbers",
+    name: "Knowledge Base",
+    key: "knowledge-base",
   },
   {
     name: "Settings",
@@ -93,34 +98,46 @@ export default function AgentSidebar({
 
           const url = `${location.pathname}?${param.toString()}`;
 
-          return (
-            <Link
-              key={item.key}
-              className="w-full"
-              to={url}
-              onClick={() => setActiveTab(item.key)}
-            >
-              <FlexRowStart
-                className={cn(
-                  "w-full py-3 px-3 rounded-lg ",
-                  activeTab === item.key &&
-                    "bg-white-200/50 text-dark-100 stroke-dark-100"
-                )}
+          let tabComp: React.ReactNode | null = null;
+
+          // No knowledge base is needed for anti-theft agent's
+          if (
+            agent_info.type === "ANTI_THEFT" &&
+            item.key === "knowledge-base"
+          ) {
+            tabComp = null;
+          } else {
+            tabComp = (
+              <Link
+                key={item.key}
+                className="w-full"
+                to={url}
+                onClick={() => setActiveTab(item.key)}
               >
-                {renderIcons(item.key, activeTab)}
-                <span
+                <FlexRowStart
                   className={cn(
-                    "text-xs",
-                    activeTab === item.key
-                      ? "font-ppL font-bold text-dark-100 "
-                      : "font-ppL font-light text-dark-300/80 "
+                    "w-full py-3 px-3 rounded-lg ",
+                    activeTab === item.key &&
+                      "bg-white-200/50 text-dark-100 stroke-dark-100"
                   )}
                 >
-                  {item.name}
-                </span>
-              </FlexRowStart>
-            </Link>
-          );
+                  {renderIcons(item.key, activeTab)}
+                  <span
+                    className={cn(
+                      "text-xs",
+                      activeTab === item.key
+                        ? "font-ppL font-bold text-dark-100 "
+                        : "font-ppL font-light text-dark-300/80 "
+                    )}
+                  >
+                    {item.name}
+                  </span>
+                </FlexRowStart>
+              </Link>
+            );
+          }
+
+          return tabComp;
         })}
       </FlexColStart>
     </FlexColStart>
@@ -158,6 +175,10 @@ function renderIcons(name: AgentActiveTabs, active: string) {
 
     case "protected-numbers":
       icon = <ShieldCheck size={15} className={mainStyle} />;
+      break;
+
+    case "knowledge-base":
+      icon = <Library size={15} className={mainStyle} />;
       break;
 
     case "settings":
