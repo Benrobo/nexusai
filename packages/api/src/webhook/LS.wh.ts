@@ -72,6 +72,7 @@ export default class LSWebhookHandler {
       const userSubscription = await prisma.subscriptions.findFirst({
         where: {
           uId: user_id,
+          subscription_id: data.id,
         },
       });
 

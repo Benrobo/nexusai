@@ -66,3 +66,15 @@ export const getTwAvailableNumbers = async () => {
   const req = await $axios.get(`/agent/tw/available-numbers`);
   return req.data;
 };
+
+/* Flow: BuyNumber -> getCheckoutUrl */
+export const buyPhoneNumber = async (data: any) => {
+  const req = await $axios.post(`/checkout/tw-phone/buy`, data);
+  return req.data;
+};
+
+export const getCheckoutUrl = async () => {
+  const req = await $axios.get(`/checkout/tw-phone`);
+  return req.data;
+};
+/* End of flow */

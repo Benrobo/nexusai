@@ -18,6 +18,7 @@ import { getAgents } from "@/http/requests";
 import toast from "react-hot-toast";
 import type { ResponseData } from "@/types";
 import { Spinner } from "@/components/Spinner";
+import { formatNumber } from "@/lib/utils";
 
 dayjs.extend(relativeTime);
 
@@ -35,6 +36,10 @@ interface IAgents {
   integrations?: number;
   contact_number?: string;
   created_at: Date;
+  used_number: {
+    phone?: string;
+    country?: string;
+  };
 }
 
 export default function Agents() {
@@ -104,9 +109,10 @@ export default function Agents() {
                   name={a.name}
                   date={a.created_at}
                   type={a.type}
-                  contact_number={a.contact_number}
+                  contact_number={a.used_number?.phone}
                   integrations={a.integrations}
                   id={a.id}
+                  active_number={a.used_number?.phone}
                 />
               );
             }
@@ -154,6 +160,7 @@ interface IAgentCardProps {
   integrations?: number;
   contact_number?: string;
   id: string;
+  active_number?: string;
 }
 
 function AgentCard({
@@ -164,6 +171,7 @@ function AgentCard({
   contact_number,
   integrations,
   id,
+  // active_number
 }: IAgentCardProps) {
   return (
     <FlexColStart className="w-full max-w-[350px] pt-4 rounded-md outline outline-[.5px] outline-white-400/80">
@@ -224,7 +232,7 @@ function AgentCard({
           <FlexRowStartCenter className="w-auto gap-0">
             <Brain size={15} className="stroke-dark-100 " />
             <span className="text-xs font-jb font-medium text-dark-100 ml-2 cursor-text">
-              {contact_number}
+              {formatNumber(contact_number)}
             </span>
           </FlexRowStartCenter>
         )}

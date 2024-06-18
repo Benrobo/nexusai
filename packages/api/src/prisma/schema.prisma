@@ -336,7 +336,7 @@ model Messages {
 
 model Subscriptions {
     id         String  @id @default(cuid())
-    uId        String  @unique
+    uId        String
     user_name  String?
     user_email String?
 

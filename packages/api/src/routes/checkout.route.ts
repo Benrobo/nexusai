@@ -14,7 +14,7 @@ export default class CheckoutRoute {
 
   initializeRoutes() {
     // create twilio phone subscription checkout
-    this.router.post(
+    this.router.get(
       `${this.path}/tw-phone`,
       useCatchErrors(
         isAuthenticated(

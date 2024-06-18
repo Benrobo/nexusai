@@ -299,7 +299,7 @@ export class TwilioService {
     // which makes "bundle_sid" null in response
 
     const resp = await this.prod_tw_client.incomingPhoneNumbers.create({
-      phoneNumber: IN_DEV_MODE ? env.TWILIO.ANTI_THEFT_NUMBER : phone_number,
+      phoneNumber: IN_DEV_MODE ? env.TWILIO.DEFAULT_PHONE_NUMBER : phone_number,
       voiceUrl: env.TWILIO.WH_VOICE_URL,
       friendlyName: phone_number,
       voiceMethod: "POST",
@@ -312,6 +312,14 @@ export class TwilioService {
       where: {
         userId: user_id,
         phone: phone_number,
+        agent_id,
+      },
+    });
+
+    const usedPhoneNumberExists = await prisma.usedPhoneNumbers.findFirst({
+      where: {
+        agentId: agent_id,
+        userId: user_id,
       },
     });
 
@@ -332,6 +340,29 @@ export class TwilioService {
           country: "US",
         },
       });
+
+      if (!usedPhoneNumberExists) {
+        // link phone number to agent
+        await prisma.usedPhoneNumbers.create({
+          data: {
+            agentId: agent_id,
+            userId: user_id,
+            phone: phone_number,
+            country: "US",
+          },
+        });
+      } else {
+        // update
+        await prisma.usedPhoneNumbers.update({
+          where: {
+            id: usedPhoneNumberExists.id,
+          },
+          data: {
+            phone: phone_number,
+            country: "US",
+          },
+        });
+      }
     } else {
       // create
       logger.info(`Creating phone number ${phone_number} for user ${user_id}`);
@@ -346,6 +377,29 @@ export class TwilioService {
           country: "US",
         },
       });
+
+      if (!usedPhoneNumberExists) {
+        // link phone number to agent
+        await prisma.usedPhoneNumbers.create({
+          data: {
+            agentId: agent_id,
+            userId: user_id,
+            phone: phone_number,
+            country: "US",
+          },
+        });
+      } else {
+        // update
+        await prisma.usedPhoneNumbers.update({
+          where: {
+            id: usedPhoneNumberExists.id,
+          },
+          data: {
+            phone: phone_number,
+            country: "US",
+          },
+        });
+      }
     }
 
     logger.info(

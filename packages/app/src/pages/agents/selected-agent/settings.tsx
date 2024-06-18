@@ -25,7 +25,7 @@ import type { AgentType, ResponseData } from "@/types";
 import toast from "react-hot-toast";
 import { Spinner } from "@/components/Spinner";
 import Button from "@/components/ui/button";
-import ManagePhoneNumber from "@/components/agents/settings/manage-pn";
+import ManagePhoneNumber from "@/components/agents/settings/manage_phone_number";
 
 const handoverConditions = [
   {
@@ -165,84 +165,95 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
         <ManagePhoneNumber agent_id={agent_id} />
 
         {/* settings sections (ANTI-THEFT)  */}
-        <FlexColStart className={cn("w-full mt-10 relative px-3")}>
-          {type !== "ANTI_THEFT" && <NotSupportedOverlay type="Anti-Theft" />}
+        <FlexColStart
+          className={cn("w-full min-h-[250px] mt-10 relative px-3")}
+        >
           {/* handover settings */}
-          <FlexColStart className="w-auto gap-0">
-            <h1 className="text-lg font-bold font-jb text-dark-100">
-              Handover
-            </h1>
-            <p className="text-xs font-ppReg text-white-400/80 mt-1">
-              Configure handover settings for the agent.
-            </p>
-          </FlexColStart>
-
-          <FlexColStart className="w-full gap-1 rounded-md bg-white-300">
-            <FlexRowCenterBtw className="w-full gap-2 px-4 py-3 rounded-md">
-              <p className="text-xs font-ppReg text-dark-100">
-                Enable handover
-              </p>
-              <Switch
-                onCheckedChange={(val: boolean) => {
-                  handleFormChange("allow_handover", val);
-                }}
-                className="data-[state=unchecked]:bg-white-400/30"
-                checked={
-                  settingsDetails?.allow_handover ??
-                  agentSettings?.allow_handover
-                }
-              />
-            </FlexRowCenterBtw>
-            <span className="w-full p-[.3px] bg-white-400/30"></span>
-            <FlexRowCenterBtw className="w-full gap-2 px-4 py-2 mt-0">
-              <p className="text-xs font-ppReg text-dark-100">
-                Handover Condition
-              </p>
-              <Select
-                onValueChange={(val) => {
-                  handleFormChange("handover_condition", val);
-                }}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue
-                    placeholder={agentSettings?.handover_condition ?? "Select"}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {handoverConditions.map((c, i) => (
-                    <SelectItem key={i} value={c.value} className="font-ppReg">
-                      {c.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FlexRowCenterBtw>
-          </FlexColStart>
-
-          <FlexRowCenterBtw className="w-full gap-2 px-4 py-3 mt-2 rounded-md bg-white-300">
-            <FlexRowStart>
-              <ShieldCheck className="p-[5px] rounded-full bg-dark-100/70" />
+          {type === "ANTI_THEFT" && (
+            <>
               <FlexColStart className="w-auto gap-0">
-                <p className="text-xs font-ppReg text-dark-100">
-                  Security code
+                <h1 className="text-lg font-bold font-jb text-dark-100">
+                  Handover
+                </h1>
+                <p className="text-xs font-ppReg text-white-400/80 mt-1">
+                  Configure handover settings for the agent.
                 </p>
-                <span className="text-[10px] font-ppL text-dark-100/50">
-                  Security code would be required for emergency scenario.
-                </span>
               </FlexColStart>
-            </FlexRowStart>
-            <Input
-              className="w-[150px] text-md font-jb placeholder:text-white-400/50 tracking-wide "
-              type="number"
-              placeholder="456234"
-              value={settingsDetails?.security_code ?? ""}
-              onChange={(e: any) => {
-                const val = (e.target as any).value;
-                if (val.length > 6) return;
-                handleFormChange("security_code", (e.target as any).value);
-              }}
-            />
-          </FlexRowCenterBtw>
+
+              <FlexColStart className="w-full gap-1 rounded-md bg-white-300">
+                <FlexRowCenterBtw className="w-full gap-2 px-4 py-3 rounded-md">
+                  <p className="text-xs font-ppReg text-dark-100">
+                    Enable handover
+                  </p>
+                  <Switch
+                    onCheckedChange={(val: boolean) => {
+                      handleFormChange("allow_handover", val);
+                    }}
+                    className="data-[state=unchecked]:bg-white-400/30"
+                    checked={
+                      settingsDetails?.allow_handover ??
+                      agentSettings?.allow_handover
+                    }
+                  />
+                </FlexRowCenterBtw>
+                <span className="w-full p-[.3px] bg-white-400/30"></span>
+                <FlexRowCenterBtw className="w-full gap-2 px-4 py-2 mt-0">
+                  <p className="text-xs font-ppReg text-dark-100">
+                    Handover Condition
+                  </p>
+                  <Select
+                    onValueChange={(val) => {
+                      handleFormChange("handover_condition", val);
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue
+                        placeholder={
+                          agentSettings?.handover_condition ?? "Select"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {handoverConditions.map((c, i) => (
+                        <SelectItem
+                          key={i}
+                          value={c.value}
+                          className="font-ppReg"
+                        >
+                          {c.value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FlexRowCenterBtw>
+              </FlexColStart>
+
+              <FlexRowCenterBtw className="w-full gap-2 px-4 py-3 mt-2 rounded-md bg-white-300">
+                <FlexRowStart>
+                  <ShieldCheck className="p-[5px] rounded-full bg-dark-100/70" />
+                  <FlexColStart className="w-auto gap-0">
+                    <p className="text-xs font-ppReg text-dark-100">
+                      Security code
+                    </p>
+                    <span className="text-[10px] font-ppL text-dark-100/50">
+                      Security code would be required for emergency scenario.
+                    </span>
+                  </FlexColStart>
+                </FlexRowStart>
+                <Input
+                  className="w-[150px] text-md font-jb placeholder:text-white-400/50 tracking-wide "
+                  type="number"
+                  placeholder="456234"
+                  value={settingsDetails?.security_code ?? ""}
+                  onChange={(e: any) => {
+                    const val = (e.target as any).value;
+                    if (val.length > 6) return;
+                    handleFormChange("security_code", (e.target as any).value);
+                  }}
+                />
+              </FlexRowCenterBtw>
+            </>
+          )}
         </FlexColStart>
       </FlexColStart>
     </div>

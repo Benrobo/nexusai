@@ -27,6 +27,23 @@ export default class CheckoutController extends BaseController {
 
     await ZodValidation(buyTwilioNumberSchema, payload, req.serverUrl);
 
+    // check if this agent has a phone number linked
+    const agentHasPhone = await prisma.usedPhoneNumbers.findFirst({
+      where: {
+        userId: user.id,
+        agentId: payload.agent_id,
+        phone: payload.phone_number,
+      },
+    });
+
+    if (agentHasPhone) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        `Only one phone number can be purchased per agent.`,
+        400
+      );
+    }
+
     // store phone number in cache for 5 minutes
     const phoneNumber = payload["phone_number"];
     const agent_id = payload["agent_id"];
@@ -73,6 +90,7 @@ export default class CheckoutController extends BaseController {
     );
   }
 
+  // generate checkout url for twilio phone number
   async createTwPhoneCheckout(req: Request & IReqObject, res: Response) {
     const user = req["user"] as any;
 

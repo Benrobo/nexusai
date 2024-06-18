@@ -10,12 +10,21 @@ import { MailCheck, PhoneCall, RefreshCcw, X } from "@/components/icons";
 import { ChildLoader, FullPageLoader } from "@/components/Loader";
 import Modal from "@/components/Modal";
 import Button from "@/components/ui/button";
-import { getAgentPhoneNumbers, getTwAvailableNumbers } from "@/http/requests";
+import {
+  buyPhoneNumber,
+  getAgentPhoneNumbers,
+  getCheckoutUrl,
+  getTwAvailableNumbers,
+} from "@/http/requests";
 import { cn, formatNumber } from "@/lib/utils";
 import type { ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 
 interface Props {
   agent_id: string;
@@ -57,6 +66,7 @@ export default function ManagePhoneNumber({ agent_id }: Props) {
   const [availableTwNumbes, setAvailableTwNumbers] = useState<
     ITwilioAvailableNumbers[]
   >([]);
+  const [buyPNLodingState, setBuyPNLoadingState] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const getAgentActiveNumMut = useMutation({
     mutationFn: async (id: string) => await getAgentPhoneNumbers(id),
@@ -74,6 +84,31 @@ export default function ManagePhoneNumber({ agent_id }: Props) {
     onSuccess: (data) => {
       const resp = data as ResponseData;
       setAvailableTwNumbers(resp.data);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
+  const buyPNMut = useMutation({
+    mutationFn: async (data: any) => await buyPhoneNumber(data),
+    onSuccess: () => {
+      // call the next flow
+      getCheckoutUrlMut.mutate();
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
+  const getCheckoutUrlMut = useMutation({
+    mutationFn: async () => await getCheckoutUrl(),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      const url = resp.data.url;
+      window.open(url, "_blank");
+      // reset loading
+      setBuyPNLoadingState([]);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
@@ -117,7 +152,7 @@ export default function ManagePhoneNumber({ agent_id }: Props) {
               Renews on June 1, 2022
             </span>
           )}
-          <FlexColStart className="w-auto gap-0 relative">
+          <FlexColStart className="w-full gap-0 relative">
             <h1
               className={cn(
                 "text-lg font-jb text-dark-100",
@@ -129,7 +164,17 @@ export default function ManagePhoneNumber({ agent_id }: Props) {
                 : "+1 (N/A) N/A-N/A"}
             </h1>
 
-            <FlexRowStartCenter className="w-auto">
+            {/* renew message */}
+            {activeNumDetails && (
+              <span className="text-[10px] absolute top-1 left-[25em] bg-dark-100 font-jb font-normal text-white-100 px-2 py-[1px] scale-[.90] rounded-full">
+                renew on{" "}
+                {dayjs(activeNumDetails?.subscription.renews_at).format(
+                  "MMM DD YYYY"
+                )}
+              </span>
+            )}
+
+            <FlexRowStartCenter className="w-full">
               <span className="text-xs font-jb font-bold text-white-400">
                 {activeNumDetails?.subscription.variant ?? "N/A"}
               </span>
@@ -227,10 +272,21 @@ export default function ManagePhoneNumber({ agent_id }: Props) {
                     <Button
                       intent={"dark"}
                       className="w-[130px] h-[36px] px-4 text-xs font-ppReg drop-shadow disabled:bg-dark-100/70 disabled:text-white-100 scale-[.90]"
-                      // disabled={enableSaveChangesButton()}
-                      // onClick={saveChanges}
+                      disabled={
+                        buyPNMut.isPending || getCheckoutUrlMut.isPending
+                      }
+                      onClick={() => {
+                        setBuyPNLoadingState((prev: any) => [
+                          ...prev,
+                          twn.phoneNumber,
+                        ]);
+                        buyPNMut.mutate({
+                          agent_id,
+                          phone_number: twn.phoneNumber,
+                        });
+                      }}
                       enableBounceEffect={true}
-                      // isLoading={updateAgentSettingsMut.isPending || tabLoading}
+                      isLoading={buyPNLodingState.includes(twn.phoneNumber)}
                     >
                       <PhoneCall size={15} />
                       Buy Number
