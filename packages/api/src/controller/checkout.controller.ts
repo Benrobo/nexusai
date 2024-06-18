@@ -8,6 +8,7 @@ import { buyTwilioNumberSchema } from "../lib/schema_validation.js";
 import redis from "../config/redis.js";
 import HttpException from "../lib/exception.js";
 import { TwilioService } from "../services/twilio.service.js";
+import prisma from "../prisma/prisma.js";
 
 interface IStoredPhoneData {
   phone_number: string;

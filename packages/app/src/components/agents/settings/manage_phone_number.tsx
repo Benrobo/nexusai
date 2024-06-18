@@ -99,6 +99,8 @@ export default function ManagePhoneNumber({ agent_id }: Props) {
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
       toast.error(err.message);
+      // clear loading state
+      setBuyPNLoadingState([]);
     },
   });
   const getCheckoutUrlMut = useMutation({
@@ -194,7 +196,7 @@ export default function ManagePhoneNumber({ agent_id }: Props) {
           {!activeNumDetails && (
             <Button
               intent={"dark"}
-              className="w-[130px] h-[36px] px-4 text-xs font-ppReg drop-shadow disabled:bg-dark-100/70 disabled:text-white-100"
+              className="w-[140px] h-[36px] px-4 text-[10px] font-ppReg drop-shadow disabled:bg-dark-100/70 disabled:text-white-100"
               onClick={() => {
                 setModalOpen(true);
                 getTwAvailableNumMut.mutate();
@@ -263,6 +265,10 @@ export default function ManagePhoneNumber({ agent_id }: Props) {
                         {twn.locality}, {twn.isoCountry}
                       </span>
                     </FlexColStart>
+
+                    <FlexRowStartCenter className="w-auto gap-4">
+                      <span className="text-sm font-jb font-bold">$1.15</span>
+                    </FlexRowStartCenter>
 
                     <FlexRowStartCenter className="w-auto gap-4">
                       <PhoneCall size={15} className="stroke-white-400" />

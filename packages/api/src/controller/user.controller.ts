@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import BaseController from "./base.controller.js";
 import sendResponse from "../lib/sendResponse.js";
 import { RESPONSE_CODE, IReqObject } from "../types/index.js";
+import prisma from "../prisma/prisma.js";
 
 export default class UserController extends BaseController {
   constructor() {
