@@ -70,6 +70,7 @@ export default class KnowledgeBaseController extends BaseController {
         data: {
           id: shortUUID.generate(),
           userId: req.user.id,
+          status: "trained",
         },
       });
 

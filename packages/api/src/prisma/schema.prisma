@@ -73,6 +73,11 @@ enum HandoverCondition {
     help
 }
 
+enum KnowledgeBaseStatus {
+    trained
+    untrained
+}
+
 model Users {
     id                String                  @id @default(cuid())
     uId               String                  @unique @default(cuid())
@@ -211,10 +216,10 @@ model UsedPhoneNumbers {
 }
 
 model KnowledgeBase {
-    id     String @id @default(cuid())
-    userId String
-
-    created_at DateTime @default(now())
+    id         String               @id @default(cuid())
+    userId     String
+    status     KnowledgeBaseStatus? @default(untrained)
+    created_at DateTime             @default(now())
 
     kb_data               KnowledgeBaseData[]
     user                  Users                 @relation(fields: [userId], references: [uId], onDelete: Cascade)
