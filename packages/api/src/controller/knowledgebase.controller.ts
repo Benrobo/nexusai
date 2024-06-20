@@ -16,6 +16,7 @@ import logger from "../config/logger.js";
 interface addKbPayload {
   title: string;
   type: KnowledgeBaseType;
+  agent_id: string;
 }
 
 interface IRetrainData {
@@ -39,6 +40,18 @@ export default class KnowledgeBaseController extends BaseController {
     const mimeType = file?.mimetype;
 
     await ZodValidation(addKbSchema, payload, req.serverUrl);
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: payload.agent_id,
+        userId: req.user.id,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
 
     const withFileTypes = ["TXT", "PDF", "MD"];
 
@@ -102,6 +115,14 @@ export default class KnowledgeBaseController extends BaseController {
           updated_at: new Date(),
         });
       }
+
+      // link knowledge base to agent
+      await prisma.linkedKnowledgeBase.create({
+        data: {
+          agentId: payload.agent_id,
+          kb_id: kb.id,
+        },
+      });
 
       return sendResponse.success(
         res,
@@ -222,9 +243,18 @@ export default class KnowledgeBaseController extends BaseController {
       throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
     }
 
-    const kb = await prisma.knowledgeBase.findMany({
-      where: { userId: userId },
-      select: { kb_data: true, status: true },
+    const lkb = await prisma.linkedKnowledgeBase.findMany({
+      where: {
+        agentId: agent_id,
+      },
+      select: {
+        kb: {
+          select: {
+            kb_data: true,
+            status: true,
+          },
+        },
+      },
     });
 
     const kbData: {
@@ -237,8 +267,9 @@ export default class KnowledgeBaseController extends BaseController {
       status?: string;
     }[] = [];
 
-    for (const kbD of kb) {
-      const firstItem = kbD.kb_data[0];
+    for (const kb of lkb) {
+      const kbD = kb.kb.kb_data[0];
+      const firstItem = kbD;
       kbData.push({
         id: firstItem.id,
         kb_id: firstItem.kb_id,
@@ -246,7 +277,7 @@ export default class KnowledgeBaseController extends BaseController {
         title: firstItem.title,
         created_at: firstItem.created_at,
         agent_id,
-        status: kbD.status,
+        status: kb.kb.status,
       });
     }
 
