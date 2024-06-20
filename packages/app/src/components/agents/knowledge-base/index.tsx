@@ -1,5 +1,6 @@
 import {
   FlexColStart,
+  FlexColStartCenter,
   FlexRowCenter,
   FlexRowEnd,
   FlexRowStart,
@@ -221,9 +222,14 @@ export default function KnowledgeBase() {
             </Table>
           </div>
         ) : (
-          <FlexColStart className="w-full h-full bg-white-100/10 rounded-md p-5">
-            <p className="text-dark-100 font-ppReg">No knowledge base found</p>
-          </FlexColStart>
+          <FlexColStartCenter className="w-full h-full bg-white-100/10 rounded-md p-5 tetx-center gap-1">
+            <p className="text-dark-100 text-sm font-jb">
+              No knowledge base found
+            </p>
+            <span className="text-[10px] font-jb text-white-400">
+              Add or Link Knowledge base
+            </span>
+          </FlexColStartCenter>
         )}
       </FlexColStart>
 
@@ -231,6 +237,7 @@ export default function KnowledgeBase() {
         <AddKnowledgeBaseModal
           closeModal={() => setActiveModal(null)}
           refetch={() => getKbQuery.refetch()}
+          agentId={agentId}
         />
       )}
     </div>
