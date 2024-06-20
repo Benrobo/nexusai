@@ -11,10 +11,16 @@ import prisma from "../prisma/prisma.js";
 import sendResponse from "../lib/sendResponse.js";
 import KbHelper from "../helpers/kb.helper.js";
 import type { KnowledgeBaseType } from "@prisma/client";
+import logger from "../config/logger.js";
 
 interface addKbPayload {
   title: string;
   type: KnowledgeBaseType;
+}
+
+interface IRetrainData {
+  agent_id: string;
+  kb_id: string;
 }
 
 export default class KnowledgeBaseController extends BaseController {
@@ -190,5 +196,105 @@ export default class KnowledgeBaseController extends BaseController {
       "Knowledge base linked to agent successfully",
       200
     );
+  }
+
+  public async getKnowledgeBase(req: Request & IReqObject, res: Response) {
+    const userId = req.user.id;
+    const agent_id = req.params["id"];
+
+    if (!agent_id) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Agent ID is required",
+        400
+      );
+    }
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: agent_id,
+        userId,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    const kb = await prisma.knowledgeBase.findMany({
+      where: { userId: userId },
+      select: { kb_data: true, status: true },
+    });
+
+    const kbData: {
+      id: string;
+      kb_id: string;
+      type: KnowledgeBaseType;
+      title: string;
+      created_at: Date;
+      agent_id: string;
+      status?: string;
+    }[] = [];
+
+    for (const kbD of kb) {
+      const firstItem = kbD.kb_data[0];
+      kbData.push({
+        id: firstItem.id,
+        kb_id: firstItem.kb_id,
+        type: firstItem.type,
+        title: firstItem.title,
+        created_at: firstItem.created_at,
+        agent_id,
+        status: kbD.status,
+      });
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Knowledge base fetched successfully",
+      200,
+      kbData
+    );
+  }
+
+  /* for now , we can only retrain webpages data */
+  /* Since PDF buffer/binary aren't getting stored anywhere */
+  public async retrainData(req: Request & IReqObject, res: Response) {
+    const user = req.user;
+    const payload = req.body as IRetrainData;
+
+    await ZodValidation(linkKbSchema, payload, req.serverUrl);
+
+    // check if agent exists
+    const agent = await prisma.agents.findUnique({
+      where: {
+        id: payload.agent_id,
+        userId: user.id,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    // check if kb exists
+    const kb = await prisma.knowledgeBase.findUnique({
+      where: {
+        id: payload.kb_id,
+        userId: user.id,
+      },
+    });
+
+    if (!kb) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Knowledge base not found",
+        404
+      );
+    }
+
+    // make sure kb type is no other than WEB_PAGES
   }
 }

@@ -10,9 +10,12 @@ import { Brain, Trash, X } from "@/components/icons";
 import Modal from "@/components/Modal";
 import Button from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { addKnowledgeBase } from "@/http/requests";
 import { cn } from "@/lib/utils";
-import type { KBType } from "@/types";
-import React, { useState } from "react";
+import type { KBType, ResponseData } from "@/types";
+import { useMutation } from "@tanstack/react-query";
+import React, { useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 const Filetype = [
   {
@@ -29,20 +32,98 @@ const Filetype = [
   },
 ] as { name: KBType; enabled?: boolean }[];
 
-export default function AddKnowledgeBaseModal() {
+type FileDetails = {
+  data: File | null;
+  name: string;
+  size: number;
+};
+
+interface IAddKnowledgeBaseModalProps {
+  closeModal: () => void;
+  refetch: () => void;
+}
+
+export default function AddKnowledgeBaseModal({
+  closeModal,
+  refetch,
+}: IAddKnowledgeBaseModalProps) {
   const [selectedKbType, setSelectedKbType] = useState<KBType | null>(
     Filetype[0].name
   );
+  const [file, setFile] = useState<FileDetails | null>({
+    data: null,
+    name: "",
+    size: 0,
+  });
+  const addKbMut = useMutation({
+    mutationFn: async (data: any) => await addKnowledgeBase(data),
+    onSuccess: (data: any) => {
+      const resp = data as ResponseData;
+      toast.success(resp.message ?? "Knowledge base added successfully");
+      closeModal();
+      refetch();
+    },
+    onError: (error: any) => {
+      toast.error(error.message ?? "An error occurred");
+    },
+  });
+
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const file = e.target.files[0];
+      if (file) {
+        const validType = ["application/pdf"];
+        const size = file.size / 1024 / 1024;
+        const type = file.type;
+
+        if (!validType.includes(type)) {
+          toast.error("Invalid file type");
+          return;
+        }
+
+        if (size > 4.5) {
+          toast.error("File size should not exceed 4.5MB");
+          return;
+        }
+        setFile({
+          data: file,
+          name: file.name,
+          size: size,
+        });
+      }
+    }
+  };
+
+  const submitData = () => {
+    if (selectedKbType === "PDF" && file?.data) {
+      const formData = new FormData();
+      formData.append("file", file.data);
+      formData.append("type", selectedKbType);
+      formData.append("title", file.name);
+
+      // dispatch action to upload file
+      addKbMut.mutate(formData);
+    }
+  };
+
   return (
-    <Modal isOpen isBlurBg fixed={false} className="">
+    <Modal
+      isOpen={true}
+      onClose={() => closeModal()}
+      isBlurBg
+      fixed={false}
+      className=""
+    >
       <FlexColStart className="w-full max-h-[600px] min-w-[500px] h-full bg-white-300 rounded-[22px] p-1">
         <FlexColStart className="w-full h-auto bg-white-100 rounded-[20px] relative">
           <button
             className="w-[30px] h-[30px] rounded-full border-none outline-none flex flex-col items-center justify-center absolute top-3 right-3 bg-white-400/20 scale-[.85] active:scale-[.95] transition-all"
-            // onClick={() => {
-            //   setModalOpen(false);
-            //   getTwAvailableNumMut.reset();
-            // }}
+            onClick={() => {
+              closeModal();
+              addKbMut.reset();
+            }}
           >
             <X size={15} color="#000" />
           </button>
@@ -84,23 +165,45 @@ export default function AddKnowledgeBaseModal() {
                 <span className="absolute top-2 right-3 text-[10px] font-jb text-white-400">
                   Max(4.5MB)
                 </span>
-                <FlexColStartCenter>
-                  <button>
-                    <p className="text-xs font-jb font-semibold text-gray-500">
-                      Click to Upload
-                    </p>
-                  </button>
-                </FlexColStartCenter>
-                <FlexColStartCenter>
-                  <FlexRowStartBtw>
-                    <span className="text-xs font-jb text-white-400">
-                      filename.pdf
-                    </span>
-                    <button>
-                      <Trash size={15} className="stroke-white-400" />
+                {!file?.data && (
+                  <FlexColStartCenter>
+                    <button onClick={() => fileRef.current?.click()}>
+                      <p className="text-xs font-jb font-semibold text-gray-500">
+                        Click to Upload
+                      </p>
                     </button>
-                  </FlexRowStartBtw>
-                </FlexColStartCenter>
+                    <input
+                      type="file"
+                      name="file"
+                      ref={fileRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept=".pdf"
+                    />
+                  </FlexColStartCenter>
+                )}
+                {file?.data && (
+                  <FlexColStartCenter>
+                    <FlexRowStartBtw>
+                      <span className="text-xs font-jb text-white-400">
+                        {file.name.length > 20
+                          ? file.name.slice(0, 20) + "..."
+                          : file.name}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setFile(null);
+                          addKbMut.reset();
+                        }}
+                      >
+                        <Trash size={15} className="stroke-white-400" />
+                      </button>
+                    </FlexRowStartBtw>
+                    <span className="text-[10px] font-jb text-white-400">
+                      {file.size.toFixed(2)}MB
+                    </span>
+                  </FlexColStartCenter>
+                )}
               </FlexColCenter>
             )}
 
@@ -145,12 +248,12 @@ export default function AddKnowledgeBaseModal() {
               <Button
                 intent={"dark"}
                 className="w-full px-4 text-[10px] font-ppReg drop-shadow disabled:bg-dark-100/30 disabled:text-white-100 rounded-2xl"
-                //   onClick={() => {
-                //     setModalOpen(true);
-                //     getTwAvailableNumMut.mutate();
-                //   }}
+                onClick={submitData}
                 enableBounceEffect={true}
-                disabled={true}
+                disabled={
+                  !file?.data && selectedKbType === "PDF" ? true : false
+                }
+                isLoading={addKbMut.isPending}
               >
                 Submit Data
               </Button>

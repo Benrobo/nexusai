@@ -78,3 +78,17 @@ export const getCheckoutUrl = async () => {
   return req.data;
 };
 /* End of flow */
+
+export const addKnowledgeBase = async (data: any) => {
+  const req = await $axios.post("/knowledge-base", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return req.data;
+};
+
+export const getKnowledgeBase = async (id: string) => {
+  const req = await $axios.get(`/knowledge-base/${id}`);
+  return req.data;
+};

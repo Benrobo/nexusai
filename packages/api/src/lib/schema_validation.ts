@@ -165,3 +165,12 @@ export const updateAgentSettingsSchema = zod.object({
     required_error: "agent is ID required",
   }),
 });
+
+export const retrainSchema = zod.object({
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
+  }),
+  kb_id: zod.string({
+    required_error: "Knowledge base ID is required",
+  }),
+});

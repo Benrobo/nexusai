@@ -7,7 +7,7 @@ import { multerUpload } from "../config/multer.js";
 export default class KnowledgeBaseRoute {
   router = express.Router();
   kbController = new KbController();
-  path = "/knowledgebase";
+  path = "/knowledge-base";
 
   constructor() {
     this.initializeRoutes();
@@ -19,6 +19,15 @@ export default class KnowledgeBaseRoute {
       multerUpload.single("file"),
       useCatchErrors(
         isAuthenticated(this.kbController.addKb.bind(this.kbController))
+      )
+    );
+
+    this.router.get(
+      `${this.path}/:id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.kbController.getKnowledgeBase.bind(this.kbController)
+        )
       )
     );
 
