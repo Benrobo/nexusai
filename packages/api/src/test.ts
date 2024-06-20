@@ -1,6 +1,10 @@
 import { TwilioService } from "./services/twilio.service.js";
 import GeminiService from "./services/gemini.service.js";
 import fs from "fs";
+import {
+  extractLinkMarkup,
+  scrapeLinksFromWebpage,
+} from "./services/scrapper.js";
 
 // Test all services without writing test scripts
 
@@ -11,6 +15,26 @@ export default async () => {
     const geminiService = new GeminiService();
     const twService = new TwilioService();
 
+    // const url = "https://trulyao.dev";
+    // const links = [
+    //   "/",
+    //   "/blog",
+    //   "/projects",
+    //   "/tools",
+    //   "/rss.xml",
+    //   "/feed.json",
+    //   "/tools",
+    //   "/blog",
+    // ];
+
+    const url = "https://benrobo.vercel.app";
+
+    // const links = await scrapeLinksFromWebpage(url);
+    // const markup = await extractLinkMarkup(url, links);
+
+    // console.log(links);
+    // console.log(markup);
+
     const query = "alumonabenaiah71@gmail.com";
     // const embedding = await geminiService.generateEmbedding(query);
 
@@ -19,6 +43,8 @@ export default async () => {
     //   "embedding.txt",
     //   JSON.stringify(embedding.map((e) => e.embedding)[0])
     // );
+
+    // if (markup) fs.writeFileSync("markup.json", JSON.stringify(markup));
 
     // console.log(await twService.getAvailableNumbersForPurchase());
 
