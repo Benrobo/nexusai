@@ -9,7 +9,6 @@ import {
 import { Brain, Trash, X } from "@/components/icons";
 import Modal from "@/components/Modal";
 import Button from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { addKnowledgeBase } from "@/http/requests";
 import { cn } from "@/lib/utils";
 import type { KBType, ResponseData } from "@/types";
@@ -41,11 +40,13 @@ type FileDetails = {
 interface IAddKnowledgeBaseModalProps {
   closeModal: () => void;
   refetch: () => void;
+  agentId: string;
 }
 
 export default function AddKnowledgeBaseModal({
   closeModal,
   refetch,
+  agentId,
 }: IAddKnowledgeBaseModalProps) {
   const [selectedKbType, setSelectedKbType] = useState<KBType | null>(
     Filetype[0].name
@@ -102,6 +103,7 @@ export default function AddKnowledgeBaseModal({
       formData.append("file", file.data);
       formData.append("type", selectedKbType);
       formData.append("title", file.name);
+      formData.append("agent_id", agentId);
 
       // dispatch action to upload file
       addKbMut.mutate(formData);
