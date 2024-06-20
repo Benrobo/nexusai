@@ -67,7 +67,7 @@ type KBData = {
 };
 
 export default function KnowledgeBase() {
-  const [activeModal, setActiveModal] = useState<ActiveModal | null>("add-kb");
+  const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [tabLoading, setTabLoading] = useState(true);
   const location = useLocation();
   const pathname = location.pathname.split("/");
@@ -95,7 +95,7 @@ export default function KnowledgeBase() {
 
   return (
     <div className="w-full max-w-[100%] h-full px-10 py-10 relative">
-      <FlexColStart className="w-full h-full ">
+      <FlexColStart className="w-full h-full relative ">
         <FlexRowStartBtw className="w-full px-3">
           <FlexColStart className="gap-0 w-full">
             <h1 className="text-2xl font-jb font-extrabold text-dark-100">
@@ -115,7 +115,7 @@ export default function KnowledgeBase() {
                   setActiveModal("add-kb");
                 }}
                 enableBounceEffect={true}
-                //   disabled={getTwAvailableNumMut.isPending}
+                disabled={getKbQuery.isPending}
               >
                 <Plus size={15} />
               </Button>
@@ -130,7 +130,7 @@ export default function KnowledgeBase() {
                 //     getTwAvailableNumMut.mutate();
                 //   }}
                 enableBounceEffect={true}
-                //   disabled={getTwAvailableNumMut.isPending}
+                disabled={getKbQuery.isPending}
               >
                 <Cable size={15} />
               </Button>
@@ -140,9 +140,9 @@ export default function KnowledgeBase() {
         <br />
         {/* knowledge base data section */}
 
-        {tabLoading ? (
-          <ChildLoader />
-        ) : kb.length > 0 ? (
+        {tabLoading || getKbQuery.isPending ? (
+          <ChildLoader className={"h-auto"} />
+        ) : !getKbQuery.isPending && kb.length > 0 ? (
           <div className="w-full rounded-md border border-white-400/20 overflow-hidden">
             <Table>
               <TableHeader className="bg-white-300">

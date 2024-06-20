@@ -30,9 +30,15 @@ export function FullPageLoader({ showText, text, fixed, blur }: Props) {
   );
 }
 
-export function ChildLoader({ color }: { color?: string }) {
+export function ChildLoader({
+  color,
+  className,
+}: {
+  color?: string;
+  className?: React.ComponentProps<"div">["className"];
+}) {
   return (
-    <FlexColCenter className="w-full h-full">
+    <FlexColCenter className={cn("w-full h-full", className)}>
       <Spinner size={20} color={color ?? "#000"} />
     </FlexColCenter>
   );
