@@ -55,13 +55,15 @@ export async function extractLinkMarkup(links: string[] = []) {
   try {
     let dataMarkup = [] as { url: string; content: string }[];
     let idx = 0;
+    const browser = await getBrowser();
+
     while (idx < links.length) {
       const link = links[idx];
-      const browser = await getBrowser();
       const page = await browser.newPage();
 
       await page.goto(link, {
-        waitUntil: "domcontentloaded",
+        waitUntil: "networkidle2",
+        timeout: 120000,
       });
 
       // Remove script and style tags
@@ -109,10 +111,10 @@ export async function extractLinkMarkup(links: string[] = []) {
           .trim(),
       });
 
-      await browser.close();
-
       idx++;
     }
+
+    await browser.close();
 
     // remove duplicates from the dataMarkup based on url
     const uniqueDataMarkup = dataMarkup
