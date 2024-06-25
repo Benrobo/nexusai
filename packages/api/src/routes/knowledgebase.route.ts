@@ -32,9 +32,23 @@ export default class KnowledgeBaseRoute {
     );
 
     this.router.post(
+      `${this.path}/retrain`,
+      useCatchErrors(
+        isAuthenticated(this.kbController.retrainData.bind(this.kbController))
+      )
+    );
+
+    this.router.post(
       `${this.path}/link`,
       useCatchErrors(
         isAuthenticated(this.kbController.linkKbToAgent.bind(this.kbController))
+      )
+    );
+
+    this.router.delete(
+      `${this.path}`,
+      useCatchErrors(
+        isAuthenticated(this.kbController.deleteKb.bind(this.kbController))
       )
     );
   }
