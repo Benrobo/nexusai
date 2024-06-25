@@ -37,7 +37,8 @@ export async function scrapeLinksFromWebpage(url: string) {
 
     await browser.close();
 
-    const uniqueLinks = removeDuplicates(_links.slice(0, 2));
+    const MAX_LINKS = 8;
+    const uniqueLinks = removeDuplicates(_links.slice(0, MAX_LINKS));
 
     return uniqueLinks;
   } catch (error) {
@@ -102,7 +103,10 @@ export async function extractLinkMarkup(links: string[] = []) {
 
       dataMarkup.push({
         url: link,
-        content: turndownService.turndown(markup),
+        content: turndownService
+          .turndown(markup)
+          .replace(/\n\s\n+/g, "\n")
+          .trim(),
       });
 
       await browser.close();
