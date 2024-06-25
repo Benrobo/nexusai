@@ -4,7 +4,12 @@ import BaseController from "./base.controller.js";
 import { FileHelper } from "../helpers/file.helper.js";
 import HttpException from "../lib/exception.js";
 import ZodValidation from "../lib/zodValidation.js";
-import { addKbSchema, linkKbSchema } from "../lib/schema_validation.js";
+import {
+  addKbSchema,
+  deleteKbSchema,
+  linkKbSchema,
+  retrainSchema,
+} from "../lib/schema_validation.js";
 import GeminiService from "../services/gemini.service.js";
 import shortUUID from "short-uuid";
 import prisma from "../prisma/prisma.js";
@@ -150,7 +155,7 @@ export default class KnowledgeBaseController extends BaseController {
       );
     }
 
-    //! handle WEB_PAGES datasource
+    // handle WEB_PAGES type
     if (payload.type === "WEB_PAGES") {
       const { url, resave, refId, trashLinks } = payload;
       const cachedData = await redis.get(refId);
@@ -182,8 +187,6 @@ export default class KnowledgeBaseController extends BaseController {
           trashLinks ? !trashLinks.split(",").includes(c.url) : true
         );
 
-        console.log(modifiedMarkup.map((c) => c.url));
-
         // create knowledgebase
         const kb = await prisma.knowledgeBase.create({
           data: {
@@ -211,7 +214,7 @@ export default class KnowledgeBaseController extends BaseController {
               id: shortUUID.generate(),
               kb_id: kb.id,
               user_id: req.user.id,
-              title: payload.title ?? url,
+              title: c.url,
               type: payload.type,
               embedding: emb.embedding,
               content: emb.content,
@@ -282,7 +285,57 @@ export default class KnowledgeBaseController extends BaseController {
         }
       );
     }
-    // const pdfText = this.fileHelper.extractText(req.body.pdf);
+  }
+
+  public async deleteKb(req: Request & IReqObject, res: Response) {
+    const user = req.user;
+    const payload = req.body as { agent_id: string; kb_id: string };
+
+    await ZodValidation(deleteKbSchema, payload, req.serverUrl);
+
+    const { agent_id: agentId, kb_id: kbId } = payload;
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: agentId,
+        userId: user.id,
+      },
+    });
+
+    const kb = await prisma.knowledgeBase.findFirst({
+      where: {
+        id: kbId,
+        userId: user.id,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    if (!kb) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Knowledge base not found",
+        404
+      );
+    }
+
+    // delete kb
+    await prisma.knowledgeBase.delete({
+      where: {
+        id: kbId,
+        userId: user.id,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Knowledge base deleted successfully",
+      200
+    );
   }
 
   // link knowledge base to agent
@@ -443,10 +496,10 @@ export default class KnowledgeBaseController extends BaseController {
     const user = req.user;
     const payload = req.body as IRetrainData;
 
-    await ZodValidation(linkKbSchema, payload, req.serverUrl);
+    await ZodValidation(retrainSchema, payload, req.serverUrl);
 
     // check if agent exists
-    const agent = await prisma.agents.findUnique({
+    const agent = await prisma.agents.findFirst({
       where: {
         id: payload.agent_id,
         userId: user.id,
@@ -458,10 +511,19 @@ export default class KnowledgeBaseController extends BaseController {
     }
 
     // check if kb exists
-    const kb = await prisma.knowledgeBase.findUnique({
+    const kb = await prisma.knowledgeBase.findFirst({
       where: {
         id: payload.kb_id,
         userId: user.id,
+      },
+      select: {
+        kb_data: {
+          select: {
+            id: true,
+            type: true,
+            title: true, // url
+          },
+        },
       },
     });
 
@@ -474,5 +536,43 @@ export default class KnowledgeBaseController extends BaseController {
     }
 
     // make sure kb type is no other than WEB_PAGES
+    // @ts-expect-error
+    if (!kb.kb_data[0]?.type === "WEB_PAGES") {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Knowledge base type must be WEB_PAGES",
+        404
+      );
+    }
+
+    const kbData = kb.kb_data;
+    const url = kbData
+      .map((k) => k.title)
+      .filter((v, i, a) => a.findIndex((d) => d === v) === i);
+    const markup = await extractLinkMarkup(url);
+
+    // update kb data with new embedding
+    for (const m of markup) {
+      const embedding = await this.googleService.generateEmbedding(m.content);
+
+      for (const emb of embedding) {
+        await KbHelper.updateKnowledgeBaseData({
+          id: shortUUID.generate(),
+          kb_id: payload.kb_id,
+          user_id: user.id,
+          title: m.url,
+          embedding: emb.embedding,
+          content: emb.content,
+          updated_at: new Date(),
+        });
+      }
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Knowledge base retrained successfully",
+      200
+    );
   }
 }
