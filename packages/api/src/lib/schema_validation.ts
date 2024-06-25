@@ -125,7 +125,13 @@ export const addKbSchema = zod.object({
       required_error: "refId is required",
     })
     .optional(),
-  resave: zod.boolean().optional(),
+  resave: zod
+    .string()
+    .refine((v) => ["true", "false"].includes(v), {
+      message: "resave must be a boolean",
+    })
+    .optional(),
+  trashLinks: zod.string().optional(),
   url: zod
     .string({
       required_error: "URL is required",
