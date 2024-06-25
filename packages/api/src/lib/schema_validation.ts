@@ -198,3 +198,12 @@ export const retrainSchema = zod.object({
     required_error: "Knowledge base ID is required",
   }),
 });
+
+export const deleteKbSchema = zod.object({
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
+  }),
+  kb_id: zod.string({
+    required_error: "Knowledge base ID is required",
+  }),
+});
