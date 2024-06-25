@@ -12,6 +12,16 @@ interface AddKbData {
   updated_at: Date;
 }
 
+interface UpdateKbData {
+  id: string;
+  kb_id: string;
+  user_id: string;
+  title: string;
+  embedding: number[];
+  content: string;
+  updated_at: Date;
+}
+
 export default class KbHelper {
   public static async addKnowledgeBaseData(props: AddKbData) {
     const {
@@ -38,6 +48,19 @@ export default class KbHelper {
             ${created_at},
             ${updated_at}
           )
+        `;
+  }
+
+  public static async updateKnowledgeBaseData(props: UpdateKbData) {
+    const { id, user_id, title, embedding, content, updated_at, kb_id } = props;
+    await prisma.$executeRaw`
+          UPDATE public."knowledge_base_data" 
+          SET 
+            title = ${title},
+            embedding = ${embedding}::numeric[],
+            content = ${content},
+            updated_at = ${updated_at}
+          WHERE id = ${id} AND "user_id" = ${user_id} AND "kb_id" = ${kb_id}
         `;
   }
 }
