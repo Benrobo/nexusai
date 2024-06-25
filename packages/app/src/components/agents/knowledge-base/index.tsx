@@ -11,6 +11,7 @@ import {
   Brain,
   Cable,
   Library,
+  Pause,
   Pen,
   Play,
   Plus,
@@ -31,10 +32,11 @@ import type { KBType, ResponseData } from "@/types";
 import Button from "@/components/ui/button";
 import AddKnowledgeBaseModal from "./addKb";
 import { useQuery } from "@tanstack/react-query";
-import { getKnowledgeBase } from "@/http/requests";
+import { getKnowledgeBase, retrainKbData } from "@/http/requests";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 import { ChildLoader } from "@/components/Loader";
+import { Spinner } from "@/components/Spinner";
 
 // Knowledgebase Tab
 
@@ -74,6 +76,7 @@ export default function KnowledgeBase() {
   const pathname = location.pathname.split("/");
   const agentId = pathname[pathname.length - 1];
   const [kb, setKb] = useState<KBData[]>([]);
+  const [trainingLoader, setTrainingLoader] = useState<string[]>([]);
   const getKbQuery = useQuery({
     queryKey: ["knowledge-base"],
     queryFn: async () => await getKnowledgeBase(agentId),
@@ -93,6 +96,27 @@ export default function KnowledgeBase() {
       setTabLoading(false);
     }
   }, [getKbQuery]);
+
+  const handleTrainingKbData = async (kb_id: string) => {
+    setTrainingLoader([...trainingLoader, kb_id]);
+    toast.promise(
+      retrainKbData({
+        kb_id: kb_id,
+        agent_id: agentId,
+      }),
+      {
+        loading: "Retraining...",
+        success: () => {
+          setTrainingLoader(trainingLoader.filter((id) => id !== kb_id));
+          return "Data retrained successfully";
+        },
+        error: (error: any) => {
+          const err = error.response.data as ResponseData;
+          return err.message ?? "An error occurred while retraining.";
+        },
+      }
+    );
+  };
 
   return (
     <div className="w-full max-w-[100%] h-full px-10 py-10 relative">
@@ -192,7 +216,7 @@ export default function KnowledgeBase() {
                         {kb.status}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right ">
                       {kb.type === "WEB_PAGES" && (
                         <TooltipComp text={"Edit Data"}>
                           <button className="mr-2">
@@ -204,9 +228,17 @@ export default function KnowledgeBase() {
                       {/* for now , we can only retrain webpages data */}
                       {/* Since pdf aren't getting stored anywhere */}
                       {kb.type === "WEB_PAGES" && (
-                        <TooltipComp text={"Delete"}>
-                          <button className="mr-2">
-                            <Play size={15} className="stroke-green-100" />
+                        <TooltipComp text={"Retrain Data"}>
+                          <button
+                            className="mr-2 disabled:opacity-50"
+                            onClick={() => handleTrainingKbData(kb.kb_id)}
+                            disabled={trainingLoader.includes(kb.kb_id)}
+                          >
+                            {trainingLoader.includes(kb.kb_id) ? (
+                              <Pause size={15} color="#ff4741" />
+                            ) : (
+                              <Play size={15} className="stroke-green-100" />
+                            )}
                           </button>
                         </TooltipComp>
                       )}

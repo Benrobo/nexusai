@@ -92,3 +92,13 @@ export const getKnowledgeBase = async (id: string) => {
   const req = await $axios.get(`/knowledge-base/${id}`);
   return req.data;
 };
+
+export const retrainKbData = async (data: any) => {
+  const req = await $axios.post(`/knowledge-base/retrain`, data);
+  return req.data;
+};
+
+export const deleteKnowledgeBase = async (data: any) => {
+  const req = await $axios.delete(`/knowledge-base`, data);
+  return req.data;
+};

@@ -360,3 +360,10 @@ export const Pen = (props: SvgIconProps) => (
     <path d="m15 5 4 4" />
   </IconMarkup>
 );
+
+export const Pause = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <rect x="14" y="4" width="4" height="16" rx="1" />
+    <rect x="6" y="4" width="4" height="16" rx="1" />
+  </IconMarkup>
+);

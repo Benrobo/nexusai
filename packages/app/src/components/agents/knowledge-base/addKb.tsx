@@ -10,7 +10,7 @@ import { Brain, Trash, X } from "@/components/icons";
 import Modal from "@/components/Modal";
 import Button from "@/components/ui/button";
 import { addKnowledgeBase } from "@/http/requests";
-import { cn } from "@/lib/utils";
+import { cn, validateUrl } from "@/lib/utils";
 import type { KBType, ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import React, { useRef, useState } from "react";
@@ -56,16 +56,43 @@ export default function AddKnowledgeBaseModal({
     name: "",
     size: 0,
   });
+  const [websiteUrl, setWebsiteUrl] = useState<string>("");
+  const [trashLinks, setTrashLinks] = useState<string[]>([]);
+  const [webPagesResponse, setWebPagesResponse] = useState({
+    refId: "",
+    links: [],
+  });
   const addKbMut = useMutation({
     mutationFn: async (data: any) => await addKnowledgeBase(data),
     onSuccess: (data: any) => {
       const resp = data as ResponseData;
-      toast.success(resp.message ?? "Knowledge base added successfully");
-      closeModal();
-      refetch();
+      if (selectedKbType === "PDF") {
+        toast.success(resp.message ?? "Knowledge base added successfully");
+        closeModal();
+        refetch();
+      }
+
+      if (selectedKbType === "WEB_PAGES") {
+        setWebPagesResponse({
+          refId: resp.data.refId,
+          links: resp.data.links,
+        });
+      }
     },
     onError: (error: any) => {
-      toast.error(error.message ?? "An error occurred");
+      const err = error.response.data as ResponseData;
+      const msg = err.message ?? "An error occurred";
+      toast.error(msg);
+
+      if (selectedKbType === "WEB_PAGES") {
+        setWebPagesResponse({
+          refId: "",
+          links: [],
+        });
+        setTrashLinks([]);
+      }
+
+      addKbMut.reset();
     },
   });
 
@@ -98,14 +125,33 @@ export default function AddKnowledgeBaseModal({
   };
 
   const submitData = () => {
+    const formData = new FormData();
+
     if (selectedKbType === "PDF" && file?.data) {
-      const formData = new FormData();
       formData.append("file", file.data);
       formData.append("type", selectedKbType);
       formData.append("title", file.name);
       formData.append("agent_id", agentId);
 
       // dispatch action to upload file
+      addKbMut.mutate(formData);
+    }
+
+    if (selectedKbType === "WEB_PAGES") {
+      formData.append("url", websiteUrl);
+      formData.append("type", selectedKbType);
+      formData.append("agent_id", agentId);
+
+      if (webPagesResponse.refId && webPagesResponse.refId.length > 0) {
+        // Save the data permanently in db
+        formData.append("refId", webPagesResponse.refId);
+        formData.append("resave", "true");
+      }
+
+      if (trashLinks.length > 0) {
+        formData.append("trashLinks", trashLinks.join(","));
+      }
+
       addKbMut.mutate(formData);
     }
   };
@@ -213,18 +259,32 @@ export default function AddKnowledgeBaseModal({
               <FlexColStart className="w-full h-auto bg-white-400/10 rounded-2xl mt-3 border-[1px] border-white-400/20 relative px-6 py-8">
                 <FlexRowStartCenter className="w-full h-[50px] py-1 px-1 bg-white-100 rounded-full gap-0 overflow-hidden border-[1px] border-white-400/20">
                   <input
-                    className="bg-none outline-none border-none ring-0 w-full h-[30px] text-dark-100 font-jb text-xs font-semibold px-5 translate-x-1"
+                    className="bg-none outline-none border-none ring-0 w-full h-[30px] text-dark-100 font-jb text-xs font-semibold px-5 translate-x-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="https://www.example.com"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    disabled={
+                      selectedKbType === "WEB_PAGES" && addKbMut.isPending
+                    }
                   />
                   <Button
                     intent={"dark"}
                     className="w-[150px] h-[40px] px-4 text-[10px] font-ppReg drop-shadow disabled:bg-dark-100/30 disabled:text-white-100 rounded-full"
-                    //   onClick={() => {
-                    //     setModalOpen(true);
-                    //     getTwAvailableNumMut.mutate();
-                    //   }}
+                    onClick={() => {
+                      // check if url is valid
+                      if (!validateUrl(websiteUrl)) {
+                        toast.error("Invalid url");
+                        return;
+                      }
+                      submitData();
+                    }}
                     enableBounceEffect={true}
-                    disabled={true}
+                    disabled={
+                      selectedKbType === "WEB_PAGES" && addKbMut.isPending
+                    }
+                    isLoading={
+                      selectedKbType === "WEB_PAGES" && addKbMut.isPending
+                    }
                   >
                     Fetch Pages
                   </Button>
@@ -232,16 +292,35 @@ export default function AddKnowledgeBaseModal({
 
                 {/* webpage url's */}
                 <FlexColStart className="w-full h-full max-h-[200px] gap-1 overflow-scroll overflow-x-hidden">
-                  {Array.from({ length: 0 }).map((_, i) => (
-                    <FlexRowStart className="w-full mt-3" key={i}>
-                      <span className="text-xs font-jb font-semibold text-white-400">
-                        https://www.example.com
+                  {webPagesResponse.links.length > 0 ? (
+                    webPagesResponse.links.map((l, i) => (
+                      <FlexRowStart className="w-full mt-3" key={i}>
+                        <span className="text-xs font-jb font-semibold text-white-400">
+                          {l}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setTrashLinks([...trashLinks, l]);
+                            setWebPagesResponse({
+                              ...webPagesResponse,
+                              links: webPagesResponse.links.filter(
+                                (link) => link !== l
+                              ),
+                            });
+                          }}
+                          className="active:scale-[1.1] scale-[.95] transition-all"
+                        >
+                          <Trash size={15} className="stroke-white-400" />
+                        </button>
+                      </FlexRowStart>
+                    ))
+                  ) : (
+                    <FlexColStartCenter className="w-full h-full gap-1">
+                      <span className="text-xs font-jb text-white-400">
+                        No links found.
                       </span>
-                      <button>
-                        <Trash size={15} className="stroke-white-400" />
-                      </button>
-                    </FlexRowStart>
-                  ))}
+                    </FlexColStartCenter>
+                  )}
                 </FlexColStart>
               </FlexColStart>
             )}
@@ -253,9 +332,22 @@ export default function AddKnowledgeBaseModal({
                 onClick={submitData}
                 enableBounceEffect={true}
                 disabled={
-                  !file?.data && selectedKbType === "PDF" ? true : false
+                  !file?.data && selectedKbType === "PDF"
+                    ? true
+                    : selectedKbType === "WEB_PAGES" && !webPagesResponse.refId
+                      ? true
+                      : selectedKbType === "WEB_PAGES" && addKbMut.isPending
+                        ? true
+                        : false
                 }
-                isLoading={addKbMut.isPending}
+                isLoading={
+                  selectedKbType === "PDF" && addKbMut.isPending
+                    ? true
+                    : selectedKbType === "WEB_PAGES" &&
+                        webPagesResponse.refId.length > 0
+                      ? true
+                      : false
+                }
               >
                 Submit Data
               </Button>
