@@ -5,6 +5,7 @@ import {
   extractLinkMarkup,
   scrapeLinksFromWebpage,
 } from "./services/scrapper.js";
+import { cfQwenChat } from "./services/cloudflare.service.js";
 
 // Test all services without writing test scripts
 
@@ -15,7 +16,11 @@ export default async () => {
     const geminiService = new GeminiService();
     const twService = new TwilioService();
 
-    // const url = "https://trulyao.dev";
+    // const qwenData = await cfQwenChat({});
+
+    // console.log(qwenData);
+
+    const url = "https://trulyao.dev";
     // const links = [
     //   "/",
     //   "/blog",
@@ -27,7 +32,7 @@ export default async () => {
     //   "/blog",
     // ];
 
-    const url = "https://benrobo.vercel.app";
+    // const url = "https://benrobo.vercel.app";
 
     // const links = await scrapeLinksFromWebpage(url);
     // const markup = await extractLinkMarkup(url, links);

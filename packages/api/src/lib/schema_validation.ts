@@ -120,6 +120,21 @@ export const addKbSchema = zod.object({
   agent_id: zod.string({
     required_error: "Agent ID is required",
   }),
+  refId: zod
+    .string({
+      required_error: "refId is required",
+    })
+    .optional(),
+  resave: zod.boolean().optional(),
+  url: zod
+    .string({
+      required_error: "URL is required",
+    })
+    .regex(
+      /^(http|https):\/\/[^ "]+$/,
+      "URL must start with http:// or https://"
+    )
+    .optional(),
 });
 
 // link agent to kb

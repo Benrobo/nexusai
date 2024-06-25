@@ -39,6 +39,10 @@ const env = {
     API_KEY: process.env.LS_API_KEY!,
     WH_SECRET: process.env.LS_WH_SECRET!,
   },
+  CF: {
+    AUTH_TOKEN: process.env.CF_AUTH_TOKEN!,
+    ACCT_ID: process.env.CF_ACCT_ID!,
+  },
 };
 
 export default env;

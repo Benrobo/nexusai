@@ -12,17 +12,35 @@ import sendResponse from "../lib/sendResponse.js";
 import KbHelper from "../helpers/kb.helper.js";
 import type { KnowledgeBaseType } from "@prisma/client";
 import logger from "../config/logger.js";
+import {
+  extractLinkMarkup,
+  scrapeLinksFromWebpage,
+} from "../services/scrapper.js";
+import redis from "../config/redis.js";
 
 interface addKbPayload {
   title: string;
   type: KnowledgeBaseType;
   agent_id: string;
+  url: string; // only when type is WEB_PAGES
+  resave: boolean; // only when type is WEB_PAGES
+  refId: string; // only when type is WEB_PAGES and resave is set to true
+  trashLinks: string[]; // only when type is WEB_PAGES and resave is set to true
 }
 
 interface IRetrainData {
   agent_id: string;
   kb_id: string;
 }
+
+type SavedWebCachedData = {
+  url: string;
+  refId: string;
+  content: {
+    url: string;
+    content: string;
+  }[];
+};
 
 export default class KnowledgeBaseController extends BaseController {
   private fileHelper: FileHelper;
@@ -55,16 +73,16 @@ export default class KnowledgeBaseController extends BaseController {
 
     const withFileTypes = ["TXT", "PDF", "MD"];
 
-    if (!file && !withFileTypes.includes(payload.type)) {
-      throw new HttpException(
-        RESPONSE_CODE.BAD_REQUEST,
-        "File is required",
-        400
-      );
-    }
-
     // handle FILE types
-    if (file) {
+    if (file && payload.type === "PDF") {
+      if (!file && !withFileTypes.includes(payload.type)) {
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "File is required",
+          400
+        );
+      }
+
       //pdf, md, docx, txt
       const validFileType = ["application/pdf", "text/markdown", "text/plain"];
       this.fileHelper.validateFileType(mimeType, validFileType);
@@ -132,8 +150,143 @@ export default class KnowledgeBaseController extends BaseController {
       );
     }
 
-    //! handle WEB_PAGES
+    //! handle WEB_PAGES datasource
     if (payload.type === "WEB_PAGES") {
+      const { url, resave, refId, trashLinks } = payload;
+      const cachedData = await redis.get(url);
+
+      if (resave) {
+        if (!refId) {
+          throw new HttpException(
+            RESPONSE_CODE.BAD_REQUEST,
+            "resave is set to true, but refId is missing.",
+            400
+          );
+        }
+
+        if (!cachedData) {
+          logger.error("Cached data not found in redis");
+          throw new HttpException(
+            RESPONSE_CODE.NOT_FOUND,
+            "Webpage not found, try again later.",
+            404
+          );
+        }
+
+        const data = JSON.parse(cachedData) as SavedWebCachedData;
+        const _cdata = data[refId];
+
+        if (!_cdata) {
+          logger.error("RefId not found in cached data");
+          throw new HttpException(
+            RESPONSE_CODE.NOT_FOUND,
+            "Webpage not found, try again later.",
+            404
+          );
+        }
+
+        const modifiedMarkup = _cdata.content.filter(
+          (c) => !trashLinks.includes(c.url)
+        );
+
+        console.log("Modified markup", modifiedMarkup);
+
+        // create knowledgebase
+        const kb = await prisma.knowledgeBase.create({
+          data: {
+            id: shortUUID.generate(),
+            userId: req.user.id,
+            status: "trained",
+          },
+        });
+
+        if (!kb) {
+          throw new HttpException(
+            RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+            "Error adding knowledge base, try again later.",
+            500
+          );
+        }
+
+        for (const c of modifiedMarkup) {
+          const embedding = await this.googleService.generateEmbedding(
+            c.content
+          );
+
+          for (const emb of embedding) {
+            await KbHelper.addKnowledgeBaseData({
+              id: shortUUID.generate(),
+              kb_id: kb.id,
+              user_id: req.user.id,
+              title: payload.title ?? url,
+              type: payload.type,
+              embedding: emb.embedding,
+              content: emb.content,
+              created_at: new Date(),
+              updated_at: new Date(),
+            });
+          }
+        }
+
+        // link knowledge base to agent
+        await prisma.linkedKnowledgeBase.create({
+          data: {
+            agentId: payload.agent_id,
+            kb_id: kb.id,
+          },
+        });
+
+        return sendResponse.success(
+          res,
+          RESPONSE_CODE.SUCCESS,
+          "Knowledge base added successfully",
+          200
+        );
+
+        return;
+      }
+
+      if (cachedData) {
+        const data = JSON.parse(cachedData) as SavedWebCachedData;
+        const links = data.content.map((d) => d.url);
+        return sendResponse.success(
+          res,
+          RESPONSE_CODE.SUCCESS,
+          "Webpage links fetched successfully",
+          200,
+          {
+            refId: data.refId,
+            links,
+          }
+        );
+      }
+
+      const links = await scrapeLinksFromWebpage(url);
+      const markup = await extractLinkMarkup(links);
+
+      // save content in redis for 10min
+      const ttl = 60 * 10; // 10min
+      const _refId = `markup:${shortUUID.generate()}`;
+      const data = JSON.stringify({
+        refId: _refId,
+        url,
+        content: markup,
+      });
+
+      await redis.set(url, data);
+      await redis.expire(url, ttl);
+
+      // send the urls to the client
+      return sendResponse.success(
+        res,
+        RESPONSE_CODE.SUCCESS,
+        "Webpage links fetched successfully",
+        200,
+        {
+          refId,
+          links,
+        }
+      );
     }
     // const pdfText = this.fileHelper.extractText(req.body.pdf);
   }

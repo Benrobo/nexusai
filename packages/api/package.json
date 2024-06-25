@@ -13,7 +13,8 @@
     "migrate": "prisma migrate dev",
     "start": "node -r tsconfig-paths/register ./dist/server.js",
     "watch": "tsc --watch",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "db:studio": "npx prisma studio"
   },
   "keywords": [],
   "author": "",
