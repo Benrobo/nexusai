@@ -133,11 +133,11 @@ export const linkKbSchema = zod.object({
   agent_id: zod.string({
     required_error: "Agent ID is required",
   }),
-  kb_ids: zod
-    .string({
+  kb_ids: zod.array(
+    zod.string({
       required_error: "Knowledge base ID is required",
     })
-    .array(),
+  ),
 });
 
 // When user clicks on "Buy Number"
