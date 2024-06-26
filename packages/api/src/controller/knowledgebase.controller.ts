@@ -6,6 +6,7 @@ import HttpException from "../lib/exception.js";
 import ZodValidation from "../lib/zodValidation.js";
 import {
   addKbSchema,
+  crawlPageSchema,
   deleteKbSchema,
   linkKbSchema,
   retrainSchema,
@@ -18,7 +19,7 @@ import KbHelper from "../helpers/kb.helper.js";
 import type { KnowledgeBaseType } from "@prisma/client";
 import logger from "../config/logger.js";
 import {
-  extractLinkMarkup,
+  extractLinkMarkupUsingLLM,
   scrapeLinksFromWebpage,
 } from "../services/scrapper.js";
 import redis from "../config/redis.js";
@@ -27,10 +28,8 @@ interface addKbPayload {
   title: string;
   type: KnowledgeBaseType;
   agent_id: string;
-  url: string; // only when type is WEB_PAGES
-  resave: string; // only when type is WEB_PAGES ["true", "false"]
   refId: string;
-  trashLinks: string; // only when type is WEB_PAGES and resave is set to true
+  trashLinks?: string; // only when type is WEB_PAGES
 }
 
 interface IRetrainData {
@@ -157,53 +156,63 @@ export default class KnowledgeBaseController extends BaseController {
 
     // handle WEB_PAGES type
     if (payload.type === "WEB_PAGES") {
-      const { url, resave, refId, trashLinks } = payload;
+      const { refId, trashLinks } = payload;
       const cachedData = await redis.get(refId);
 
-      // Sent only when data needed to be saved  in db for the first time
-      if (resave === "true") {
-        if (!cachedData) {
-          logger.error("Cached data not found in redis");
-          throw new HttpException(
-            RESPONSE_CODE.NOT_FOUND,
-            "Webpage not found, invalid reference ID.",
-            404
-          );
-        }
-
-        const data = JSON.parse(cachedData) as SavedWebCachedData;
-        const dataExists = data.refId === refId;
-
-        if (!dataExists) {
-          logger.error("RefId not found in cached data");
-          throw new HttpException(
-            RESPONSE_CODE.NOT_FOUND,
-            "Webpage not found, try again later.",
-            404
-          );
-        }
-
-        const modifiedMarkup = data.content.filter((c) =>
-          trashLinks ? !trashLinks.split(",").includes(c.url) : true
+      if (!cachedData) {
+        logger.error("Cached data not found in redis");
+        throw new HttpException(
+          RESPONSE_CODE.NOT_FOUND,
+          "Webpage not found, invalid reference ID.",
+          404
         );
+      }
 
-        // create knowledgebase
-        const kb = await prisma.knowledgeBase.create({
-          data: {
-            id: shortUUID.generate(),
-            userId: req.user.id,
-            status: "trained",
-          },
-        });
+      const data = JSON.parse(cachedData) as SavedWebCachedData;
+      const dataExists = data.refId === refId;
 
-        if (!kb) {
-          throw new HttpException(
-            RESPONSE_CODE.INTERNAL_SERVER_ERROR,
-            "Error adding knowledge base, try again later.",
-            500
-          );
-        }
+      if (!dataExists) {
+        logger.error("RefId not found in cached data");
+        throw new HttpException(
+          RESPONSE_CODE.NOT_FOUND,
+          "Webpage not found, try again later.",
+          404
+        );
+      }
 
+      const modifiedMarkup = data.content.filter((c) => {
+        if (!trashLinks) return true;
+        const trash = trashLinks.split(",");
+        return !trash.includes(c.url);
+      });
+
+      if (modifiedMarkup.length === 0) {
+        logger.error("No valid links found while modifying markup");
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "No valid links found, try again later.",
+          400
+        );
+      }
+
+      // create knowledgebase
+      const kb = await prisma.knowledgeBase.create({
+        data: {
+          id: shortUUID.generate(),
+          userId: req.user.id,
+          status: "trained",
+        },
+      });
+
+      if (!kb) {
+        throw new HttpException(
+          RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+          "Error adding knowledge base, try again later.",
+          500
+        );
+      }
+
+      try {
         for (const c of modifiedMarkup) {
           const embedding = await this.googleService.generateEmbedding(
             c.content
@@ -223,66 +232,37 @@ export default class KnowledgeBaseController extends BaseController {
             });
           }
         }
-
-        // link knowledge base to agent
-        await prisma.linkedKnowledgeBase.create({
-          data: {
-            agentId: payload.agent_id,
-            kb_id: kb.id,
+      } catch (e: any) {
+        // if an error occur, delete created kb
+        await prisma.knowledgeBase.delete({
+          where: {
+            id: kb.id,
           },
         });
 
-        // clear cache
-        await redis.del(refId);
-
-        return sendResponse.success(
-          res,
-          RESPONSE_CODE.SUCCESS,
-          "Knowledge base added successfully",
-          200
+        throw new HttpException(
+          RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+          "Error adding knowledge base, try again later.",
+          500
         );
       }
 
-      if (cachedData) {
-        const data = JSON.parse(cachedData) as SavedWebCachedData;
-        const links = data.content.map((d) => d.url);
-        return sendResponse.success(
-          res,
-          RESPONSE_CODE.SUCCESS,
-          "Webpage links fetched successfully",
-          200,
-          {
-            refId: data.refId,
-            links,
-          }
-        );
-      }
-
-      const links = await scrapeLinksFromWebpage(url);
-      const markup = await extractLinkMarkup(links);
-
-      // save content in redis for 10min
-      const ttl = 60 * 10; // 10min
-      const _refId = shortUUID.generate();
-      const data = JSON.stringify({
-        refId: _refId,
-        url,
-        content: markup,
+      // link knowledge base to agent
+      await prisma.linkedKnowledgeBase.create({
+        data: {
+          agentId: payload.agent_id,
+          kb_id: kb.id,
+        },
       });
 
-      await redis.set(_refId, data);
-      await redis.expire(_refId, ttl);
+      // clear cache
+      await redis.del(refId);
 
-      // send the urls to the client
       return sendResponse.success(
         res,
         RESPONSE_CODE.SUCCESS,
-        "Webpage links fetched successfully",
-        200,
-        {
-          refId: _refId,
-          links,
-        }
+        "Knowledge base added successfully",
+        200
       );
     }
   }
@@ -335,6 +315,74 @@ export default class KnowledgeBaseController extends BaseController {
       RESPONSE_CODE.SUCCESS,
       "Knowledge base deleted successfully",
       200
+    );
+  }
+
+  public async crawlWebpage(req: Request & IReqObject, res: Response) {
+    const payload = req.body as { url: string; agent_id: string };
+    const user = req.user;
+
+    await ZodValidation(crawlPageSchema, payload, req.serverUrl);
+
+    const { url, agent_id } = payload;
+
+    // check if agent exists
+
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: agent_id,
+        userId: user.id,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    // check if cahced data exists
+    const cachedData = await redis.get(url);
+
+    if (cachedData) {
+      const data = JSON.parse(cachedData) as SavedWebCachedData;
+      const links = data?.content?.map((d) => d.url);
+      return sendResponse.success(
+        res,
+        RESPONSE_CODE.SUCCESS,
+        "Webpage links fetched successfully",
+        200,
+        {
+          refId: data.refId,
+          links,
+        }
+      );
+    }
+
+    // crawl page
+    const links = await scrapeLinksFromWebpage(url);
+    const markup = await extractLinkMarkupUsingLLM(links);
+
+    // save content in redis for 10min
+    const ttl = 60 * 10; // 10min
+    const refId = shortUUID.generate();
+    const data = JSON.stringify({
+      refId: refId,
+      url,
+      content: markup,
+    });
+
+    await redis.set(refId, data);
+    await redis.expire(refId, ttl);
+
+    // send the urls to the client
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Webpage links fetched successfully",
+      200,
+      {
+        refId,
+        links,
+      }
     );
   }
 
@@ -549,7 +597,7 @@ export default class KnowledgeBaseController extends BaseController {
     const url = kbData
       .map((k) => k.title)
       .filter((v, i, a) => a.findIndex((d) => d === v) === i);
-    const markup = await extractLinkMarkup(url);
+    const markup = await extractLinkMarkupUsingLLM(url);
 
     // update kb data with new embedding
     for (const m of markup) {

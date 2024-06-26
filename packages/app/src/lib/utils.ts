@@ -38,7 +38,7 @@ export const formatPhoneNumber = (input: string) => {
 };
 
 export const formatNumber = (number: string) => {
-  return number.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, "$1 ($2) $3-$4");
+  return number?.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, "$1 ($2) $3-$4");
 };
 
 export const validateUrl = (url: string) => {

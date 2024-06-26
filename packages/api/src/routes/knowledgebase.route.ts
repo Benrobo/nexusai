@@ -39,6 +39,13 @@ export default class KnowledgeBaseRoute {
     );
 
     this.router.post(
+      `${this.path}/crawl-page`,
+      useCatchErrors(
+        isAuthenticated(this.kbController.crawlWebpage.bind(this.kbController))
+      )
+    );
+
+    this.router.post(
       `${this.path}/link`,
       useCatchErrors(
         isAuthenticated(this.kbController.linkKbToAgent.bind(this.kbController))

@@ -1,10 +1,9 @@
 import axios from "axios";
-import cheerio from "cheerio";
 import puppeteer from "puppeteer";
 import { RESPONSE_CODE } from "../types/index.js";
 import HttpException from "../lib/exception.js";
 import TurndownService from "turndown";
-import { cfQwenChat } from "./cloudflare.service.js";
+import logger from "../config/logger.js";
 
 const turndownService = new TurndownService();
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
@@ -51,82 +50,82 @@ export async function scrapeLinksFromWebpage(url: string) {
   }
 }
 
-export async function extractLinkMarkup(links: string[] = []) {
+export async function extractLinkMarkupUsingLLM(links: string[] = []) {
+  logger.info("Extracting link markup using LLM");
   try {
     let dataMarkup = [] as { url: string; content: string }[];
-    let idx = 0;
-    const browser = await getBrowser();
-
-    while (idx < links.length) {
-      const link = links[idx];
-      const page = await browser.newPage();
-
-      await page.goto(link, {
-        waitUntil: "networkidle2",
-        timeout: 120000,
-      });
-
-      // Remove script and style tags
-      // get the valid html tags back and not the text content
-      const markup = await page.evaluate(() => {
-        const invalidTags =
-          "script,style,noscript,svg,img,path,input,noscript,button,next-route-announcer,head".split(
-            ","
-          );
-        // remove tag
-        for (const tag of invalidTags) {
-          const elements = document.querySelectorAll(tag);
-          elements.forEach((el) => {
-            el.parentNode.removeChild(el);
-          });
-        }
-        return document.body.innerHTML;
-      });
-
-      // get an LLM ready markdown content
-      // ! I initially wanted to use this LLM for markdown conversion but it's not working as expected
-      // ! The output returned aren't consistent
-      //       const qwenData = await cfQwenChat({
-      //         custom_prompt: {
-      //           prompt: `You are an AI assistant that converts webpage content to markdown while filtering out unnecessary information. Please follow these guidelines:
-      // Remove any inappropriate content, ads, or irrelevant information
-      // If unsure about including something, err on the side of keeping it
-      // Answer in English. Include all points in markdown in sufficient detail to be useful.
-      // Aim for clean, readable markdown.
-      // Return the markdown and nothing else.`,
-      //           messages: [
-      //             {
-      //               role: "system",
-      //               content: `Input: ${markup} Output:\`\`\`markdown\n`,
-      //             },
-      //           ],
-      //         },
-      //       });
-
+    for (const l of links) {
+      const md = await getCleanMD(l);
       dataMarkup.push({
-        url: link,
-        content: turndownService
-          .turndown(markup)
-          .replace(/\n\s\n+/g, "\n")
-          .trim(),
+        url: l,
+        content: md,
       });
-
-      idx++;
     }
 
-    await browser.close();
-
-    // remove duplicates from the dataMarkup based on url
-    const uniqueDataMarkup = dataMarkup
-      .filter((v, i, a) => a.findIndex((t) => t.url === v.url) === i)
-      .filter((d) => d.content.length > 0);
-
-    return uniqueDataMarkup;
-  } catch (error) {
-    console.error("Error:", error);
+    return dataMarkup;
+  } catch (e: any) {
     throw new HttpException(
       RESPONSE_CODE.EXTRACT_LINKS_ERROR,
-      "Error extracting links",
+      "Error extracting link markup",
+      400
+    );
+  }
+}
+
+export async function extractLinkMarkupUsingBrowser(links: string[] = []) {
+  const browser = await getBrowser();
+  let dataMarkup = [] as { url: string; content: string }[];
+
+  for (const link of links) {
+    const page = await browser.newPage();
+    await page.goto(link);
+    // Remove script and style tags
+    // get the valid html tags back and not the text content
+    const markup = await page.evaluate(() => {
+      const invalidTags =
+        "script,style,noscript,svg,img,path,input,noscript,button,next-route-announcer,head".split(
+          ","
+        );
+      // remove tag
+      for (const tag of invalidTags) {
+        const elements = document.querySelectorAll(tag);
+        elements.forEach((el) => {
+          el.parentNode.removeChild(el);
+        });
+      }
+      return document.body.innerHTML;
+    });
+
+    await page.close();
+
+    dataMarkup.push({
+      url: link,
+      content: turndownService
+        .turndown(markup)
+        .replace(/\n\s\n+/g, "\n")
+        .trim(),
+    });
+  }
+
+  await browser.close();
+
+  return dataMarkup;
+}
+
+// A fallback function to extract link using @Dhravya markdown cloudflare function
+// credit: https://github.com/Dhravya/markdowner
+export async function getCleanMD(link: string) {
+  try {
+    const apiUrl = "https://md.dhr.wtf/";
+    const req = await axios.get(`${apiUrl}?url=${link}`, {
+      timeout: 10000,
+    });
+    const textresp = req.data;
+    return textresp;
+  } catch (e: any) {
+    throw new HttpException(
+      RESPONSE_CODE.EXTRACT_LINKS_ERROR,
+      "Error extracting link markup",
       400
     );
   }

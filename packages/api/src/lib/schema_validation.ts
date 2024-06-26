@@ -125,22 +125,7 @@ export const addKbSchema = zod.object({
       required_error: "refId is required",
     })
     .optional(),
-  resave: zod
-    .string()
-    .refine((v) => ["true", "false"].includes(v), {
-      message: "resave must be a boolean",
-    })
-    .optional(),
   trashLinks: zod.string().optional(),
-  url: zod
-    .string({
-      required_error: "URL is required",
-    })
-    .regex(
-      /^(http|https):\/\/[^ "]+$/,
-      "URL must start with http:// or https://"
-    )
-    .optional(),
 });
 
 // link agent to kb
@@ -205,5 +190,19 @@ export const deleteKbSchema = zod.object({
   }),
   kb_id: zod.string({
     required_error: "Knowledge base ID is required",
+  }),
+});
+
+export const crawlPageSchema = zod.object({
+  url: zod
+    .string({
+      required_error: "URL is required",
+    })
+    .regex(
+      /^(http|https):\/\/[^ "]+$/,
+      "URL must start with http:// or https://"
+    ),
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
   }),
 });
