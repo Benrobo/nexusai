@@ -88,8 +88,23 @@ export const addKnowledgeBase = async (data: any) => {
   return req.data;
 };
 
+export const crawlWebpage = async (data: any) => {
+  const req = await $axios.post("/knowledge-base/crawl-page", data);
+  return req.data;
+};
+
 export const getKnowledgeBase = async (id: string) => {
   const req = await $axios.get(`/knowledge-base/${id}`);
+  return req.data;
+};
+
+export const getAllKnowledgeBase = async () => {
+  const req = await $axios.get(`/knowledge-base`);
+  return req.data;
+};
+
+export const linkKnowledgeBase = async (data: any) => {
+  const req = await $axios.post(`/knowledge-base/link`, data);
   return req.data;
 };
 
