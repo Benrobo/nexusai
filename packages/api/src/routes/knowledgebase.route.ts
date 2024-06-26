@@ -31,6 +31,15 @@ export default class KnowledgeBaseRoute {
       )
     );
 
+    this.router.get(
+      `${this.path}`,
+      useCatchErrors(
+        isAuthenticated(
+          this.kbController.getAllKnowledgeBase.bind(this.kbController)
+        )
+      )
+    );
+
     this.router.post(
       `${this.path}/retrain`,
       useCatchErrors(
