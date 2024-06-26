@@ -29,6 +29,7 @@ interface addKbPayload {
   type: KnowledgeBaseType;
   agent_id: string;
   refId: string;
+  url: string;
   trashLinks?: string; // only when type is WEB_PAGES
 }
 
@@ -156,8 +157,8 @@ export default class KnowledgeBaseController extends BaseController {
 
     // handle WEB_PAGES type
     if (payload.type === "WEB_PAGES") {
-      const { refId, trashLinks } = payload;
-      const cachedData = await redis.get(refId);
+      const { refId, url, trashLinks } = payload;
+      const cachedData = await redis.get(url);
 
       if (!cachedData) {
         logger.error("Cached data not found in redis");
@@ -256,7 +257,7 @@ export default class KnowledgeBaseController extends BaseController {
       });
 
       // clear cache
-      await redis.del(refId);
+      await redis.del(url);
 
       return sendResponse.success(
         res,
@@ -345,6 +346,15 @@ export default class KnowledgeBaseController extends BaseController {
     if (cachedData) {
       const data = JSON.parse(cachedData) as SavedWebCachedData;
       const links = data?.content?.map((d) => d.url);
+
+      if (links.length === 0) {
+        throw new HttpException(
+          RESPONSE_CODE.NOT_FOUND,
+          "No links found on the webpage",
+          404
+        );
+      }
+
       return sendResponse.success(
         res,
         RESPONSE_CODE.SUCCESS,
@@ -360,6 +370,15 @@ export default class KnowledgeBaseController extends BaseController {
     // crawl page
     const links = await scrapeLinksFromWebpage(url);
     const markup = await extractLinkMarkupUsingLLM(links);
+
+    // if markup is empty
+    if (markup.length === 0) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "No links found on the webpage",
+        404
+      );
+    }
 
     // save content in redis for 10min
     const ttl = 60 * 10; // 10min
@@ -535,6 +554,73 @@ export default class KnowledgeBaseController extends BaseController {
       "Knowledge base fetched successfully",
       200,
       kbData
+    );
+  }
+
+  public async getAllKnowledgeBase(req: Request & IReqObject, res: Response) {
+    const userId = req.user.id;
+
+    const kb = await prisma.knowledgeBase.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        linked_knowledge_base: {
+          select: {
+            agentId: true,
+            kb_id: true,
+            agents: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        status: true,
+        id: true,
+        kb_data: true,
+      },
+    });
+
+    // const kbData = kb.map((k) => k.kb_data[0])[0];
+
+    // i need a well structure data which contain the data of the kb and the agent id
+
+    const allKb: {
+      id: string;
+      type: KnowledgeBaseType;
+      title: string;
+      status?: string;
+      linked_kb: {
+        agentId: string;
+        kb_id: string;
+      }[];
+    }[] = [];
+
+    for (const k of kb) {
+      const linkedKb = k.linked_knowledge_base;
+      const kbData = k.kb_data.find((d) => d.kb_id === k.id);
+      allKb.push({
+        id: k.id,
+        type: kbData.type,
+        title: kbData.title,
+        status: k.status,
+        linked_kb: linkedKb.map((lk) => {
+          return {
+            agentId: lk.agentId,
+            kb_id: lk.kb_id,
+            name: lk.agents.name,
+          };
+        }),
+      });
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Knowledge base fetched successfully",
+      200,
+      allKb
     );
   }
 
