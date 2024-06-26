@@ -37,6 +37,7 @@ import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 import { ChildLoader } from "@/components/Loader";
 import { Spinner } from "@/components/Spinner";
+import LinkKnowledgeBase from "./link-kb";
 
 // Knowledgebase Tab
 
@@ -150,10 +151,9 @@ export default function KnowledgeBase() {
               <Button
                 intent={"dark"}
                 className="h-[36px] px-4 text-[10px] font-ppReg drop-shadow disabled:bg-dark-100/70 disabled:text-white-100"
-                //   onClick={() => {
-                //     setModalOpen(true);
-                //     getTwAvailableNumMut.mutate();
-                //   }}
+                onClick={() => {
+                  setActiveModal("link-kb");
+                }}
                 enableBounceEffect={true}
                 disabled={getKbQuery.isPending}
               >
@@ -267,6 +267,14 @@ export default function KnowledgeBase() {
 
       {activeModal === "add-kb" && (
         <AddKnowledgeBaseModal
+          closeModal={() => setActiveModal(null)}
+          refetch={() => getKbQuery.refetch()}
+          agentId={agentId}
+        />
+      )}
+
+      {activeModal === "link-kb" && (
+        <LinkKnowledgeBase
           closeModal={() => setActiveModal(null)}
           refetch={() => getKbQuery.refetch()}
           agentId={agentId}
