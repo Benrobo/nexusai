@@ -11,6 +11,7 @@ const $axios = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true, // to allow cookies
+  timeout: 60000, // 60 seconds
 });
 
 export default $axios;
