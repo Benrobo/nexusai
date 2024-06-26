@@ -370,8 +370,8 @@ export default class KnowledgeBaseController extends BaseController {
       content: markup,
     });
 
-    await redis.set(refId, data);
-    await redis.expire(refId, ttl);
+    await redis.set(url, data);
+    await redis.expire(url, ttl);
 
     // send the urls to the client
     return sendResponse.success(
