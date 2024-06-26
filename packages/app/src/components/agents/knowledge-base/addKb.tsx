@@ -9,7 +9,7 @@ import {
 import { Brain, Trash, X } from "@/components/icons";
 import Modal from "@/components/Modal";
 import Button from "@/components/ui/button";
-import { addKnowledgeBase } from "@/http/requests";
+import { addKnowledgeBase, crawlWebpage } from "@/http/requests";
 import { cn, validateUrl } from "@/lib/utils";
 import type { KBType, ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
@@ -58,40 +58,49 @@ export default function AddKnowledgeBaseModal({
   });
   const [websiteUrl, setWebsiteUrl] = useState<string>("");
   const [trashLinks, setTrashLinks] = useState<string[]>([]);
-  const [webPagesResponse, setWebPagesResponse] = useState({
+  const [webPagesResponse, setWebPagesResponse] = useState<{
+    refId: string;
+    links: string[];
+  }>({
     refId: "",
     links: [],
   });
-  const addKbMut = useMutation({
-    mutationFn: async (data: any) => await addKnowledgeBase(data),
+  const crawlWebPageMut = useMutation({
+    mutationFn: async (data: any) => await crawlWebpage(data),
     onSuccess: (data: any) => {
       const resp = data as ResponseData;
-      if (selectedKbType === "PDF") {
-        toast.success(resp.message ?? "Knowledge base added successfully");
-        closeModal();
-        refetch();
-      }
-
-      if (selectedKbType === "WEB_PAGES") {
-        setWebPagesResponse({
-          refId: resp.data.refId,
-          links: resp.data.links,
-        });
-      }
+      const _data = resp.data as { refId: string; links: string[] };
+      setWebPagesResponse({
+        refId: _data.refId,
+        links: _data.links,
+      });
     },
     onError: (error: any) => {
       const err = error.response.data as ResponseData;
       const msg = err.message ?? "An error occurred";
       toast.error(msg);
-
-      if (selectedKbType === "WEB_PAGES") {
-        setWebPagesResponse({
-          refId: "",
-          links: [],
-        });
-        setTrashLinks([]);
-      }
-
+      crawlWebPageMut.reset();
+    },
+  });
+  const addKbMut = useMutation({
+    mutationFn: async (data: any) => await addKnowledgeBase(data),
+    onSuccess: (data: any) => {
+      const resp = data as ResponseData;
+      toast.success(resp.message ?? "Knowledge base added successfully");
+      closeModal();
+      refetch();
+      setWebPagesResponse({
+        refId: "",
+        links: [],
+      });
+      setTrashLinks([]);
+      setFile(null);
+      setWebsiteUrl("");
+    },
+    onError: (error: any) => {
+      const err = error.response.data as ResponseData;
+      const msg = err.message ?? "An error occurred";
+      toast.error(msg);
       addKbMut.reset();
     },
   });
@@ -145,7 +154,6 @@ export default function AddKnowledgeBaseModal({
       if (webPagesResponse.refId && webPagesResponse.refId.length > 0) {
         // Save the data permanently in db
         formData.append("refId", webPagesResponse.refId);
-        formData.append("resave", "true");
       }
 
       if (trashLinks.length > 0) {
@@ -276,14 +284,20 @@ export default function AddKnowledgeBaseModal({
                         toast.error("Invalid url");
                         return;
                       }
-                      submitData();
+
+                      crawlWebPageMut.mutate({
+                        url: websiteUrl,
+                        agent_id: agentId,
+                      });
                     }}
                     enableBounceEffect={true}
                     disabled={
-                      selectedKbType === "WEB_PAGES" && addKbMut.isPending
+                      (selectedKbType === "WEB_PAGES" && addKbMut.isPending) ||
+                      crawlWebPageMut.isPending
                     }
                     isLoading={
-                      selectedKbType === "WEB_PAGES" && addKbMut.isPending
+                      (selectedKbType === "WEB_PAGES" && addKbMut.isPending) ||
+                      crawlWebPageMut.isPending
                     }
                   >
                     Fetch Pages
@@ -291,11 +305,11 @@ export default function AddKnowledgeBaseModal({
                 </FlexRowStartCenter>
 
                 {/* webpage url's */}
-                <FlexColStart className="w-full h-full max-h-[200px] gap-1 overflow-scroll overflow-x-hidden">
+                <FlexColStart className="w-full h-full max-h-[200px] gap-1 overflow-scroll overflow-x-hidden hideScrollBar">
                   {webPagesResponse.links.length > 0 ? (
                     webPagesResponse.links.map((l, i) => (
                       <FlexRowStart className="w-full mt-3" key={i}>
-                        <span className="text-xs font-jb font-semibold text-white-400">
+                        <span className="text-[10px] font-jb font-semibold text-white-400">
                           {l}
                         </span>
                         <button
@@ -340,14 +354,7 @@ export default function AddKnowledgeBaseModal({
                         ? true
                         : false
                 }
-                isLoading={
-                  selectedKbType === "PDF" && addKbMut.isPending
-                    ? true
-                    : selectedKbType === "WEB_PAGES" &&
-                        webPagesResponse.refId.length > 0
-                      ? true
-                      : false
-                }
+                isLoading={addKbMut.isPending}
               >
                 Submit Data
               </Button>
