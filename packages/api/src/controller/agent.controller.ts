@@ -190,7 +190,7 @@ export default class AgentController extends BaseController {
     }
 
     //! PERFORM SOME CHECKS BEFORE ACTIVATING AGENT
-    // * AUTOMATED_CUSTOMER_SUPPORT
+    // * SALES_ASSISTANT
     /**
      * - contact number is available
      * - Check if user added at least one knowledge base

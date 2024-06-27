@@ -114,7 +114,7 @@ export default function Agents() {
             //     />
             //   );
             // }
-            // if (a.type === "AUTOMATED_CUSTOMER_SUPPORT") {
+            // if (a.type === "SALES_ASSISTANT") {
             //   return (
             //     <AgentCard
             //       key={idx}
@@ -204,7 +204,7 @@ function AgentCard({
               <span className="w-[20px] h-[20px] flex flex-col items-center justify-center text-xs rounded-full absolute -bottom-2 right-[-5px] bg-white-100 border-[2px] border-white-400">
                 {type === "ANTI_THEFT"
                   ? "🚨"
-                  : type === "AUTOMATED_CUSTOMER_SUPPORT"
+                  : type === "SALES_ASSISTANT"
                     ? "🧠"
                     : "🔌"}
               </span>

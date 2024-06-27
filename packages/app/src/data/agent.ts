@@ -1,4 +1,4 @@
-import type { AgentType } from "@nexusai/shared/types";
+import type { AgentType } from "@/types";
 
 interface IagentType {
   type: AgentType;
@@ -15,10 +15,10 @@ export const agentTypes = [
     desc: "Protect your phone numbers from scammers.",
   },
   {
-    type: "AUTOMATED_CUSTOMER_SUPPORT",
-    title: "Automated Customer Support",
+    type: "SALES_ASSISTANT",
+    title: "Sales Assistant",
     img: "/assets/images/help-desk.svg",
-    desc: "Automate your customer support with AI.",
+    desc: "Automate your business sales process.",
   },
   {
     type: "CHATBOT",

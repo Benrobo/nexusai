@@ -22,7 +22,7 @@ enum IntegrationType {
 
 enum AgentType {
     ANTI_THEFT // requires valid US phonenumber
-    AUTOMATED_CUSTOMER_SUPPORT // requires valid US phonenumber
+    SALES_ASSISTANT // requires valid US phonenumber
     CHATBOT // doesn't require phonenumber
 }
 

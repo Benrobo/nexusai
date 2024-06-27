@@ -48,11 +48,11 @@ export interface IReqObject {
   serverUrl?: string;
 }
 
-export type AgentType = "ANTI_THEFT" | "AUTOMATED_CUSTOMER_SUPPORT" | "CHATBOT";
+export type AgentType = "ANTI_THEFT" | "SALES_ASSISTANT" | "CHATBOT";
 
 export enum AgentEnum {
   ANTI_THEFT = "ANTI_THEFT",
-  AUTOMATED_CUSTOMER_SUPPORT = "AUTOMATED_CUSTOMER_SUPPORT",
+  SALES_ASSISTANT = "SALES_ASSISTANT",
   CHATBOT = "CHATBOT",
 }
 

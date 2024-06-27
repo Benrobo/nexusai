@@ -81,7 +81,7 @@ export default function CreateAgent({
     const agentExists = agents && agents.find((a) => a.type === "ANTI_THEFT");
     if (agentExists) {
       selectedAgent === "ANTI_THEFT" || !selectedAgent
-        ? setSelectedAgent("AUTOMATED_CUSTOMER_SUPPORT")
+        ? setSelectedAgent("SALES_ASSISTANT")
         : null;
     }
   }, [agents, openModal]);
@@ -181,7 +181,7 @@ export default function CreateAgent({
                 readOnly={createAgentMut.isPending}
               />
 
-              {/* {["AUTOMATED_CUSTOMER_SUPPORT", "ANTI_THEFT"].includes(
+              {/* {["SALES_ASSISTANT", "ANTI_THEFT"].includes(
                 selectedAgent!
               ) && (
                 <FlexColStart className="w-full gap-0 mt-3">

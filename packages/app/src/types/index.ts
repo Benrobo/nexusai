@@ -40,6 +40,6 @@ export type AgentActiveTabs =
   | "settings"
   | "knowledge-base";
 
-export type AgentType = "ANTI_THEFT" | "AUTOMATED_CUSTOMER_SUPPORT" | "CHATBOT";
+export type AgentType = "ANTI_THEFT" | "SALES_ASSISTANT" | "CHATBOT";
 
 export type KBType = "TXT" | "WEB_PAGES" | "PDF" | "YT_VIDEOS" | "NOTION";

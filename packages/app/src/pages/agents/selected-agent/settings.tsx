@@ -164,9 +164,9 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
 
         <span className="w-full p-[.2px] h-auto bg-white-400/20"></span>
 
-        {(["ANTI_THEFT", "AUTOMATED_CUSTOMER_SUPPORT"] as AgentType[]).includes(
-          type
-        ) && <ManagePhoneNumber agent_id={agent_id} />}
+        {(["ANTI_THEFT", "SALES_ASSISTANT"] as AgentType[]).includes(type) && (
+          <ManagePhoneNumber agent_id={agent_id} />
+        )}
 
         {/* settings sections (ANTI-THEFT)  */}
         <FlexColStart

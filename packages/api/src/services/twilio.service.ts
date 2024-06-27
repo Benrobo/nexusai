@@ -180,7 +180,7 @@ export class TwilioService {
       sendXMLResponse(res, twiml.toString());
     }
 
-    if (agent_type === "AUTOMATED_CUSTOMER_SUPPORT") {
+    if (agent_type === "SALES_ASSISTANT") {
       // twiml.say("Hello Benaiah, how may I help you today?");
       // twiml.gather({
       //   input: ["speech"],
@@ -310,7 +310,9 @@ export class TwilioService {
     // which makes "bundle_sid" null in response
 
     const resp = await this.prod_tw_client.incomingPhoneNumbers.create({
-      phoneNumber: IN_DEV_MODE ? env.TWILIO.DEFAULT_PHONE_NUMBER : phone_number,
+      phoneNumber: IN_DEV_MODE
+        ? env.TWILIO.DEFAULT_PHONE_NUMBER1
+        : phone_number,
       voiceUrl: env.TWILIO.WH_VOICE_URL,
       friendlyName: phone_number,
       voiceMethod: "POST",
