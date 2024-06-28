@@ -113,8 +113,13 @@ export const retrainKbData = async (data: any) => {
   return req.data;
 };
 
-export const deleteKnowledgeBase = async (data: any) => {
-  const req = await $axios.delete(`/knowledge-base`, data);
+export const deleteKnowledgeBase = async (data: {
+  agent_id: string;
+  kb_id: string;
+}) => {
+  const req = await $axios.delete(
+    `/knowledge-base/${data.agent_id}/${data.kb_id}`
+  );
   return req.data;
 };
 

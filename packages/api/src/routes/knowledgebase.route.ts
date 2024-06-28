@@ -72,7 +72,7 @@ export default class KnowledgeBaseRoute {
 
     // delete kb
     this.router.delete(
-      `${this.path}`,
+      `${this.path}/:agent_id/:kb_id`,
       useCatchErrors(
         isAuthenticated(this.kbController.deleteKb.bind(this.kbController))
       )

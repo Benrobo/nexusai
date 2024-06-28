@@ -12,7 +12,11 @@ import { ChildLoader } from "@/components/Loader";
 import Modal from "@/components/Modal";
 import TooltipComp from "@/components/TooltipComp";
 import Button from "@/components/ui/button";
-import { getAllKnowledgeBase, linkKnowledgeBase } from "@/http/requests";
+import {
+  deleteKnowledgeBase,
+  getAllKnowledgeBase,
+  linkKnowledgeBase,
+} from "@/http/requests";
 import { cn } from "@/lib/utils";
 import type { ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
@@ -56,6 +60,7 @@ export default function LinkKnowledgeBase({
       toast.error("Error fetching knowledge base");
     },
   });
+  const [toBeDeleted, setToBeDeleted] = useState<string[]>([]); // to be deleted
   const linkKbMut = useMutation({
     mutationFn: async (data: any) => await linkKnowledgeBase(data),
     onSuccess: (data: any) => {
@@ -171,14 +176,61 @@ export default function LinkKnowledgeBase({
                         </FlexRowStartCenter>
                       </TooltipComp>
 
-                      <button>
+                      <button
+                        className="active:scale-[1.1] scale-[.95] transition-all"
+                        onClick={() => {
+                          const confirm = window.confirm(
+                            kb.linked_kb.length > 0
+                              ? `Are you sure you want to delete this knowledge base? There are ${kb.linked_kb.length} agents linked to this data source(s).`
+                              : `Are you sure you want to delete this knowledge base?`
+                          );
+
+                          if (!confirm) return;
+
+                          setToBeDeleted([...toBeDeleted, kb.id]);
+
+                          toast.promise(
+                            deleteKnowledgeBase({
+                              kb_id: kb.id,
+                              agent_id: agentId,
+                            }),
+                            {
+                              loading: "Deleting...",
+                              success: () => {
+                                setToBeDeleted(
+                                  toBeDeleted.filter((k) => k !== kb.id)
+                                );
+                                getAvailableKbMut.mutate();
+                                return "Knowledge base deleted";
+                              },
+                              error: () => {
+                                setToBeDeleted(
+                                  toBeDeleted.filter((k) => k !== kb.id)
+                                );
+                                return "Error deleting knowledge base";
+                              },
+                            },
+                            {
+                              position: "top-right",
+                            }
+                          );
+                        }}
+                        disabled={toBeDeleted.includes(kb.id)}
+                      >
                         <Trash size={15} className="stroke-red-305" />
                       </button>
                     </FlexRowEndCenter>
                   </FlexRowStartCenter>
                 </FlexRowStartBtw>
               ))
-            ) : null}
+            ) : (
+              <FlexColCenter className="w-full h-full gap-1">
+                <h1 className="font-jb font-bold text-sm">No data source</h1>
+                <p className="text-xs font-jb font-light text-gray-500">
+                  No data source available to link.
+                </p>
+              </FlexColCenter>
+            )}
 
             <br />
             <FlexColCenter className="w-full mt-5 gap-1 px-4">

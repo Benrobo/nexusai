@@ -271,23 +271,23 @@ export default class KnowledgeBaseController extends BaseController {
 
   public async deleteKb(req: Request & IReqObject, res: Response) {
     const user = req.user;
-    const payload = req.body as { agent_id: string; kb_id: string };
+    const params = req.params;
 
-    await ZodValidation(deleteKbSchema, payload, req.serverUrl);
+    await ZodValidation(deleteKbSchema, params, req.serverUrl);
 
-    const { agent_id: agentId, kb_id: kbId } = payload;
+    const { agent_id, kb_id } = params;
 
     // check if agent exists
     const agent = await prisma.agents.findFirst({
       where: {
-        id: agentId,
+        id: agent_id,
         userId: user.id,
       },
     });
 
     const kb = await prisma.knowledgeBase.findFirst({
       where: {
-        id: kbId,
+        id: kb_id,
         userId: user.id,
       },
     });
@@ -307,7 +307,7 @@ export default class KnowledgeBaseController extends BaseController {
     // delete kb
     await prisma.knowledgeBase.delete({
       where: {
-        id: kbId,
+        id: kb_id,
         userId: user.id,
       },
     });
