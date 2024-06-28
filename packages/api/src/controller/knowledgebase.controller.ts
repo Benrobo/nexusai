@@ -10,6 +10,7 @@ import {
   deleteKbSchema,
   linkKbSchema,
   retrainSchema,
+  unlinkKbSchema,
 } from "../lib/schema_validation.js";
 import GeminiService from "../services/gemini.service.js";
 import shortUUID from "short-uuid";
@@ -484,6 +485,73 @@ export default class KnowledgeBaseController extends BaseController {
       res,
       RESPONSE_CODE.SUCCESS,
       "Knowledge base linked to agent successfully",
+      200
+    );
+  }
+
+  // unlink knowledge base from agent
+  public async unlinkKbFromAgent(req: Request & IReqObject, res: Response) {
+    const userId = req.user.id;
+    const { agent_id, kb_id } = req.body;
+
+    await ZodValidation(unlinkKbSchema, { agent_id, kb_id }, req.serverUrl);
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: agent_id,
+        userId,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    // check if kb exists
+    const kb = await prisma.knowledgeBase.findMany({
+      where: {
+        id: kb_id,
+        userId,
+      },
+    });
+
+    if (kb.length === 0) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        `Knowledge base not found`,
+        404
+      );
+    }
+
+    // check if that kb is linked to the agent
+    const linkedKb = await prisma.linkedKnowledgeBase.findFirst({
+      where: {
+        agentId: agent_id,
+        kb_id,
+      },
+    });
+
+    if (!linkedKb) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        `Knowledge base is not linked to this agent, failed to delete`,
+        404
+      );
+    }
+
+    // unlink kb from agent
+    await prisma.linkedKnowledgeBase.delete({
+      where: {
+        id: linkedKb.id,
+        agentId: agent_id,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Knowledge base unlinked from agent successfully",
       200
     );
   }
