@@ -117,3 +117,8 @@ export const deleteKnowledgeBase = async (data: any) => {
   const req = await $axios.delete(`/knowledge-base`, data);
   return req.data;
 };
+
+export const unlinkKnowledgeBase = async (data: any) => {
+  const req = await $axios.post(`/knowledge-base/unlink`, data);
+  return req.data;
+};
