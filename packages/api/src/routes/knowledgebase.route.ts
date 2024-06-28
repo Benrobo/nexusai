@@ -61,6 +61,16 @@ export default class KnowledgeBaseRoute {
       )
     );
 
+    this.router.post(
+      `${this.path}/unlink`,
+      useCatchErrors(
+        isAuthenticated(
+          this.kbController.unlinkKbFromAgent.bind(this.kbController)
+        )
+      )
+    );
+
+    // delete kb
     this.router.delete(
       `${this.path}`,
       useCatchErrors(
