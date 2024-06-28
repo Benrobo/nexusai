@@ -16,6 +16,7 @@ import {
   Play,
   Plus,
   Trash,
+  UnPlug,
 } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -31,8 +32,12 @@ import TooltipComp from "@/components/TooltipComp";
 import type { KBType, ResponseData } from "@/types";
 import Button from "@/components/ui/button";
 import AddKnowledgeBaseModal from "./addKb";
-import { useQuery } from "@tanstack/react-query";
-import { getKnowledgeBase, retrainKbData } from "@/http/requests";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  getKnowledgeBase,
+  retrainKbData,
+  unlinkKnowledgeBase,
+} from "@/http/requests";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 import { ChildLoader } from "@/components/Loader";
@@ -83,6 +88,7 @@ export default function KnowledgeBase() {
     queryFn: async () => await getKnowledgeBase(agentId),
     enabled: agentId && agentId.length > 0 ? true : false,
   });
+  const [kbUnlinking, setKbUnlinking] = useState<string[]>([]);
 
   useEffect(() => {
     if (getKbQuery.error) {
@@ -242,9 +248,46 @@ export default function KnowledgeBase() {
                           </button>
                         </TooltipComp>
                       )}
-                      <TooltipComp text={"Delete"}>
-                        <button className="mr-2">
-                          <Trash size={15} className="stroke-red-200" />
+                      <TooltipComp text={"Unlink Knowledge Base"}>
+                        <button
+                          className="mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={kbUnlinking.includes(kb.kb_id)}
+                          onClick={() => {
+                            const confirm = window.confirm(
+                              "Are you sure you want to unlink this knowledge base?"
+                            );
+                            if (confirm) {
+                              setKbUnlinking([...kbUnlinking, kb.kb_id]);
+                              toast.promise(
+                                unlinkKnowledgeBase({
+                                  agent_id: agentId,
+                                  kb_id: kb.kb_id,
+                                }),
+                                {
+                                  loading: "Unlinking...",
+                                  success: () => {
+                                    setKbUnlinking(
+                                      kbUnlinking.filter(
+                                        (id) => id !== kb.kb_id
+                                      )
+                                    );
+                                    getKbQuery.refetch();
+                                    return "Knowledge base unlinked successfully";
+                                  },
+                                  error: (err: any) => {
+                                    const error = err.response
+                                      .data as ResponseData;
+                                    const msg =
+                                      error.message ??
+                                      "An error occurred while unlinking knowledge base";
+                                    return msg;
+                                  },
+                                }
+                              );
+                            }
+                          }}
+                        >
+                          <UnPlug size={15} className="stroke-red-305" />
                         </button>
                       </TooltipComp>
                     </TableCell>
