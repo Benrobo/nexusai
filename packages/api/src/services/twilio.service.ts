@@ -13,6 +13,7 @@ import logger from "../config/logger.js";
 import { twimlPrompt } from "../data/twilio/prompt.js";
 import { sendXMLResponse } from "../helpers/twilio.helper.js";
 import VoiceResponse from "twilio/lib/twiml/VoiceResponse.js";
+import AIService from "./AI.service.js";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ export class TwilioService {
     env.TWILIO.TEST_ACCT_SID,
     env.TWILIO.TEST_AUTH_TOKEN
   );
+  aiService = new AIService();
 
   constructor() {}
 
@@ -172,7 +174,7 @@ export class TwilioService {
       twiml.say(prompt.msg);
       twiml.gather({
         input: ["speech"],
-        action: `${env.TWILIO.WH_VOICE_URL}/process`,
+        action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
         method: "POST",
         timeout: 3,
       });
@@ -181,24 +183,42 @@ export class TwilioService {
     }
 
     if (agent_type === "SALES_ASSISTANT") {
-      // twiml.say("Hello Benaiah, how may I help you today?");
-      // twiml.gather({
-      //   input: ["speech"],
-      //   action: `${env.TWILIO.WH_VOICE_URL}/process`,
-      //   method: "POST",
-      //   timeout: 3,
-      // });
-      // sendXMLResponse(res, twiml.toString());
+      const prompt = twimlPrompt.find((p) => p.type === "INIT_ANTI_THEFT");
+
+      twiml.say(prompt.msg);
+      twiml.gather({
+        input: ["speech"],
+        action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
+        method: "POST",
+        timeout: 3,
+      });
+
+      sendXMLResponse(res, twiml.toString());
     }
   }
 
-  // CONTINUE CONVERSATION
-  async processVoiceConversation(body: IncomingCallParams, res: Response) {
+  //* ANTI-THEFT VOICE CALL PROCESSING
+  async processVoiceATConversation(body: IncomingCallParams, res: Response) {
+    const userInput = body["SpeechResult"] as any;
+    const twiml = new VoiceResponse();
+
+    //! Save user/agent conversation in database later
+
+    // console.log("userInput", userInput);
+    // twiml.say("Hi Benaiah, how are you?");
+    // twiml.hangup();
+    const func_call = this.aiService.handleConversation(userInput);
+
+    // sendXMLResponse(res, twiml.toString());
+  }
+
+  // * SALES ASSISTANT VOICE CALL PROCESSING
+  async processVoiceSAConversation(body: IncomingCallParams, res: Response) {
     const userInput = body["SpeechResult"] as any;
     const twiml = new VoiceResponse();
 
     // console.log("userInput", userInput);
-    twiml.say("Hi Benaiah, how are you?");
+    twiml.say("Hello Benaiah, how may I help you today?");
     twiml.hangup();
 
     sendXMLResponse(res, twiml.toString());

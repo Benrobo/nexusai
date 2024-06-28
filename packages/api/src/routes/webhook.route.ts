@@ -40,9 +40,16 @@ export default class WebhookRoute {
     );
 
     this.router.all(
-      `${this.path}/twilio/voice/process`,
+      `${this.path}/twilio/voice/process/anti-theft`,
       useCatchErrors(
-        this.twWebhookHandler.processOngoingVoiceConv.bind(
+        this.twWebhookHandler.processAntiTheftCall.bind(this.twWebhookHandler)
+      )
+    );
+
+    this.router.all(
+      `${this.path}/twilio/voice/process/sales-assistant`,
+      useCatchErrors(
+        this.twWebhookHandler.processSalesAssistantCall.bind(
           this.twWebhookHandler
         )
       )
