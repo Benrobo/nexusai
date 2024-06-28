@@ -7,20 +7,18 @@ export default class AIService {
 
   public async determineCallIntent(msg: string) {
     const intentCallResp = await this.geminiService.functionCall({
-      contents: {
-        role: "user",
-        parts: {
-          text: msg,
-        },
-      },
+      prompt: msg,
       tools: [
         {
           func_name: "determine_call_intent",
-          description: `Identify call intent or action from the given prompt. Actions must be returned in one word, all caps, and underscored. Also, the title and subtitle and emoji must be returned if available.
-              Also, Identify users intent or action from the given prompt. You need to decide from the given prompt if they want to update either (title, subtitle, cover image, content) or not.`,
+          description: `Identify call intent or action from the given prompt. Actions must be returned in one word, all caps, and underscored Note: the action can only be one of the following: 
+          ${DEFAULT_CALL_INTENTS.join(", ")}.
+          <UserPrompt>${msg}</UserPrompt>,
+          `,
           parameters: {
             type: "object",
             properties: {
+              // @ts-expect-error
               action: {
                 type: "string",
                 description: `The user request action gotten from the prompt, supported actions/intents are ${DEFAULT_CALL_INTENTS.join(
@@ -33,9 +31,13 @@ export default class AIService {
         },
       ],
     });
+
+    return intentCallResp.data;
   }
 
   public async handleConversation(user_input: string) {
-    const callIntent = this.determineCallIntent(user_input);
+    const callIntent = await this.determineCallIntent(user_input);
+
+    console.log(callIntent);
   }
 }

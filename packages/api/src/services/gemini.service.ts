@@ -1,51 +1,27 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  FunctionDeclarationSchemaType,
+  GoogleGenerativeAI,
+  type FunctionCall,
+  type FunctionDeclarationsTool,
+} from "@google/generative-ai";
 import env from "../config/env.js";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import logger from "../config/logger.js";
+import HttpException from "../lib/exception.js";
+import { RESPONSE_CODE } from "../types/index.js";
 
 interface IFunctionCall {
-  contents: {
-    role: "user" | "system";
-    parts: {
-      text: string;
-    };
-  };
+  prompt: string;
   tools: {
     func_name: string;
     description: string;
     parameters: {
       type: string;
       properties: {
-        [key: string]: {
-          type: string;
-          description: string;
-        };
+        [key: string]: FunctionDeclarationSchemaType;
       };
     };
     required: string[];
-  }[];
-}
-
-interface IFuncCallResult {
-  content: {
-    role: string;
-    parts: {
-      text: string;
-    };
-  };
-  tools: {
-    function_declarations: {
-      name: string;
-      description: string;
-      parameters: {
-        type: string;
-        properties: {
-          [key: string]: {
-            type: string;
-            description: string;
-          };
-        };
-      };
-    }[];
   }[];
 }
 
@@ -91,36 +67,47 @@ export default class GeminiService {
     return tokens;
   }
 
-  // function calling
-  private constructFunctionCallProperties(props: IFunctionCall) {
-    const finalConstruct: IFuncCallResult = {
-      content: {
-        role: props.contents.role ?? "",
-        parts: {
-          text: props.contents.parts.text ?? "",
-        },
-      },
-      tools: [
-        {
-          function_declarations: props.tools.map((t) => ({
-            name: t.func_name,
-            description: t.description,
-            parameters: {
-              type: t.parameters.type,
-              properties: t.parameters.properties,
-              required: t.required,
-            },
-          })),
-        },
-      ],
-    };
-
-    return finalConstruct;
-  }
-
   public async functionCall(props: IFunctionCall) {
-    const func_call_payload = this.constructFunctionCallProperties(props);
+    let resp = {
+      error: null,
+      data: null,
+    } as { error: any; data: FunctionCall | null };
+    try {
+      const generativeModel = this.genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        tools: [
+          {
+            // @ts-expect-error
+            functionDeclarations: props.tools.map((t) => ({
+              name: t.func_name,
+              description: t.description,
+              parameters: {
+                type: t.parameters.type as FunctionDeclarationSchemaType,
+                properties: t.parameters.properties,
+                required: t.required,
+              },
+            })),
+          },
+        ],
+      });
 
-    console.log(func_call_payload);
+      const chat = generativeModel.startChat();
+      // Send the message to the model.
+      const result = await chat.sendMessage(props.prompt!);
+
+      // For simplicity, this uses the first function call found.
+      const call = result.response.functionCalls()[0];
+
+      resp.data = call;
+      return resp;
+    } catch (e: any) {
+      logger.error("Error calling AI function", e);
+      resp.error = e;
+      throw new HttpException(
+        RESPONSE_CODE.GENERATIVE_AI_ERROR,
+        "Error calling AI function",
+        400
+      );
+    }
   }
 }
