@@ -445,25 +445,27 @@ export default class KnowledgeBaseController extends BaseController {
       );
     }
 
-    // check if kb is already linked
+    const linkedKb: { title: string }[] = [];
     for (const k of kb) {
       const kbData = k.kb_data;
-      for (const data of kbData) {
-        const isLinked = await prisma.linkedKnowledgeBase.findFirst({
-          where: {
-            agentId: agent_id,
-            kb_id: data.id,
-          },
-        });
+      const isLinked = await prisma.linkedKnowledgeBase.findFirst({
+        where: {
+          agentId: agent_id,
+          kb_id: k.id,
+        },
+      });
 
-        if (isLinked) {
-          throw new HttpException(
-            RESPONSE_CODE.AGENT_ALREADY_LINKED,
-            `Knowledge base "${data.title}" is already linked to agent "${agent.name}"`,
-            400
-          );
-        }
+      if (isLinked) {
+        linkedKb.push({ title: kbData[0].title });
       }
+    }
+
+    if (linkedKb.length > 0) {
+      const msg =
+        linkedKb.length > 1
+          ? `One or more of this knowledegebase are already linked to this agent`
+          : `Knowledge base "${linkedKb[0].title}" is already linked to this agent`;
+      throw new HttpException(RESPONSE_CODE.AGENT_ALREADY_LINKED, msg, 400);
     }
 
     // link kb to agent
