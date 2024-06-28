@@ -140,6 +140,16 @@ export const linkKbSchema = zod.object({
   ),
 });
 
+// unlink kb from agent
+export const unlinkKbSchema = zod.object({
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
+  }),
+  kb_id: zod.string({
+    required_error: "Knowledge base ID is required",
+  }),
+});
+
 // When user clicks on "Buy Number"
 // we store selected phone number in redis to be retrieve later
 // when creating checkout
