@@ -26,10 +26,15 @@ enum AgentType {
     CHATBOT // doesn't require phonenumber
 }
 
-enum EntityType {
-    AGENT
-    USER
-    CONVERSATION
+enum ChatMsgEntityType {
+    agent
+    user
+    conversation_account
+}
+
+enum CallLogMsgType {
+    agent
+    user
 }
 
 enum KnowledgeBaseType {
@@ -94,6 +99,7 @@ model Users {
     agents            Agents[]
     subscriptions     Subscriptions[]
     knowledge_base    KnowledgeBase[]
+    call_logs         CallLogs[]
 
     @@map(name: "users")
 }
@@ -120,6 +126,7 @@ model Agents {
     linked_knowledge_base LinkedKnowledgeBase[]
     agent_settings        AgentSettings?
     purchased_number      PurchasedPhoneNumbers?
+    call_logs             CallLogs[]
 
     @@index([userId])
     @@map(name: "agents")
@@ -274,67 +281,93 @@ model Integration {
 }
 
 model Conversations {
-    id         String   @id @default(cuid())
-    wsId       String
-    agentId    String
-    userId     String
-    created_at DateTime @default(now())
-    escalated  Boolean  @default(false)
+    id                    String   @id @default(cuid())
+    agentId               String
+    userId                String
+    created_at            DateTime @default(now())
+    conversationAccountId String?
 
-    user     Users      @relation(fields: [userId], references: [id])
-    Agents   Agents?    @relation(fields: [agentId], references: [id])
-    messages Messages[]
+    user          Users                @relation(fields: [userId], references: [id])
+    Agents        Agents?              @relation(fields: [agentId], references: [id])
+    chat_messages ChatMessages[]
+    conv_account  ConversationAccount? @relation(fields: [conversationAccountId], references: [id])
 
-    conv_account ConversationAccount[]
-
-    @@index([wsId])
     @@index([agentId])
     @@index([userId])
+    @@index([conversationAccountId])
     @@map(name: "conversations")
 }
 
-// Only mean't for users using the chatbot widget
 model ConversationAccount {
-    id          String   @id @default(cuid())
-    wsId        String
-    con_user_id String
-    email       String
-    name        String
-    verified    Boolean  @default(false)
-    created_at  DateTime @default(now())
+    id         String   @id @default(cuid())
+    email      String
+    name       String
+    verified   Boolean  @default(false)
+    created_at DateTime @default(now())
 
-    conversations Conversations @relation(fields: [con_user_id], references: [id])
+    conversations Conversations[]
 
-    @@index([wsId])
-    @@index([con_user_id])
     @@map(name: "conversation_account")
 }
 
-model MessageEntity {
-    id         String     @id @default(cuid())
-    entityId   String
-    entityType EntityType
-    message    Messages[]
-
-    @@unique([entityId])
-    @@map(name: "message_entity")
-}
-
-model Messages {
-    id         String   @id @default(cuid())
+model ChatMessages {
+    id         String             @id @default(cuid())
     convId     String
-    entityId   String
+    fromId     String
+    fromType   ChatMsgEntityType?
+    toId       String
+    toType     ChatMsgEntityType?
     content    String
-    created_at DateTime @default(now())
-    agentsId   String?
+    created_at DateTime           @default(now())
+    agentId    String?
 
     conversations Conversations @relation(fields: [convId], references: [id])
-    entity        MessageEntity @relation(fields: [entityId], references: [entityId])
 
-    @@index([entityId])
-    @@index([agentsId])
+    @@index([fromId])
+    @@index([toId])
+    @@index([agentId])
     @@index([convId])
     @@map(name: "messages")
+}
+
+// call logs
+model CallLogs {
+    id             String @id @default(cuid())
+    refId          String
+    agentId        String
+    userId         String
+    from_number    String
+    to_number      String
+    caller_country String
+    caller_city    String
+    zip_code       String
+
+    created_at DateTime @default(now())
+
+    agent    Agents             @relation(fields: [agentId], references: [id])
+    user     Users              @relation(fields: [userId], references: [id])
+    messages CallLogsMessages[]
+
+    @@index([agentId])
+    @@index([userId])
+    @@map(name: "call_logs")
+}
+
+model CallLogsMessages {
+    id          String          @id @default(cuid())
+    call_log_id String
+    fromId      String
+    toId        String
+    entity_type CallLogMsgType?
+    content     String
+    created_at  DateTime        @default(now())
+
+    call_logs CallLogs @relation(fields: [call_log_id], references: [id])
+
+    @@index([fromId])
+    @@index([toId])
+    @@index([call_log_id])
+    @@map(name: "call_logs_messages")
 }
 
 // Subscriptions
