@@ -18,6 +18,7 @@ import logger from "../config/logger.js";
 import prisma from "../prisma/prisma.js";
 import redis from "../config/redis.js";
 import { Prisma } from "@prisma/client";
+import retry from "../lib/retry.js";
 
 type IHandleConversationProps = {
   user_input: string;
@@ -169,20 +170,41 @@ export default class AIService {
   ) {
     const intentCallResp = await this.geminiService.functionCall({
       prompt: `
-        ${system_instruction}
-
         <UserMessage>${user_msg}</UserMessage>
-        <CallHistory>${call_history ?? "N/A"}</CallHistory>
-        
-        First, identify the call intent or action. Then, construct a follow-up response.
+
+        <CallHistory>
+            ${call_history ?? "N/A"}
+        </CallHistory>
+
+        First, identify the call intent. Then, construct a follow-up response. Make sure the follow up message is available in your response, it is a MUST.
       `,
       tools: [
         {
+          func_name: "follow_up_response",
+          description: `Construct a follow-up response from users message and the data source given.
+            `,
+          parameters: {
+            type: "object",
+            properties: {
+              // @ts-expect-error
+              message: {
+                type: "string",
+                description: `
+                ## Context
+                ${system_instruction}
+                
+                Construct a follow-up response from users message or enquiry from the context given. If the  context is irrelivant to the user message, you can construct a response using your intuition. Make sure it meaningful and relevant to the user.
+                `,
+              },
+            },
+          },
+          required: ["message"],
+        },
+        {
           func_name: "determine_call_intent",
-          description: `Identify call intent or action from the given prompt. Actions must be returned in one word, all caps, and underscored Note: the action can only be one of the following: 
+          description: `Identify call intent or action from the given prompt. Actions must be returned in one word, all caps, and underscored Note: the action can only be one of the following:
           ${DEFAULT_SA_CALL_INTENTS.join(", ")}.
 
-          
           <UserPrompt>${user_msg}</UserPrompt>
 
           <CallHistory>
@@ -203,24 +225,7 @@ export default class AIService {
           },
           required: ["action"],
         },
-        {
-          func_name: "follow_up_response",
-          description: `Construct a follow-up response from users message and the data source given.
-          `,
-          parameters: {
-            type: "object",
-            properties: {
-              // @ts-expect-error
-              response: {
-                type: "string",
-                description: `The follow-up response constructed from the main context and provided data source / knowledege base. Must be short and concise.`,
-              },
-            },
-          },
-          required: ["response"],
-        },
       ],
-      system_instruction,
     });
 
     return intentCallResp.data as IFunctionCallResp[];
@@ -337,26 +342,34 @@ export default class AIService {
     }
   }
 
-  // Process ANTI-THEFT request
-  private async processAntiTheftRequest(props: IHandleConversationProps) {
-    const { user_input, agent_info, cached_conv_info } = props;
-    let resp = { msg: "", ended: false };
-
+  private async getChatHistoryTxt(refId: string, user_input: string) {
     let mainHistory = "";
 
     const callHistory = await this.callLogService.getCallLogById({
-      refId: cached_conv_info.callRefId,
+      refId,
     });
 
     if (callHistory?.messages.length > 0) {
-      const mid = callHistory.messages.length / 1.6; // slice out 5 call histories
-      callHistory.messages.slice(mid, -1).forEach((m) => {
+      callHistory.messages.slice(-5).forEach((m) => {
         mainHistory += `\n[${m.entity_type}]: ${m.content}\n`;
       });
 
       // add current user requets to mainHistoiry
       mainHistory += `\n[user]: ${user_input}\n`;
     }
+
+    return mainHistory;
+  }
+
+  // Process ANTI-THEFT request
+  private async processAntiTheftRequest(props: IHandleConversationProps) {
+    const { user_input, agent_info, cached_conv_info } = props;
+    let resp = { msg: "", ended: false };
+
+    const mainHistory = await this.getChatHistoryTxt(
+      cached_conv_info.callRefId,
+      user_input
+    );
 
     const callIntent = (
       await this.determineCallIntent(user_input, mainHistory)
@@ -463,6 +476,11 @@ export default class AIService {
 
     const agentName = agent.name;
 
+    const mainHistory = await this.getChatHistoryTxt(
+      cached_conv_info.callRefId,
+      user_input
+    );
+
     // perform a similarity search with the vector
     const similarities = await this.vectorSimilaritySearch({
       agent_id: agent_info.agent_id,
@@ -485,11 +503,40 @@ export default class AIService {
     const callIntent = await this.determineSAIntentAndFollowUpResponse(
       user_input,
       systemInstruction,
-      closestMatch
+      mainHistory
     );
 
     console.log(callIntent);
 
-    return resp;
+    if (callIntent.length > 0) {
+      const intent = callIntent.find((f) => f.name === "determine_call_intent")
+        ?.args?.action;
+
+      if (intent === "ENQUIRY") {
+        const followUp =
+          callIntent.find((f) => f.name === "follow_up_response")?.args
+            ?.message ??
+          "I'm sorry, I couldn't understand or find any information on that. How else can I help you?.";
+
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          followUp
+        );
+
+        resp.msg = followUp;
+        return resp;
+      }
+
+      if (intent === "APPOINTMENT") {
+      }
+
+      return resp;
+    } else {
+      resp.msg =
+        "I'm sorry, I couldn't find any information on that. Please try again.";
+      return resp;
+    }
   }
 }
