@@ -197,8 +197,8 @@ export default class AIService {
     });
 
     if (callHistory?.messages.length > 0) {
-      const mid = callHistory.messages.length / 2;
-      callHistory.messages.slice(mid).forEach((m) => {
+      const mid = callHistory.messages.length / 1.6; // slice out 5 call histories
+      callHistory.messages.slice(mid, -1).forEach((m) => {
         mainHistory += `\n[${m.entity_type}]: ${m.content}\n`;
       });
 
