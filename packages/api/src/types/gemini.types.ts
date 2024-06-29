@@ -26,3 +26,5 @@ export interface ICallAIProps {
     }[];
   }[];
 }
+
+export type VectorSimilaritySearchProp = {};
