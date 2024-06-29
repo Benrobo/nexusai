@@ -59,7 +59,7 @@ export default class GeminiService {
     let resp = {
       error: null,
       data: null,
-    } as { error: any; data: FunctionCall | null };
+    } as { error: any; data: FunctionCall[] | null };
     try {
       const generativeModel = this.genAI.getGenerativeModel({
         model: "gemini-1.5-flash",
@@ -84,7 +84,10 @@ export default class GeminiService {
       const result = await chat.sendMessage(props.prompt!);
 
       // For simplicity, this uses the first function call found.
-      const call = result.response.functionCalls()[0];
+      const call = result.response.functionCalls();
+
+      logger.info("Function call:");
+      logger.info(result.response.usageMetadata);
 
       resp.data = call;
       return resp;
@@ -153,4 +156,6 @@ export default class GeminiService {
       return resp;
     }
   }
+
+  public async similaritySearch() {}
 }
