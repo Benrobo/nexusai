@@ -14,24 +14,15 @@ import { twimlPrompt } from "../data/twilio/prompt.js";
 import { sendXMLResponse } from "../helpers/twilio.helper.js";
 import VoiceResponse from "twilio/lib/twiml/VoiceResponse.js";
 import AIService from "./AI.service.js";
+import redis from "../config/redis.js";
+import type {
+  ConvVoiceCallCacheInfo,
+  ProvisioningPhoneNumberProps,
+  IncomingCallParams,
+  InitConvRestProps,
+} from "../types/twilio-service.types.js";
 
 dotenv.config();
-
-interface IncomingCallParams extends TwilioIncomingCallVoiceResponse {}
-
-interface InitConvRestProps {
-  agent_type: AgentType;
-  agent_id: string;
-  user_id: string;
-  caller: string;
-}
-
-interface ProvisioningPhoneNumberProps {
-  user_id: string;
-  subscription_id: string;
-  phone_number: string;
-  agent_id: string;
-}
 
 /**
  * Note: TwiMl instance is being used multiple times in the class to prevent stack response.
@@ -176,7 +167,8 @@ export class TwilioService {
         input: ["speech"],
         action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
         method: "POST",
-        timeout: 3,
+        timeout: 5,
+        speechModel: "experimental_conversations",
       });
 
       sendXMLResponse(res, twiml.toString());
@@ -199,17 +191,93 @@ export class TwilioService {
 
   //* ANTI-THEFT VOICE CALL PROCESSING
   async processVoiceATConversation(body: IncomingCallParams, res: Response) {
-    const userInput = body["SpeechResult"] as any;
     const twiml = new VoiceResponse();
+    try {
+      const userInput = body["SpeechResult"];
+      const callSid = body["CallSid"];
+      const callerPhone = body.Caller;
+      const calledPhone = body.Called;
+      const callRefId = `${callerPhone}-${calledPhone}-${callSid}`;
 
-    //! Save user/agent conversation in database later
+      const agents = await prisma.agents.findMany({
+        select: {
+          used_number: {
+            select: {
+              agentId: true,
+              phone: true,
+            },
+          },
+          userId: true,
+        },
+      });
 
-    // console.log("userInput", userInput);
-    // twiml.say("Hi Benaiah, how are you?");
-    // twiml.hangup();
-    const func_call = this.aiService.handleConversation(userInput);
+      const agent = agents.find((a) => a.used_number.phone === calledPhone);
+      const agentInfo = agent
+        ? {
+            agent_id: agent.used_number.agentId,
+            user_id: agent.userId,
+          }
+        : null;
 
-    // sendXMLResponse(res, twiml.toString());
+      let convCachedInfo: ConvVoiceCallCacheInfo = JSON.parse(
+        await redis.get(callRefId)
+      );
+
+      // if conversation exists, just continue
+      if (convCachedInfo) {
+        // continue conversation
+        logger.info("continue conversation");
+      } else {
+        // start new conversation
+        logger.info("start new conversation");
+
+        // save conversation in cache
+        convCachedInfo = {
+          callerPhone: callerPhone,
+          calledPhone: calledPhone,
+          callRefId,
+          city: body.CalledCity,
+          country_code: body.CalledCountry,
+          zipcode: body.CalledZip,
+        };
+        await redis.set(callRefId, JSON.stringify(convCachedInfo));
+      }
+
+      //! Save user/agent conversation in database later
+
+      // * save caller and called phone in cache to be used later on
+      // * for ontinous conversation
+
+      const conv = await this.aiService.handleConversation({
+        user_input: userInput,
+        agent_type: "ANTI_THEFT",
+        agent_info: agentInfo,
+        cached_conv_info: convCachedInfo,
+      });
+
+      if (conv.ended) {
+        twiml.say(conv.msg);
+        twiml.hangup();
+
+        await redis.del(callRefId);
+      } else {
+        twiml
+          .gather({
+            input: ["speech"],
+            action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
+            method: "POST",
+            timeout: 5,
+            // speechModel: "experimental_conversations",
+          })
+          .say(conv.msg!);
+      }
+      sendXMLResponse(res, twiml.toString());
+    } catch (e: any) {
+      console.log(e);
+      twiml.say("Something went wrong. Please try again later.");
+      twiml.hangup();
+      sendXMLResponse(res, twiml.toString());
+    }
   }
 
   // * SALES ASSISTANT VOICE CALL PROCESSING
