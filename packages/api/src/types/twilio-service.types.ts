@@ -23,4 +23,5 @@ export type ConvVoiceCallCacheInfo = {
   city: string;
   country_code: string;
   zipcode: string;
+  kb_ids?: string[];
 };
