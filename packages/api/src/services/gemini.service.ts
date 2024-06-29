@@ -2,31 +2,19 @@ import {
   FunctionDeclarationSchemaType,
   GoogleGenerativeAI,
   type FunctionCall,
-  type FunctionDeclarationsTool,
+  type GenerateContentResult,
 } from "@google/generative-ai";
 import env from "../config/env.js";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import logger from "../config/logger.js";
 import HttpException from "../lib/exception.js";
-import { RESPONSE_CODE } from "../types/index.js";
-
-interface IFunctionCall {
-  prompt: string;
-  tools: {
-    func_name: string;
-    description: string;
-    parameters: {
-      type: string;
-      properties: {
-        [key: string]: FunctionDeclarationSchemaType;
-      };
-    };
-    required: string[];
-  }[];
-}
+import { RESPONSE_CODE, type AgentType } from "../types/index.js";
+import type { FunctionCallingNames } from "../types/agent.types.js";
+import type { ICallAIProps, IFunctionCall } from "../types/gemini.types.js";
 
 export default class GeminiService {
   private genAI: GoogleGenerativeAI;
+  // private cacheManager: GoogleAIC
   constructor() {
     this.genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
   }
@@ -79,7 +67,7 @@ export default class GeminiService {
           {
             // @ts-expect-error
             functionDeclarations: props.tools.map((t) => ({
-              name: t.func_name,
+              name: t.func_name as FunctionCallingNames,
               description: t.description,
               parameters: {
                 type: t.parameters.type as FunctionDeclarationSchemaType,
@@ -108,6 +96,61 @@ export default class GeminiService {
         "Error calling AI function",
         400
       );
+    }
+  }
+
+  private constructChatHistory(
+    data: { userPrompt: string; aiPrompt: string }[]
+  ) {
+    const history = [] as { role: string; parts: { text: string }[] }[];
+    for (const d of data) {
+      history.push({
+        role: "user",
+        parts: [{ text: d.userPrompt }],
+      });
+      history.push({
+        role: "system",
+        parts: [{ text: d.aiPrompt }],
+      });
+    }
+    return history;
+  }
+
+  // Call GEMINI AI to handle user's conversation
+  public async callAI(props: ICallAIProps) {
+    let resp: { data: string | null; error: string | null } = {
+      data: null,
+      error: null,
+    };
+    try {
+      const genModel = this.genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        systemInstruction: props.instruction,
+      });
+
+      let result: GenerateContentResult;
+
+      if (!props?.enable_call_history) {
+        result = await genModel.generateContent(props.user_prompt);
+      } else {
+        const chat = genModel.startChat({
+          history: props?.history,
+          systemInstruction: props.instruction,
+          generationConfig: {
+            maxOutputTokens: 1000,
+          },
+        });
+
+        result = await chat.sendMessage(props.user_prompt);
+      }
+
+      resp.data = result.response.text();
+      return resp;
+    } catch (e: any) {
+      console.log(e);
+      logger.error("GenAI response error", e);
+      resp.error = e;
+      return resp;
     }
   }
 }
