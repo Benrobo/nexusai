@@ -243,11 +243,6 @@ export class TwilioService {
         await redis.set(callRefId, JSON.stringify(convCachedInfo));
       }
 
-      //! Save user/agent conversation in database later
-
-      // * save caller and called phone in cache to be used later on
-      // * for ontinous conversation
-
       const conv = await this.aiService.handleConversation({
         user_input: userInput,
         agent_type: "ANTI_THEFT",
