@@ -9,6 +9,7 @@ type TypeResponse =
   | "KNOWLEDGE_BASE_NOT_FOUND"
   | "AGENT_NOT_LINKED"
   | "INIT_ANTI_THEFT"
+  | "INIT_SALES_ASSISTANT"
   | "INACTIVE_AGENT"; // if agent isn't activated
 
 interface TwiMlResponse {
@@ -42,8 +43,15 @@ export const twimlPrompt = [
     msg: `Hi, I'm currently unable to assist you. Please try again later. Thank you for your understanding.`,
   },
   {
-    // This happen when users purchase phone number, create an agent without linking the phone number
     type: "INIT_ANTI_THEFT",
     msg: `Hi, I'm ${AGENT_NAME}, what would you like to pass to the recipient?`,
+  },
+  {
+    type: "INIT_SALES_ASSISTANT",
+    msg: `Hi, you've reached {{agent_name}}. How can I help you today?`,
+  },
+  {
+    type: "INIT_SALES_ASSISTANT",
+    msg: `Hi, you've reached {{agent_name}}. How can I help you today?`,
   },
 ] as TwiMlResponse[];
