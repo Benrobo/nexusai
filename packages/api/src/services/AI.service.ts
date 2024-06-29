@@ -528,8 +528,27 @@ export default class AIService {
         resp.msg = followUp;
         return resp;
       }
-
       if (intent === "APPOINTMENT") {
+        //! check if user has an appointment/booking integration
+
+        // ! if they don't, change the followUp message to something else
+
+        // ! if they do, invoke the bg-function for booking appointment
+
+        const followUp =
+          callIntent.find((f) => f.name === "follow_up_response")?.args
+            ?.message ??
+          "I'm sorry, I couldn't understand or find any information on that. How else can I help you?.";
+
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          followUp
+        );
+
+        resp.msg = followUp;
+        return resp;
       }
 
       return resp;
