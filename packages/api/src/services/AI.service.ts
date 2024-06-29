@@ -2,15 +2,24 @@ import type {
   DefaultIntents,
   IFunctionCallResp,
 } from "../types/agent.types.js";
-import { DEFAULT_CALL_INTENTS } from "../data/agent/config.js";
+import {
+  DEFAULT_CALL_INTENTS,
+  DEFAULT_SA_CALL_INTENTS,
+} from "../data/agent/config.js";
 import GeminiService from "./gemini.service.js";
 import type { AgentType } from "../types/index.js";
-import { antiTheftInstructionPrompt } from "../data/agent/prompt.js";
+import {
+  antiTheftInstructionPrompt,
+  salesAssistantInstructionPrompt,
+} from "../data/agent/prompt.js";
 import type { ConvVoiceCallCacheInfo } from "../types/twilio-service.types.js";
 import CallLogsService from "./call-logs.service.js";
 import logger from "../config/logger.js";
+import prisma from "../prisma/prisma.js";
+import redis from "../config/redis.js";
+import { Prisma } from "@prisma/client";
 
-interface IHandleConversationProps {
+type IHandleConversationProps = {
   user_input: string;
   agent_type: AgentType;
   cached_conv_info: ConvVoiceCallCacheInfo;
@@ -18,7 +27,22 @@ interface IHandleConversationProps {
     agent_id: string;
     user_id: string;
   };
-}
+};
+
+type VectorSimilaritySearchProps = {
+  user_input: string;
+  agent_id: string;
+  data_source_ids: string[];
+};
+
+type SimilaritiesResult = {
+  match_embeddings: {
+    id: string;
+    content: string[];
+    metadata: string;
+    similarity: number;
+  };
+};
 
 export default class AIService {
   private geminiService = new GeminiService();
@@ -58,7 +82,7 @@ export default class AIService {
       ],
     });
 
-    return intentCallResp.data as IFunctionCallResp;
+    return intentCallResp.data as IFunctionCallResp[];
   }
 
   public async constructFollowUpMessage(msg: string) {
@@ -100,7 +124,7 @@ export default class AIService {
       ],
     });
 
-    return requestExtraction.data as IFunctionCallResp;
+    return requestExtraction.data as IFunctionCallResp[];
   }
 
   // determine if the user needs further requests based on follow-up message
@@ -135,7 +159,71 @@ export default class AIService {
       ],
     });
 
-    return furtherRequest.data as IFunctionCallResp;
+    return furtherRequest.data as IFunctionCallResp[];
+  }
+
+  private async determineSAIntentAndFollowUpResponse(
+    user_msg: string,
+    system_instruction: string,
+    call_history?: string
+  ) {
+    const intentCallResp = await this.geminiService.functionCall({
+      prompt: `
+        ${system_instruction}
+
+        <UserMessage>${user_msg}</UserMessage>
+        <CallHistory>${call_history ?? "N/A"}</CallHistory>
+        
+        First, identify the call intent or action. Then, construct a follow-up response.
+      `,
+      tools: [
+        {
+          func_name: "determine_call_intent",
+          description: `Identify call intent or action from the given prompt. Actions must be returned in one word, all caps, and underscored Note: the action can only be one of the following: 
+          ${DEFAULT_SA_CALL_INTENTS.join(", ")}.
+
+          
+          <UserPrompt>${user_msg}</UserPrompt>
+
+          <CallHistory>
+            ${call_history ?? "N/A"}
+          </CallHistory>
+          `,
+          parameters: {
+            type: "object",
+            properties: {
+              // @ts-expect-error
+              action: {
+                type: "string",
+                description: `The user request action gotten from the prompt, supported actions/intents are ${DEFAULT_CALL_INTENTS.join(
+                  ""
+                )}`,
+              },
+            },
+          },
+          required: ["action"],
+        },
+        {
+          func_name: "follow_up_response",
+          description: `Construct a follow-up response from users message and the data source given.
+          `,
+          parameters: {
+            type: "object",
+            properties: {
+              // @ts-expect-error
+              response: {
+                type: "string",
+                description: `The follow-up response constructed from the main context and provided data source / knowledege base. Must be short and concise.`,
+              },
+            },
+          },
+          required: ["response"],
+        },
+      ],
+      system_instruction,
+    });
+
+    return intentCallResp.data as IFunctionCallResp[];
   }
 
   private async processCallLog(
@@ -187,10 +275,74 @@ export default class AIService {
     }
   }
 
+  public async vectorSimilaritySearch(props: VectorSimilaritySearchProps) {
+    const { data_source_ids, user_input } = props;
+
+    let userMsgEmbedding:
+      | {
+          embedding: number[];
+          content: string;
+        }[]
+      | null = null;
+
+    const cachedEmbedding = await redis.get(user_input);
+
+    if (!cachedEmbedding) {
+      userMsgEmbedding = await this.geminiService.generateEmbedding(user_input);
+
+      await redis.set(user_input, JSON.stringify(userMsgEmbedding));
+      await redis.expire(user_input, 60 * 30); // expire in 30mins
+    } else {
+      userMsgEmbedding = JSON.parse(cachedEmbedding);
+    }
+
+    const embeddingsString = `[${userMsgEmbedding[0].embedding}]`;
+
+    // convert data_source_ids to supported Postgresql array literal string
+    const kbIdsArrayLiteral = `{${data_source_ids.map((id) => `"${id}"`).join(",")}}`;
+
+    const similarities = (await prisma.$queryRaw`
+      SELECT match_embeddings(
+        ${embeddingsString},
+        0.2,
+        5,
+        ${kbIdsArrayLiteral}::text[]
+      )::json;
+    `) satisfies SimilaritiesResult[];
+    const _similarities: {
+      content: string[];
+      similarity: number;
+      metadata: string;
+    }[] = [];
+
+    for (const sim of similarities) {
+      _similarities.push({
+        content: sim.match_embeddings.content,
+        similarity: sim.match_embeddings.similarity,
+        metadata: sim.match_embeddings.metadata,
+      });
+    }
+
+    return _similarities;
+  }
+
   public async handleConversation(props: IHandleConversationProps) {
     const { user_input, agent_type, agent_info, cached_conv_info } = props;
-    let mainHistory = "";
+
+    if (agent_type === "ANTI_THEFT") {
+      return await this.processAntiTheftRequest(props);
+    }
+    if (agent_type === "SALES_ASSISTANT") {
+      return await this.processSalesAssistantRequest(props);
+    }
+  }
+
+  // Process ANTI-THEFT request
+  private async processAntiTheftRequest(props: IHandleConversationProps) {
+    const { user_input, agent_info, cached_conv_info } = props;
     let resp = { msg: "", ended: false };
+
+    let mainHistory = "";
 
     const callHistory = await this.callLogService.getCallLogById({
       refId: cached_conv_info.callRefId,
@@ -206,72 +358,64 @@ export default class AIService {
       mainHistory += `\n[user]: ${user_input}\n`;
     }
 
-    const callIntent = await this.determineCallIntent(user_input, mainHistory);
+    const callIntent = (
+      await this.determineCallIntent(user_input, mainHistory)
+    ).find((f) => f.name === "determine_call_intent");
 
     logger.info(callIntent.args.action);
 
-    if (agent_type === "ANTI_THEFT") {
-      if (["GREETINGS"].includes(callIntent.args.action)) {
-        const genAiResp = await this.geminiService.callAI({
-          user_prompt: user_input,
-          instruction: antiTheftInstructionPrompt,
-        });
+    if (["GREETINGS"].includes(callIntent.args.action)) {
+      const genAiResp = await this.geminiService.callAI({
+        user_prompt: user_input,
+        instruction: antiTheftInstructionPrompt,
+      });
 
-        console.log(genAiResp);
+      console.log(genAiResp);
 
+      await this.processCallLog(
+        cached_conv_info,
+        agent_info,
+        user_input,
+        genAiResp.data
+      );
+      resp.msg = genAiResp.data;
+      return resp;
+    }
+    if (callIntent.args.action === "REQUEST") {
+      const followUp = (await this.constructFollowUpMessage(user_input)).find(
+        (f) => f.name === "construct_follow_up_message"
+      );
+      const followUpMsg = followUp.args["follow_up_message"];
+
+      // save data
+      await this.processCallLog(
+        cached_conv_info,
+        agent_info,
+        user_input,
+        followUpMsg
+      );
+
+      resp.msg = followUpMsg;
+      return resp;
+    }
+    if (callIntent.args.action === "FURTHER_REQUEST") {
+      const furtherRequest = (
+        await this.determineFurtherRequest(user_input)
+      ).find((f) => f.name === "determine_further_request");
+
+      if (furtherRequest.args["further_request"]?.toLowerCase() === "yes") {
+        const aiResp = `How may i further assist you?`;
         await this.processCallLog(
           cached_conv_info,
           agent_info,
           user_input,
-          genAiResp.data
-        );
-        resp.msg = genAiResp.data;
-        return resp;
-      }
-      if (callIntent.args.action === "REQUEST") {
-        const followUp = await this.constructFollowUpMessage(user_input);
-        const followUpMsg = followUp.args["follow_up_message"];
-
-        // save data
-        await this.processCallLog(
-          cached_conv_info,
-          agent_info,
-          user_input,
-          followUpMsg
+          aiResp
         );
 
-        resp.msg = followUpMsg;
+        //   return { msg: aiResp };
+        resp.msg = aiResp;
         return resp;
-      }
-      if (callIntent.args.action === "FURTHER_REQUEST") {
-        const furtherRequest = await this.determineFurtherRequest(user_input);
-        if (furtherRequest.args["further_request"]?.toLowerCase() === "yes") {
-          const aiResp = `How may i further assist you?`;
-          await this.processCallLog(
-            cached_conv_info,
-            agent_info,
-            user_input,
-            aiResp
-          );
-
-          //   return { msg: aiResp };
-          resp.msg = aiResp;
-          return resp;
-        } else {
-          const aiResp = `Ok, great. Thanks for reaching out. Your message has been received and will be addressed promptly.`;
-          await this.processCallLog(
-            cached_conv_info,
-            agent_info,
-            user_input,
-            aiResp
-          );
-
-          resp.ended = true;
-          resp.msg = aiResp;
-          return resp;
-        }
-      }
-      if (callIntent.args.action === "GOODBYE") {
+      } else {
         const aiResp = `Ok, great. Thanks for reaching out. Your message has been received and will be addressed promptly.`;
         await this.processCallLog(
           cached_conv_info,
@@ -284,8 +428,68 @@ export default class AIService {
         resp.msg = aiResp;
         return resp;
       }
-
-      // HANDLE EMERGENCY / call handover
     }
+    if (callIntent.args.action === "GOODBYE") {
+      const aiResp = `Ok, great. Thanks for reaching out. Your message has been received and will be addressed promptly.`;
+      await this.processCallLog(
+        cached_conv_info,
+        agent_info,
+        user_input,
+        aiResp
+      );
+
+      resp.ended = true;
+      resp.msg = aiResp;
+      return resp;
+    }
+    if (
+      ["HANDOVER", "CALL_ESCALATION", "EMERGENCY"].includes(
+        callIntent.args.action
+      )
+    ) {
+      //! work on this next
+    }
+  }
+
+  // process SALES-ASSISTANT request
+  private async processSalesAssistantRequest(props: IHandleConversationProps) {
+    const { user_input, agent_type, agent_info, cached_conv_info } = props;
+    let resp = { msg: "", ended: false };
+
+    const agent = await prisma.agents.findFirst({
+      where: { id: agent_info.agent_id, userId: agent_info.user_id },
+      select: { name: true },
+    });
+
+    const agentName = agent.name;
+
+    // perform a similarity search with the vector
+    const similarities = await this.vectorSimilaritySearch({
+      agent_id: agent_info.agent_id,
+      data_source_ids: cached_conv_info.kb_ids, // knowleedge base id's
+      user_input,
+    });
+
+    // get the content and embeddings of closest search within the returned result
+    const closestMatch = similarities
+      .slice(0, 2)
+      .map((d) => d.content)
+      .join("\n");
+
+    const systemInstruction = salesAssistantInstructionPrompt({
+      agent_name: agentName,
+      data_source: closestMatch.trim(),
+      user_input,
+    });
+
+    const callIntent = await this.determineSAIntentAndFollowUpResponse(
+      user_input,
+      systemInstruction,
+      closestMatch
+    );
+
+    console.log(callIntent);
+
+    return resp;
   }
 }
