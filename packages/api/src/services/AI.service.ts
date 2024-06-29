@@ -211,12 +211,10 @@ export default class AIService {
     logger.info(callIntent.args.action);
 
     if (agent_type === "ANTI_THEFT") {
-      const aiInstruction =
-        agent_type === "ANTI_THEFT" ? antiTheftInstructionPrompt : "";
       if (["GREETINGS"].includes(callIntent.args.action)) {
         const genAiResp = await this.geminiService.callAI({
           user_prompt: user_input,
-          instruction: aiInstruction,
+          instruction: antiTheftInstructionPrompt,
         });
 
         console.log(genAiResp);
@@ -287,7 +285,7 @@ export default class AIService {
         return resp;
       }
 
-      //   HANDLE EMERGENCY / call handover
+      // HANDLE EMERGENCY / call handover
     }
   }
 }
