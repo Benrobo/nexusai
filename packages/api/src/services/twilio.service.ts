@@ -21,6 +21,7 @@ import type {
   IncomingCallParams,
   InitConvRestProps,
 } from "../types/twilio-service.types.js";
+import { defaultAgentName } from "../data/agent/config.js";
 
 dotenv.config();
 
@@ -40,7 +41,7 @@ export class TwilioService {
 
   // INCOMING CALLS
   async handleIncomingCall(body: IncomingCallParams, res: Response) {
-    const { To, Caller, CallerCountry, CalledState, CallStatus } = body;
+    const { To, Caller } = body;
     const twiml = new VoiceResponse();
 
     // check if "TO" phone is in db.
@@ -158,6 +159,11 @@ export class TwilioService {
   private async initConversation(res: Response, rest: InitConvRestProps) {
     const { agent_type, user_id, agent_id, caller } = rest;
     const twiml = new VoiceResponse();
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: agent_id,
+      },
+    });
 
     if (agent_type === "ANTI_THEFT") {
       const prompt = twimlPrompt.find((p) => p.type === "INIT_ANTI_THEFT");
@@ -175,9 +181,11 @@ export class TwilioService {
     }
 
     if (agent_type === "SALES_ASSISTANT") {
-      const prompt = twimlPrompt.find((p) => p.type === "INIT_ANTI_THEFT");
+      const prompt = twimlPrompt
+        .find((p) => p.type === "INIT_SALES_ASSISTANT")
+        .msg.replace("{{agent_name}}", agent?.name ?? defaultAgentName);
 
-      twiml.say(prompt.msg);
+      twiml.say(prompt);
       twiml.gather({
         input: ["speech"],
         action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
@@ -189,7 +197,7 @@ export class TwilioService {
     }
   }
 
-  //* ANTI-THEFT VOICE CALL PROCESSING
+  // ANTI-THEFT VOICE CALL PROCESSING
   async processVoiceATConversation(body: IncomingCallParams, res: Response) {
     const twiml = new VoiceResponse();
     try {
@@ -219,29 +227,14 @@ export class TwilioService {
           }
         : null;
 
-      let convCachedInfo: ConvVoiceCallCacheInfo = JSON.parse(
-        await redis.get(callRefId)
-      );
-
-      // if conversation exists, just continue
-      if (convCachedInfo) {
-        // continue conversation
-        logger.info("continue conversation");
-      } else {
-        // start new conversation
-        logger.info("start new conversation");
-
-        // save conversation in cache
-        convCachedInfo = {
-          callerPhone: callerPhone,
-          calledPhone: calledPhone,
-          callRefId,
-          city: body.CalledCity,
-          country_code: body.CalledCountry,
-          zipcode: body.CalledZip,
-        };
-        await redis.set(callRefId, JSON.stringify(convCachedInfo));
-      }
+      let convCachedInfo: ConvVoiceCallCacheInfo = {
+        callerPhone: callerPhone,
+        calledPhone: calledPhone,
+        callRefId,
+        city: body.CalledCity,
+        country_code: body.CalledCountry,
+        zipcode: body.CalledZip,
+      };
 
       const conv = await this.aiService.handleConversation({
         user_input: userInput,
@@ -275,19 +268,94 @@ export class TwilioService {
     }
   }
 
-  // * SALES ASSISTANT VOICE CALL PROCESSING
+  // SALES ASSISTANT VOICE CALL PROCESSING
   async processVoiceSAConversation(body: IncomingCallParams, res: Response) {
-    const userInput = body["SpeechResult"] as any;
     const twiml = new VoiceResponse();
+    try {
+      const userInput = body["SpeechResult"];
+      const callSid = body["CallSid"];
+      const callerPhone = body.Caller;
+      const calledPhone = body.Called;
+      const callRefId = `${callerPhone}-${calledPhone}-${callSid}`;
 
-    // console.log("userInput", userInput);
-    twiml.say("Hello Benaiah, how may I help you today?");
-    twiml.hangup();
+      const agents = await prisma.agents.findMany({
+        select: {
+          used_number: {
+            select: {
+              agentId: true,
+              phone: true,
+            },
+          },
+          userId: true,
+        },
+      });
 
-    sendXMLResponse(res, twiml.toString());
+      const agent = agents.find((a) => a.used_number.phone === calledPhone);
+      const agentInfo = agent
+        ? {
+            agent_id: agent.used_number.agentId,
+            user_id: agent.userId,
+          }
+        : null;
+
+      // decline call if agent has no linked knowledge base / data source.
+      const linkedKb = await prisma.linkedKnowledgeBase.findMany({
+        where: {
+          agentId: agentInfo?.agent_id,
+        },
+      });
+
+      if (!linkedKb || linkedKb.length === 0) {
+        twiml.say(
+          twimlPrompt.find((p) => p.type === "KNOWLEDGE_BASE_NOT_FOUND").msg
+        );
+        twiml.hangup();
+        sendXMLResponse(res, twiml.toString());
+        return;
+      }
+
+      const convCachedInfo: ConvVoiceCallCacheInfo = {
+        callerPhone: callerPhone,
+        calledPhone: calledPhone,
+        callRefId,
+        city: body.CalledCity,
+        country_code: body.CalledCountry,
+        zipcode: body.CalledZip,
+        kb_ids: linkedKb.map((kb) => kb.kb_id),
+      };
+
+      const conv = await this.aiService.handleConversation({
+        user_input: userInput,
+        agent_type: "SALES_ASSISTANT",
+        agent_info: agentInfo,
+        cached_conv_info: convCachedInfo,
+      });
+
+      if (conv.ended) {
+        twiml.say(conv.msg);
+        twiml.hangup();
+
+        await redis.del(callRefId);
+      } else {
+        twiml
+          .gather({
+            input: ["speech"],
+            action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
+            method: "POST",
+            timeout: 5,
+            // speechModel: "experimental_conversations",
+          })
+          .say(conv.msg!);
+      }
+      sendXMLResponse(res, twiml.toString());
+    } catch (e: any) {
+      console.log(e);
+      twiml.say("Something went wrong. Please try again later.");
+      twiml.hangup();
+      sendXMLResponse(res, twiml.toString());
+    }
   }
 
-  // send sms
   async sendSMS(to: string, body: string) {
     try {
       const msg = await this.prod_tw_client.messages.create({
