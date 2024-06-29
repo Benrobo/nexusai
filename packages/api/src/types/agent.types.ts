@@ -4,15 +4,20 @@ export type DefaultIntents =
   | "GREETINGS"
   | "REQUEST"
   | "GOODBYE"
+  | "APPOINTMENT"
   | "FURTHER_REQUEST"
   | "CALL_ESCALATION"
   | "HANDOVER";
 
-export type FunctionCallingNames = "determine_call_intent";
+export type FunctionCallingNames =
+  | "determine_call_intent"
+  | "follow_up_response"
+  | "construct_follow_up_message"
+  | "determine_further_request";
 
 export interface IFunctionCallResp {
   name: FunctionCallingNames;
   args: {
-    action: DefaultIntents;
+    [key: string]: DefaultIntents | string;
   };
 }

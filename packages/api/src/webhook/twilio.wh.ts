@@ -23,16 +23,16 @@ export default class TwilioWebhookHandler {
 
     console.log(body);
 
-    await this.twService.processVoiceATConversation(body, res);
+    await this.twService.processVoiceSAConversation(body, res);
   }
 
   public async processAntiTheftCall(req: Request, res: Response) {
     const body = req.body;
 
-    logger.info("Processing ongoing anti-theft voice call WH received");
+    logger.info("Processing ongoing sales-assistant voice call WH received");
 
     console.log(body);
 
-    await this.twService.processVoiceATConversation(body, res);
+    await this.twService.processVoiceSAConversation(body, res);
   }
 }
