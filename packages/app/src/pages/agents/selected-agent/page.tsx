@@ -83,7 +83,7 @@ export default function SelectedAgent() {
   }
 
   return (
-    <FlexRowStart className="w-full h-full bg-white-200/20">
+    <FlexRowStart className="w-full h-full bg-white-200/20  overflow-y-hidden">
       {/* sidebar */}
       <AgentSidebar
         agent_info={agentInfo!}

@@ -16,12 +16,14 @@ interface IVerifyPhoneProps {
   closeModal: () => void;
   isOpen: boolean;
   refetchVerifiedPhone?: () => void;
+  agent_id: string;
 }
 
 export default function VerifyPhoneModal({
   closeModal,
   isOpen,
   refetchVerifiedPhone,
+  agent_id,
 }: IVerifyPhoneProps) {
   const otp = useRef("");
   const verifyPhoneMut = useMutation({
@@ -69,6 +71,7 @@ export default function VerifyPhoneModal({
               otp.current = v;
               verifyPhoneMut.mutate({
                 otp: v,
+                agentId: agent_id,
               });
             }}
             inputMode={"numeric"}

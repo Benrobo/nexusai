@@ -23,7 +23,7 @@ export default class OTPManager {
 
     //1. store OTP in redis for 5 mins
     const otp = this.generateOTP();
-    const ttl = 5 * 60 * 1000; // 5 mins
+    const ttl = 60 * 5; // 5 mins
     await redis.set(
       userId,
       JSON.stringify({

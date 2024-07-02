@@ -4,6 +4,7 @@ import {
   FlexColStart,
   FlexRowCenter,
   FlexRowCenterBtw,
+  FlexRowEnd,
   FlexRowStart,
   FlexRowStartBtw,
 } from "@/components/Flex";
@@ -16,16 +17,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck } from "@/components/icons";
-import { cn } from "@/lib/utils";
+import { CheckCheck, ShieldCheck } from "@/components/icons";
+import { cn, formatNumber, validatePhoneNumber } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getAgentSettings, updateAgentSettings } from "@/http/requests";
+import {
+  getAgentSettings,
+  sendOTP,
+  updateAgentSettings,
+} from "@/http/requests";
 import type { AgentType, ResponseData } from "@/types";
 import toast from "react-hot-toast";
 import { Spinner } from "@/components/Spinner";
 import Button from "@/components/ui/button";
 import ManagePhoneNumber from "@/components/agents/settings/manage_phone_number";
+import VerifyPhoneModal from "@/components/agents/verify-phone";
 
 const handoverConditions = [
   {
@@ -58,7 +64,9 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
   const [settingsDetails, setSettingsDetails] = useState<AgentSettings>(
     {} as AgentSettings
   );
-
+  const [addHandoverNumber, setAddHandoverNumber] = useState(false);
+  const [handoverNum, setHandoverNum] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const getAgentSettingsQuery = useMutation({
     mutationFn: async (data: string) => getAgentSettings(data),
     onSuccess: (data) => {
@@ -74,12 +82,23 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
       toast.error(err.message);
     },
   });
-
   const updateAgentSettingsMut = useMutation({
     mutationFn: async (data: any) => updateAgentSettings(data),
     onSuccess: (data) => {
       toast.success("Settings updated");
       window.location.reload();
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
+  const sendOTPMut = useMutation({
+    mutationFn: async (data: any) => sendOTP(data),
+    onSuccess: () => {
+      toast.success("OTP sent successfully");
+      setAddHandoverNumber(true);
+      setOtpSent(true);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
@@ -136,7 +155,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
   }
 
   return (
-    <div className="w-full max-w-[100%] h-full px-10 py-10">
+    <div className="w-full max-w-[100%] h-full px-10 py-10 overflow-y-scroll pb-[50em] hideScrollBar2">
       <FlexColStart className="w-full h-full ">
         <FlexRowStartBtw className="w-full px-3">
           <FlexColStart className="gap-0 w-full">
@@ -168,7 +187,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
           <ManagePhoneNumber agent_id={agent_id} />
         )}
 
-        {/* settings sections (ANTI-THEFT)  */}
+        {/* settings sections  */}
         <FlexColStart
           className={cn("w-full min-h-[250px] mt-10 relative px-3")}
         >
@@ -258,6 +277,97 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
               </FlexRowCenterBtw>
             </>
           )}
+
+          {/* Escallation number */}
+          {["ANTI_THEFT", "SALES_ASSISTANT"].includes(type) && (
+            <>
+              <FlexColStart className="w-auto gap-0">
+                {/* <h1 className="text-lg font-bold font-jb text-dark-100">
+                  Handover Number
+                </h1>
+                <p className="text-xs font-ppReg text-white-400/80 mt-1">
+                  Configure handover number for the agent.
+                </p> */}
+              </FlexColStart>
+
+              <FlexRowStartBtw className="w-full gap-1 rounded-md bg-white-300 px-4 py-2">
+                <FlexColStart className="w-auto gap-1">
+                  <FlexRowStart className="w-auto">
+                    <p className="text-xs font-ppReg text-dark-100">
+                      Handover number
+                    </p>
+                  </FlexRowStart>
+                  <p className="text-[10px] font-jb text-white-400">
+                    The number to which the agent would be handed over to. (US
+                    only)
+                  </p>
+                </FlexColStart>
+
+                <FlexRowEnd className="w-auto">
+                  <Input
+                    type="text"
+                    className="w-auto text-xs font-jb placeholder:text-white-400/50 tracking-wide"
+                    placeholder="+1 234 567 8890"
+                    value={handoverNum}
+                    onChange={(e: any) => {
+                      if (e.target.value.length > 12) return;
+                      setHandoverNum(e.target.value);
+                    }}
+                  />
+
+                  <button
+                    className="w-[38px] h-[38px] bg-dark-100 flex flex-col items-center justify-center rounded-sm active:scale-[.95] target:scale-[.90] transition-all disabled:bg-dark-100/50 disabled:text-white-100"
+                    onClick={() => {
+                      if (handoverNum.length < 12) {
+                        return toast.error("Invalid phone number");
+                      }
+                      if (!handoverNum.startsWith("+1")) {
+                        return toast.error("Phone number must start with +1");
+                      }
+                      if (!validatePhoneNumber(handoverNum)) {
+                        return toast.error("Invalid phone number");
+                      }
+                      sendOTPMut.mutate({
+                        phone: handoverNum,
+                      });
+                    }}
+                    disabled={sendOTPMut.isPending}
+                  >
+                    {sendOTPMut.isPending ? (
+                      <Spinner />
+                    ) : (
+                      <CheckCheck className="stroke-white-100" size={15} />
+                    )}
+                  </button>
+                </FlexRowEnd>
+              </FlexRowStartBtw>
+
+              {otpSent && (
+                <FlexRowEnd className="w-full">
+                  <Timer
+                    time={20}
+                    onClick={() => {
+                      sendOTPMut.mutate({
+                        phone: handoverNum,
+                      });
+                    }}
+                  />
+                </FlexRowEnd>
+              )}
+
+              {/* verify phone modal */}
+              {addHandoverNumber && (
+                <VerifyPhoneModal
+                  closeModal={() => setAddHandoverNumber(false)}
+                  isOpen={addHandoverNumber}
+                  refetchVerifiedPhone={() => {
+                    getAgentSettingsQuery.mutate(agent_id);
+                  }}
+                  agent_id={agent_id}
+                />
+              )}
+            </>
+          )}
         </FlexColStart>
       </FlexColStart>
     </div>
@@ -274,5 +384,37 @@ function NotSupportedOverlay({ type }: { type: string }) {
         </p>
       </FlexColCenter>
     </button>
+  );
+}
+
+function Timer({ time, onClick }: { time: number; onClick: () => void }) {
+  const [timer, setTimer] = useState(time);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (timer <= 0) return clearInterval(interval);
+      setTimer((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timer]);
+  return (
+    <>
+      {timer > 1 && (
+        <p className="text-xs font-ppReg text-white-400">{timer}s</p>
+      )}
+
+      {/* resend */}
+      {timer <= 0 && (
+        <button
+          className="text-[10px] font-jb underline"
+          onClick={() => {
+            setTimer(20);
+            onClick && onClick();
+          }}
+          disabled={timer > 0}
+        >
+          Resend OTP
+        </button>
+      )}
+    </>
   );
 }

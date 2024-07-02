@@ -2,6 +2,7 @@ import express from "express";
 import useCatchErrors from "../lib/error.js";
 import AgentController from "../controller/agent.controller.js";
 import { isAuthenticated } from "../middlewares/auth.js";
+import rateLimit from "../middlewares/rateLimit.js";
 
 export default class AgentRoute {
   router = express.Router();
@@ -64,7 +65,9 @@ export default class AgentRoute {
     this.router.post(
       `${this.path}/send-otp`,
       useCatchErrors(
-        isAuthenticated(this.agentController.sendOTP.bind(this.agentController))
+        isAuthenticated(
+          rateLimit(this.agentController.sendOTP.bind(this.agentController))
+        )
       )
     );
 

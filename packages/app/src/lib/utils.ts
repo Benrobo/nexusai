@@ -41,6 +41,12 @@ export const formatNumber = (number: string) => {
   return number?.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, "$1 ($2) $3-$4");
 };
 
+// validate phone number , make sure +1 is included
+export const validatePhoneNumber = (phone: string) => {
+  const pattern = new RegExp(/^\+1\d{10}$/);
+  return !!pattern.test(phone);
+};
+
 export const validateUrl = (url: string) => {
   const pattern = new RegExp(
     "^(https?:\\/\\/)?" + // protocol

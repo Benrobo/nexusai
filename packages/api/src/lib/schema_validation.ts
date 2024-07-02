@@ -87,7 +87,7 @@ export const verifyUsPhoneSchema = zod.object({
     .string({
       required_error: "Phone number is required",
     })
-    .regex(/^\+1-[0-9]{3}-[0-9]{3}-[0-9]{4}$/, {
+    .regex(/^\+1\d{10}$/, {
       message: "Invalid US phone number",
     })
     .refine((data) => data.startsWith("+1"), {

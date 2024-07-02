@@ -43,18 +43,8 @@ export default class AgentController extends BaseController {
 
     await ZodValidation(verifyUsPhoneSchema, payload, req.serverUrl!);
 
-    const phone = formatPhoneNumber(payload.phone);
-
-    if (!validateUsNumber(phone)) {
-      throw new HttpException(
-        RESPONSE_CODE.BAD_REQUEST,
-        "Invalid phone number",
-        400
-      );
-    }
-
     // send OTP to phone number
-    const otpSent = await this.otpManager.sendOTP(phone, user.id);
+    const otpSent = await this.otpManager.sendOTP(payload.phone, user.id);
 
     if (!otpSent) {
       throw new HttpException(
