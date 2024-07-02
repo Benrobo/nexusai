@@ -97,13 +97,11 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
     onSuccess: () => {
       toast.success("OTP sent successfully");
       setAddHandoverNumber(true);
-      setOtpSent(true);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
       toast.error(err.message);
       setHandoverNum("");
-      setOtpSent(false);
     },
   });
 
@@ -364,7 +362,6 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                   refetchVerifiedPhone={() => {
                     getAgentSettingsQuery.mutate(agent_id);
                     setHandoverNum("");
-                    setOtpSent(false);
                   }}
                   agent_id={agent_id}
                 />
