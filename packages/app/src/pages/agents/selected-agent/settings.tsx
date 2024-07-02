@@ -66,7 +66,6 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
   );
   const [addHandoverNumber, setAddHandoverNumber] = useState(false);
   const [handoverNum, setHandoverNum] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const getAgentSettingsQuery = useMutation({
     mutationFn: async (data: string) => getAgentSettings(data),
     onSuccess: (data) => {
@@ -103,6 +102,8 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
       toast.error(err.message);
+      setHandoverNum("");
+      setOtpSent(false);
     },
   });
 
@@ -281,14 +282,14 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
           {/* Escallation number */}
           {["ANTI_THEFT", "SALES_ASSISTANT"].includes(type) && (
             <>
-              <FlexColStart className="w-auto gap-0">
-                {/* <h1 className="text-lg font-bold font-jb text-dark-100">
+              {/* <FlexColStart className="w-auto gap-0">
+                <h1 className="text-lg font-bold font-jb text-dark-100">
                   Handover Number
                 </h1>
                 <p className="text-xs font-ppReg text-white-400/80 mt-1">
                   Configure handover number for the agent.
-                </p> */}
-              </FlexColStart>
+                </p>
+              </FlexColStart> */}
 
               <FlexRowStartBtw className="w-full gap-1 rounded-md bg-white-300 px-4 py-2">
                 <FlexColStart className="w-auto gap-1">
@@ -334,14 +335,14 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                     disabled={sendOTPMut.isPending}
                   >
                     {sendOTPMut.isPending ? (
-                      <Spinner />
+                      <Spinner size={15} />
                     ) : (
                       <CheckCheck className="stroke-white-100" size={15} />
                     )}
                   </button>
                 </FlexRowEnd>
               </FlexRowStartBtw>
-
+              {/* 
               {otpSent && (
                 <FlexRowEnd className="w-full">
                   <Timer
@@ -353,7 +354,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                     }}
                   />
                 </FlexRowEnd>
-              )}
+              )} */}
 
               {/* verify phone modal */}
               {addHandoverNumber && (
@@ -362,6 +363,8 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                   isOpen={addHandoverNumber}
                   refetchVerifiedPhone={() => {
                     getAgentSettingsQuery.mutate(agent_id);
+                    setHandoverNum("");
+                    setOtpSent(false);
                   }}
                   agent_id={agent_id}
                 />
@@ -387,11 +390,22 @@ function NotSupportedOverlay({ type }: { type: string }) {
   );
 }
 
-function Timer({ time, onClick }: { time: number; onClick: () => void }) {
+function Timer({
+  time,
+  onClick,
+  resend,
+}: {
+  time: number;
+  onClick: () => void;
+  resend?: () => void;
+}) {
   const [timer, setTimer] = useState(time);
   useEffect(() => {
     const interval = setInterval(() => {
-      if (timer <= 0) return clearInterval(interval);
+      if (timer <= 0) {
+        resend && resend();
+        return clearInterval(interval);
+      }
       setTimer((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(interval);
