@@ -330,7 +330,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                         phone: handoverNum,
                       });
                     }}
-                    disabled={sendOTPMut.isPending}
+                    disabled={sendOTPMut.isPending || handoverNum.length === 0}
                   >
                     {sendOTPMut.isPending ? (
                       <Spinner size={15} />
