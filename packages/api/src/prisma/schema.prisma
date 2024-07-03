@@ -281,7 +281,6 @@ model Integration {
     agent_id String
     type     IntegrationType
     url      String
-    enabled  Boolean         @default(false)
 
     created_at DateTime @default(now())
 

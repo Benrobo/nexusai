@@ -211,7 +211,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
 
         {/* settings sections  */}
         <FlexColStart
-          className={cn("w-full min-h-[250px] mt-10 relative px-3")}
+          className={cn("w-full min-h-[250px] mt-10 relative px-1")}
         >
           {/* handover settings */}
           {type === "ANTI_THEFT" && (
@@ -303,23 +303,14 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
           {/* Escallation number */}
           {["ANTI_THEFT", "SALES_ASSISTANT"].includes(type) && (
             <>
-              {/* <FlexColStart className="w-auto gap-0">
-                <h1 className="text-lg font-bold font-jb text-dark-100">
-                  Handover Number
-                </h1>
-                <p className="text-xs font-ppReg text-white-400/80 mt-1">
-                  Configure handover number for the agent.
-                </p>
-              </FlexColStart> */}
-
               <FlexRowStartBtw className="w-full gap-1 rounded-md bg-white-300 px-4 py-2">
                 <FlexColStart className="w-auto gap-1">
                   <FlexRowStart className="w-auto">
-                    <p className="text-xs font-ppReg text-dark-100">
+                    <p className="text-sm font-ppM text-dark-100">
                       Handover number
                     </p>
                   </FlexRowStart>
-                  <p className="text-[10px] font-jb text-white-400">
+                  <p className="text-xs font-jb text-white-400">
                     The number to which the agent would be handed over to. (US
                     only)
                   </p>
@@ -328,7 +319,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                 <FlexRowEnd className="w-auto">
                   <Input
                     type="text"
-                    className="w-auto text-xs font-jb placeholder:text-white-400/50 tracking-wide"
+                    className="w-auto text-xs text-dark-100 font-bold font-jb placeholder:text-white-400/50 tracking-wide disabled:cursor-not-allowed disabled:opacity-1"
                     placeholder="+1 234 567 8890"
                     value={
                       handoverEditMode
