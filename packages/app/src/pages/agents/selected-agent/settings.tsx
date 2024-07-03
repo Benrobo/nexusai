@@ -17,11 +17,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { CheckCheck, ShieldCheck } from "@/components/icons";
-import { cn, formatNumber, validatePhoneNumber } from "@/lib/utils";
+import { CheckCheck, Pen, ShieldCheck } from "@/components/icons";
+import {
+  cn,
+  formatNumber,
+  formatPhoneNumber,
+  validatePhoneNumber,
+} from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
+  getAgentFwdNumber,
   getAgentSettings,
   sendOTP,
   updateAgentSettings,
@@ -64,8 +70,24 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
   const [settingsDetails, setSettingsDetails] = useState<AgentSettings>(
     {} as AgentSettings
   );
+  const [forwardingNum, setForwardingNum] = useState<string | null>(null);
+  const [handoverEditMode, setHandoverEditMode] = useState(false);
   const [addHandoverNumber, setAddHandoverNumber] = useState(false);
   const [handoverNum, setHandoverNum] = useState("");
+  const getFwdNumberQuery = useMutation({
+    mutationFn: async (id: string) => await getAgentFwdNumber(id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      if (resp.data?.phone) {
+        // setHandoverEditMode(true);
+        setForwardingNum(resp.data?.phone);
+      }
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
   const getAgentSettingsQuery = useMutation({
     mutationFn: async (data: string) => getAgentSettings(data),
     onSuccess: (data) => {
@@ -107,6 +129,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
 
   useEffect(() => {
     if (agent_id && !agentSettings) getAgentSettingsQuery.mutate(agent_id!);
+    if (agent_id && !forwardingNum) getFwdNumberQuery.mutate(agent_id);
   }, [agent_id]);
 
   const handleFormChange = (
@@ -307,37 +330,60 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                     type="text"
                     className="w-auto text-xs font-jb placeholder:text-white-400/50 tracking-wide"
                     placeholder="+1 234 567 8890"
-                    value={handoverNum}
+                    value={
+                      handoverEditMode
+                        ? forwardingNum ?? ""
+                        : formatNumber(forwardingNum ?? "") ?? handoverNum
+                    }
                     onChange={(e: any) => {
                       if (e.target.value.length > 12) return;
                       setHandoverNum(e.target.value);
                     }}
+                    disabled={forwardingNum && !handoverEditMode ? true : false}
                   />
 
-                  <button
-                    className="w-[38px] h-[38px] bg-dark-100 flex flex-col items-center justify-center rounded-sm active:scale-[.95] target:scale-[.90] transition-all disabled:bg-dark-100/50 disabled:text-white-100"
-                    onClick={() => {
-                      if (handoverNum.length < 12) {
-                        return toast.error("Invalid phone number");
-                      }
-                      if (!handoverNum.startsWith("+1")) {
-                        return toast.error("Phone number must start with +1");
-                      }
-                      if (!validatePhoneNumber(handoverNum)) {
-                        return toast.error("Invalid phone number");
-                      }
-                      sendOTPMut.mutate({
-                        phone: handoverNum,
-                      });
-                    }}
-                    disabled={sendOTPMut.isPending || handoverNum.length === 0}
-                  >
-                    {sendOTPMut.isPending ? (
-                      <Spinner size={15} />
-                    ) : (
-                      <CheckCheck className="stroke-white-100" size={15} />
-                    )}
-                  </button>
+                  {(!forwardingNum || handoverEditMode) && (
+                    <button
+                      className="w-[38px] h-[38px] bg-dark-100 flex flex-col items-center justify-center rounded-sm active:scale-[.95] target:scale-[.90] transition-all disabled:bg-dark-100/50 disabled:text-white-100"
+                      onClick={() => {
+                        if (handoverEditMode || !forwardingNum) {
+                          if (handoverNum.length < 12) {
+                            return toast.error("Invalid phone number");
+                          }
+                          if (!handoverNum.startsWith("+1")) {
+                            return toast.error(
+                              "Phone number must start with +1"
+                            );
+                          }
+                          if (!validatePhoneNumber(handoverNum)) {
+                            return toast.error("Invalid phone number");
+                          }
+                          sendOTPMut.mutate({
+                            phone: handoverNum,
+                          });
+                        }
+                        setHandoverEditMode((prev) => !prev);
+                      }}
+                      disabled={sendOTPMut.isPending}
+                    >
+                      {sendOTPMut.isPending ? (
+                        <Spinner size={15} />
+                      ) : (
+                        <CheckCheck className="stroke-white-100" size={15} />
+                      )}
+                    </button>
+                  )}
+
+                  {forwardingNum && (
+                    <button
+                      className="w-[38px] h-[38px] bg-dark-100 flex flex-col items-center justify-center rounded-sm active:scale-[.95] target:scale-[.90] transition-all disabled:bg-dark-100/50 disabled:text-white-100"
+                      onClick={() => {
+                        setHandoverEditMode((prev) => !prev);
+                      }}
+                    >
+                      <Pen className="stroke-white-100" size={15} />
+                    </button>
+                  )}
                 </FlexRowEnd>
               </FlexRowStartBtw>
               {/* 
@@ -361,6 +407,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                   isOpen={addHandoverNumber}
                   refetchVerifiedPhone={() => {
                     getAgentSettingsQuery.mutate(agent_id);
+                    getFwdNumberQuery.mutate(agent_id);
                     setHandoverNum("");
                   }}
                   agent_id={agent_id}

@@ -37,6 +37,12 @@ enum CallLogMsgType {
     user
 }
 
+enum CallLogAnalysisType {
+    spam
+    genuine
+    malicious
+}
+
 enum KnowledgeBaseType {
     TXT
     WEB_PAGES
@@ -127,6 +133,7 @@ model Agents {
     agent_settings        AgentSettings?
     purchased_number      PurchasedPhoneNumbers?
     call_logs             CallLogs[]
+    integrations          Integration[]
 
     @@index([userId])
     @@map(name: "agents")
@@ -154,7 +161,6 @@ model ForwardingNumber {
     id         String   @id @default(cuid())
     agentId    String   @unique
     phone      String   @unique
-    dial_code  String?
     country    String?
     created_at DateTime @default(now())
 
@@ -271,12 +277,17 @@ model LinkedKnowledgeBase {
 
 // integrations added by user
 model Integration {
-    id      String          @id @default(cuid())
-    wsId    String          @unique
-    type    IntegrationType
-    enabled Boolean         @default(false)
+    id       String          @id @default(cuid())
+    agent_id String
+    type     IntegrationType
+    url      String
+    enabled  Boolean         @default(false)
 
-    @@index([wsId])
+    created_at DateTime @default(now())
+
+    agents Agents @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+
+    @@index([agent_id])
     @@map(name: "integrations")
 }
 
@@ -344,6 +355,8 @@ model CallLogs {
 
     created_at DateTime @default(now())
 
+    analysis CallLogsAnalysis?
+
     agent    Agents             @relation(fields: [agentId], references: [id])
     user     Users              @relation(fields: [userId], references: [id])
     messages CallLogsMessages[]
@@ -368,6 +381,24 @@ model CallLogsMessages {
     @@index([toId])
     @@index([call_log_id])
     @@map(name: "call_logs_messages")
+}
+
+// Call logs Analysis
+model CallLogsAnalysis {
+    id        String @id @default(cuid())
+    callLogId String @unique
+
+    // sentiment analysis for each call log
+    //  this is to identify if the call was malicious, spam, or genuine
+    sentiment String?
+    type      CallLogAnalysisType?
+
+    created_at DateTime @default(now())
+
+    call_logs CallLogs @relation(fields: [callLogId], references: [id])
+
+    @@index([callLogId])
+    @@map(name: "call_logs_analysis")
 }
 
 // Subscriptions

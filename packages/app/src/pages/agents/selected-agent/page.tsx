@@ -10,6 +10,7 @@ import { getAgent } from "@/http/requests";
 import { Spinner } from "@/components/Spinner";
 import toast from "react-hot-toast";
 import SettingsPage from "./settings";
+import Integrations from "./integrations";
 import KnowledgeBase from "@/components/agents/knowledge-base";
 
 interface IAgentInfo {
@@ -98,6 +99,7 @@ export default function SelectedAgent() {
           <SettingsPage agent_id={agentId!} type={agentInfo.type!} />
         )}
         {activeTab === "knowledge-base" && <KnowledgeBase />}
+        {activeTab === "integrations" && <Integrations />}
       </div>
     </FlexRowStart>
   );

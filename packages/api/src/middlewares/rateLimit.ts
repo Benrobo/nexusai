@@ -6,7 +6,14 @@ import logger from "../config/logger.js";
 // rate limit send OTP route to 1 request per minute
 // using redis
 
-export default function rateLimit(fn: Function) {
+/**
+ *
+ * @param fn - function to be rate limited
+ * @param shouldCache  - boolean to cache the request
+ * @returns
+ */
+
+export default function rateLimit(fn: Function, shouldCache: Boolean) {
   return async (req: Request & IReqObject, res: Response) => {
     const userId = req.user.id;
     const ip = req.ip;
@@ -14,10 +21,12 @@ export default function rateLimit(fn: Function) {
 
     const data = await redis.get(key);
     if (!data) {
-      // set key to expire in 1 minute
-      const exp = 20; // 20sec
-      await redis.set(key, userId);
-      await redis.expire(key, exp);
+      if (shouldCache) {
+        // set key to expire in 1 minute
+        const exp = 20; // 20sec
+        await redis.set(key, userId);
+        await redis.expire(key, exp);
+      }
 
       return await fn(req, res);
     } else {

@@ -56,9 +56,6 @@ export default class OTPManager {
       );
     }
 
-    // delete OTP from redis
-    await redis.del(userId);
-
     return otp;
   }
 }

@@ -57,6 +57,11 @@ export const verifyPhone = async (data: any) => {
   return req.data;
 };
 
+export const getAgentFwdNumber = async (id: string) => {
+  const req = await $axios.get(`/agent/forward-number/${id}`);
+  return req.data;
+};
+
 export const getAgentPhoneNumbers = async (id: string) => {
   const req = await $axios.get(`/agent/active-number/${id}`);
   return req.data;
@@ -125,5 +130,20 @@ export const deleteKnowledgeBase = async (data: {
 
 export const unlinkKnowledgeBase = async (data: any) => {
   const req = await $axios.post(`/knowledge-base/unlink`, data);
+  return req.data;
+};
+
+export const addIntegration = async (data: any) => {
+  const req = await $axios.post(`/agent/integration`, data);
+  return req.data;
+};
+
+export const getIntegration = async (id: string) => {
+  const req = await $axios.get(`/agent/integration/${id}`);
+  return req.data;
+};
+
+export const deleteIntegration = async (agent_id: string, int_id: string) => {
+  const req = await $axios.delete(`/agent/integration/${agent_id}/${int_id}`);
   return req.data;
 };

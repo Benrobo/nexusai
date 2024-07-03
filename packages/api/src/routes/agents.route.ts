@@ -66,7 +66,19 @@ export default class AgentRoute {
       `${this.path}/send-otp`,
       useCatchErrors(
         isAuthenticated(
-          rateLimit(this.agentController.sendOTP.bind(this.agentController))
+          rateLimit(
+            this.agentController.sendOTP.bind(this.agentController),
+            false
+          )
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/forward-number/:agent_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.getForwardedNumber.bind(this.agentController)
         )
       )
     );
@@ -128,6 +140,34 @@ export default class AgentRoute {
           this.agentController.getTwilioAvailableNumber.bind(
             this.agentController
           )
+        )
+      )
+    );
+
+    // INTEGRATIONS
+    this.router.get(
+      `${this.path}/integration/:agent_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.getIntegration.bind(this.agentController)
+        )
+      )
+    );
+
+    this.router.post(
+      `${this.path}/integration`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.addIntegration.bind(this.agentController)
+        )
+      )
+    );
+
+    this.router.delete(
+      `${this.path}/integration/:agent_id/:int_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.removeIntegration.bind(this.agentController)
         )
       )
     );

@@ -216,3 +216,20 @@ export const crawlPageSchema = zod.object({
     required_error: "Agent ID is required",
   }),
 });
+
+export const addIntegrationSchema = zod.object({
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
+  }),
+  type: zod.string({
+    required_error: "Integration type is required",
+  }),
+  url: zod
+    .string({
+      required_error: "Integration URL is required",
+    })
+    .regex(
+      /^(http|https):\/\/[^ "]+$/,
+      "URL must start with http:// or https://"
+    ),
+});

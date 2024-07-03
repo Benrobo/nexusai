@@ -5,6 +5,7 @@ import { RESPONSE_CODE, IReqObject } from "../types/index.js";
 import { type AgentEnum, type AgentType } from "../types/index.js";
 import ZodValidation from "../lib/zodValidation.js";
 import {
+  addIntegrationSchema,
   createAgentSchema,
   LinkPhoneNumberSchema,
   updateAgentSettingsSchema,
@@ -17,6 +18,9 @@ import OTPManager from "../lib/otp-manager.js";
 import shortUUID from "short-uuid";
 import prisma from "../prisma/prisma.js";
 import { TwilioService } from "../services/twilio.service.js";
+import redis from "../config/redis.js";
+import rateLimit from "../middlewares/rateLimit.js";
+import type { IntegrationType } from "@prisma/client";
 
 interface ICreateAG {
   name: string;
@@ -43,6 +47,21 @@ export default class AgentController extends BaseController {
 
     await ZodValidation(verifyUsPhoneSchema, payload, req.serverUrl!);
 
+    // check if phone number exists in forwarding number
+    const fwdNum = await prisma.forwardingNumber.findFirst({
+      where: {
+        phone: payload.phone,
+      },
+    });
+
+    if (fwdNum) {
+      throw new HttpException(
+        RESPONSE_CODE.DUPLICATE_ENTRY,
+        "Phone number already in use",
+        400
+      );
+    }
+
     // send OTP to phone number
     const otpSent = await this.otpManager.sendOTP(payload.phone, user.id);
 
@@ -54,11 +73,52 @@ export default class AgentController extends BaseController {
       );
     }
 
+    // rate limit send OTP route to 1 request per minute
+    // the rateLimit middleware would have access to this key, only if
+    // otp was sent successfully
+
+    const ip = req.ip;
+    const key = `rate-limit:${ip}`;
+
+    await redis.set(key, user.id);
+    await redis.expire(key, 60);
+
     sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "OTP sent successfully",
       200
+    );
+  }
+
+  async getForwardedNumber(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const agentId = req.params["agent_id"];
+
+    if (!agentId) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Agent ID is required",
+        400
+      );
+    }
+
+    const fwdNum = await prisma.forwardingNumber.findFirst({
+      where: {
+        agentId: agentId as string,
+      },
+      select: {
+        phone: true,
+        country: true,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Forwarded number retrieved successfully",
+      200,
+      fwdNum
     );
   }
 
@@ -84,6 +144,17 @@ export default class AgentController extends BaseController {
     const otpcode = payload.otp;
 
     const otp = await this.otpManager.verifyOTP(user.id, otpcode);
+
+    // save the number in forwarded numbers
+    await prisma.forwardingNumber.create({
+      data: {
+        phone: otp.phone,
+        agentId: payload.agentId,
+        country: "US",
+      },
+    });
+
+    await redis.del(user.id);
 
     sendResponse.success(
       res,
@@ -166,7 +237,7 @@ export default class AgentController extends BaseController {
 
   async activateAgent(req: Request & IReqObject, res: Response) {
     const user = req["user"];
-    const agentId = req.query["id"];
+    const agentId = req.params["id"];
 
     const agent = await prisma.agents.findFirst({
       where: {
@@ -587,6 +658,129 @@ export default class AgentController extends BaseController {
       res,
       RESPONSE_CODE.SUCCESS,
       "Phone number linked to agent successfully",
+      200
+    );
+  }
+
+  async addIntegration(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const payload = req.body as {
+      agent_id: string;
+      type: IntegrationType;
+      url: string;
+    };
+
+    await ZodValidation(addIntegrationSchema, payload, req.serverUrl!);
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: payload.agent_id,
+        userId: user.id,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    // check if integration already exists
+    const integration = await prisma.integration.findFirst({
+      where: {
+        agent_id: payload.agent_id,
+        type: payload.type as IntegrationType,
+      },
+    });
+
+    if (integration) {
+      throw new HttpException(
+        RESPONSE_CODE.DUPLICATE_ENTRY,
+        "Integration already exists",
+        400
+      );
+    }
+
+    // validate url
+    if (payload.type === "google_calendar") {
+      const url = new URL(payload.url);
+      if (url.hostname !== "calendar.app.google") {
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "Invalid Google calendar URL",
+          400
+        );
+      }
+    }
+
+    // add integration
+    await prisma.integration.create({
+      data: {
+        agent_id: payload.agent_id,
+        type: payload.type as IntegrationType,
+        url: payload.url,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Integration added successfully",
+      200
+    );
+  }
+
+  async getIntegration(req: Request & IReqObject, res: Response) {
+    const agentId = req.params["agent_id"];
+
+    const integration = await prisma.integration.findMany({
+      where: {
+        agent_id: agentId,
+      },
+      select: {
+        id: true,
+        type: true,
+        url: true,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Integration retrieved successfully",
+      200,
+      integration
+    );
+  }
+
+  async removeIntegration(req: Request & IReqObject, res: Response) {
+    const agentId = req.params["agent_id"];
+    const intId = req.params["int_id"];
+
+    const integration = await prisma.integration.findFirst({
+      where: {
+        id: intId,
+        agent_id: agentId,
+      },
+    });
+
+    if (!integration) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Integration not found",
+        404
+      );
+    }
+
+    await prisma.integration.delete({
+      where: {
+        id: integration.id,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Integration removed successfully",
       200
     );
   }
