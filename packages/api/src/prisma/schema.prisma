@@ -343,7 +343,7 @@ model ChatMessages {
 // call logs
 model CallLogs {
     id             String @id @default(cuid())
-    refId          String
+    refId          String @unique
     agentId        String
     userId         String
     from_number    String
@@ -359,6 +359,7 @@ model CallLogs {
     agent    Agents             @relation(fields: [agentId], references: [id])
     user     Users              @relation(fields: [userId], references: [id])
     messages CallLogsMessages[]
+    entries  CallLogEntry?
 
     @@index([agentId])
     @@index([userId])
@@ -380,6 +381,20 @@ model CallLogsMessages {
     @@index([toId])
     @@index([call_log_id])
     @@map(name: "call_logs_messages")
+}
+
+model CallLogEntry {
+    id         String   @id @default(cuid())
+    refId      String   @unique
+    callReason String?
+    callerName String?
+    referral   String?
+    message    String?
+    createdAt  DateTime @default(now())
+
+    call_logs CallLogs @relation(fields: [refId], references: [refId], onDelete: Cascade)
+
+    @@map(name: "call_log_entry")
 }
 
 // Call logs Analysis
