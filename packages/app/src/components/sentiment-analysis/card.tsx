@@ -1,7 +1,6 @@
 import { FlexColStart } from "../Flex";
 import { cn } from "@/lib/utils";
 import SentimentChart, { type SentimentData } from "./chart";
-import { Meh, ShieldAlert, ThumbsUp } from "../icons";
 import animatedSvg from "@/data/animated-svg";
 
 interface SentimentAnalysisCardProps {

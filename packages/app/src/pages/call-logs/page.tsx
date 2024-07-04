@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import animatedSvg from "@/data/animated-svg";
-import { cn, formatNumber, maskPhoneNumber } from "@/lib/utils";
+import { cn, maskPhoneNumber } from "@/lib/utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
