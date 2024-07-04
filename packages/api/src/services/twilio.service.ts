@@ -173,8 +173,8 @@ export class TwilioService {
         input: ["speech"],
         action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
         method: "POST",
-        timeout: 5,
-        speechModel: "experimental_conversations",
+        timeout: 3,
+        speechTimeout: "1",
       });
 
       sendXMLResponse(res, twiml.toString());
@@ -191,6 +191,7 @@ export class TwilioService {
         action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
         method: "POST",
         timeout: 3,
+        speechTimeout: "1",
       });
 
       sendXMLResponse(res, twiml.toString());
@@ -342,8 +343,8 @@ export class TwilioService {
             input: ["speech"],
             action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
             method: "POST",
-            timeout: 5,
-            // speechModel: "experimental_conversations",
+            timeout: 3,
+            speechTimeout: "auto",
           })
           .say(conv.msg!);
       }

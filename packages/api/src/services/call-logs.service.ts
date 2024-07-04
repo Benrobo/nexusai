@@ -99,4 +99,57 @@ export default class CallLogsService {
 
     return log;
   }
+
+  public async getCallLogEntry({ refId }: { refId: string }) {
+    const log = await prisma.callLogEntry.findFirst({
+      where: {
+        refId,
+      },
+    });
+
+    return log;
+  }
+
+  public async addCallLogEntry(props: {
+    refId: string;
+    callReason?: string;
+    callerName?: string;
+    referral?: string;
+    message?: string;
+  }) {
+    const { refId, callReason, callerName, referral, message } = props;
+
+    // check if call log exists with refId
+    const log = await prisma.callLogEntry.findFirst({
+      where: {
+        refId,
+      },
+    });
+
+    if (log) {
+      // update
+      await prisma.callLogEntry.update({
+        where: {
+          refId,
+        },
+        data: {
+          callReason: callReason,
+          callerName: callerName,
+          referral,
+          message,
+        },
+      });
+    } else {
+      // create
+      await prisma.callLogEntry.create({
+        data: {
+          refId,
+          callReason: callReason,
+          callerName: callerName,
+          referral,
+          message,
+        },
+      });
+    }
+  }
 }
