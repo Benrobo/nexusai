@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import env from "@/config/env";
+import parsePhoneNumber from "libphonenumber-js";
 
 dayjs.extend(relativeTime);
 
@@ -38,7 +39,8 @@ export const formatPhoneNumber = (input: string) => {
 };
 
 export const formatNumber = (number: string) => {
-  return number?.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, "$1 ($2) $3-$4");
+  const phoneNumber = parsePhoneNumber(number);
+  return phoneNumber?.formatInternational();
 };
 
 // validate phone number , make sure +1 is included
@@ -46,6 +48,12 @@ export const validatePhoneNumber = (phone: string) => {
   const pattern = new RegExp(/^\+1\d{10}$/);
   return !!pattern.test(phone);
 };
+
+export function maskPhoneNumber(phoneNumber: string) {
+  const str = phoneNumber.toString();
+  const masked = str.slice(0, -4).replace(/\d/g, "*") + str.slice(-4);
+  return masked;
+}
 
 export const validateUrl = (url: string) => {
   const pattern = new RegExp(

@@ -7,6 +7,7 @@ export type InitConvRestProps = {
   agent_id: string;
   user_id: string;
   caller: string;
+  callSid: string;
 };
 
 export type ProvisioningPhoneNumberProps = {

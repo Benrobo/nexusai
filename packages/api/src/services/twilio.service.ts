@@ -41,7 +41,7 @@ export class TwilioService {
 
   // INCOMING CALLS
   async handleIncomingCall(body: IncomingCallParams, res: Response) {
-    const { To, Caller } = body;
+    const { To, Caller, CallSid } = body;
     const twiml = new VoiceResponse();
 
     // check if "TO" phone is in db.
@@ -148,6 +148,7 @@ export class TwilioService {
       agent_id: agent.id,
       user_id: calledPhone.users?.uId,
       caller: Caller,
+      callSid: CallSid,
     });
   }
 
@@ -157,7 +158,7 @@ export class TwilioService {
    * @param rest agent_type, caller
    */
   private async initConversation(res: Response, rest: InitConvRestProps) {
-    const { agent_type, user_id, agent_id, caller } = rest;
+    const { agent_type, user_id, agent_id, callSid } = rest;
     const twiml = new VoiceResponse();
     const agent = await prisma.agents.findFirst({
       where: {
@@ -354,6 +355,18 @@ export class TwilioService {
       twiml.say("Something went wrong. Please try again later.");
       twiml.hangup();
       sendXMLResponse(res, twiml.toString());
+    }
+  }
+
+  // would use this later
+  private async getCallDuration(callSid: string) {
+    try {
+      const call = await this.prod_tw_client.calls(callSid).fetch();
+      return call.duration;
+    } catch (e: any) {
+      logger.error(`Error fetching call duration: ${e.message}`);
+      console.log(e);
+      return null;
     }
   }
 

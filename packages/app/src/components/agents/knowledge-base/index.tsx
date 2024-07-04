@@ -1,21 +1,16 @@
 import {
   FlexColStart,
   FlexColStartCenter,
-  FlexRowCenter,
   FlexRowEnd,
-  FlexRowStart,
   FlexRowStartBtw,
-  FlexRowStartCenter,
 } from "@/components/Flex";
 import {
-  Brain,
   Cable,
   Library,
   Pause,
   Pen,
   Play,
   Plus,
-  Trash,
   UnPlug,
 } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -32,7 +27,7 @@ import TooltipComp from "@/components/TooltipComp";
 import type { KBType, ResponseData } from "@/types";
 import Button from "@/components/ui/button";
 import AddKnowledgeBaseModal from "./addKb";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   getKnowledgeBase,
   retrainKbData,
@@ -41,7 +36,6 @@ import {
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 import { ChildLoader } from "@/components/Loader";
-import { Spinner } from "@/components/Spinner";
 import LinkKnowledgeBase from "./link-kb";
 
 // Knowledgebase Tab

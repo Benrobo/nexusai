@@ -20,6 +20,7 @@ import {
   Library,
   LockOpen,
   Package,
+  PhoneIncoming,
   Plus,
 } from "../icons";
 import { cn, logout } from "@/lib/utils";
@@ -36,6 +37,12 @@ const sidebarRoutes = [
     title: "Dashboard",
     key: "dashboard",
     path: "/dashboard",
+    isExtensible: false,
+  },
+  {
+    title: "Call logs",
+    key: "call-logs",
+    path: "/call-logs",
     isExtensible: false,
   },
   {
@@ -164,7 +171,7 @@ export default function DashboardSidebar() {
                     "text-sm",
                     activePage === route.key
                       ? "font-ppM text-dark-100 "
-                      : "font-ppL font-light text-white-300/40 "
+                      : "font-ppL font-light text-white-100 "
                   )}
                 >
                   {route.title}
@@ -314,6 +321,10 @@ function renderIcons(name: string, active: string) {
 
     case "inbox":
       icon = <Inbox size={20} className={cn(mainStyle, "")} />;
+      break;
+
+    case "call-logs":
+      icon = <PhoneIncoming size={20} className={cn(mainStyle, "")} />;
       break;
 
     case "knowledge-base":
