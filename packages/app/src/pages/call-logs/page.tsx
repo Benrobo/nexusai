@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import animatedSvg from "@/data/animated-svg";
 import { cn, formatNumber, maskPhoneNumber } from "@/lib/utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -153,7 +154,7 @@ export default function CallLogsPage() {
             analysis={[
               {
                 sentiment: "negative",
-                confidence_level: 70,
+                confidence_level: 20,
               },
               {
                 sentiment: "neutral",
@@ -161,7 +162,7 @@ export default function CallLogsPage() {
               },
               {
                 sentiment: "positive",
-                confidence_level: 20,
+                confidence_level: 70,
               },
             ]}
             suggested_action="The caller seems to have a cunny response."
@@ -172,8 +173,12 @@ export default function CallLogsPage() {
         {false && (
           <FlexColCenter className="w-full h-full">
             <img
-              src="/assets/animated-svg/scroll-txt_animated.svg"
+              src={animatedSvg.find((d) => d.name === "scroll-txt")?.url}
               width={50}
+              style={{
+                filter:
+                  "invert(0%) sepia(0%) saturate(7500%) hue-rotate(76deg) brightness(89%) contrast(104%)",
+              }}
             />
             <p className="text-sm font-bold font-ppReg text-white-400">
               Select a call log to view details

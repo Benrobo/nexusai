@@ -2,6 +2,7 @@ import { FlexColStart } from "../Flex";
 import { cn } from "@/lib/utils";
 import SentimentChart, { type SentimentData } from "./chart";
 import { Meh, ShieldAlert, ThumbsUp } from "../icons";
+import animatedSvg from "@/data/animated-svg";
 
 interface SentimentAnalysisCardProps {
   title: string;
@@ -49,21 +50,39 @@ export default function SentimentAnalysisCard({
       {/* sentiment ID */}
       <div className="absolute top-2 right-2">
         {highestValue?.sentiment === "positive" && (
-          <ThumbsUp
-            size={60}
+          <img
+            src={animatedSvg.find((d) => d.name === "thumbsup")?.url}
+            width={60}
             className={cn("opacity-[.20] stroke-green-100")}
+            style={{
+              filter:
+                "invert(42%) sepia(70%) saturate(471%) hue-rotate(81deg) brightness(86%) contrast(94%)", // green
+            }}
           />
         )}
 
         {highestValue?.sentiment === "negative" && (
-          <ShieldAlert
-            size={60}
+          <img
+            src={animatedSvg.find((d) => d.name === "shield-alert")?.url}
+            width={60}
             className={cn("opacity-[.20] stroke-red-305")}
+            style={{
+              filter:
+                "invert(44%) sepia(76%) saturate(2801%) hue-rotate(334deg) brightness(99%) contrast(104%)", // red
+            }}
           />
         )}
 
         {highestValue?.sentiment === "neutral" && (
-          <Meh size={60} className={cn("opacity-[.20] stroke-orange-300")} />
+          <img
+            src={animatedSvg.find((d) => d.name === "meh")?.url}
+            width={60}
+            className={cn("opacity-[.20]")}
+            style={{
+              filter:
+                "invert(61%) sepia(27%) saturate(949%) hue-rotate(343deg) brightness(106%) contrast(95%)", // orange
+            }}
+          />
         )}
       </div>
     </FlexColStart>
