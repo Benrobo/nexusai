@@ -86,6 +86,234 @@ export default class AIService {
     return intentCallResp.data as IFunctionCallResp[];
   }
 
+  public async getCallReason(msg: string, callerName: string) {
+    const callReason = await this.geminiService.functionCall({
+      prompt: msg,
+      tools: [
+        {
+          func_name: "get_call_reason",
+          description: `Extract the reason for the call from the user's message. Do your very best to understand the user's message and extract the reason for the call. It must be short, concise and straignt to the point. If the reason is unclear, prepare a follow-up to clarify the purpose of the call.Use ${callerName} when addressing the caller.
+
+          <examples>
+            Input: "I want to know if John is available."
+            Reason: "inquiring about John's availability"
+            Follow-up: "Could you clarify how you know John, ${callerName}?"
+
+            Input: "I need to reschedule my appointment."
+            Reason: "rescheduling an appointment"
+            Follow-up: "I see, ${callerName}. How did you get this contact number?"
+
+            Input: "Just calling to say hi."
+            Reason: null
+            Follow-up: "Hello ${callerName}. Is there a specific reason for your call today?"
+          </examples>
+          
+          <input>
+            <CallerName>${callerName}</CallerName>
+            <UserMessage>${msg}</UserMessage>
+          </input>
+          
+          
+          Analyze the message and provide:
+          1. Reason: [extracted reason or "null" if unclear]
+          2. Follow-up: [question to clarify the call's purpose if needed]
+          `,
+          parameters: {
+            type: "object",
+            properties: {
+              // @ts-ignore
+              reason: {
+                type: "string",
+                description: `The reason for the call extracted from the user's message. set to null if reason can't be found.`,
+              },
+              // @ts-ignore
+              follow_up: {
+                type: "string",
+                description: `The follow-up response constructed from the extracted reason.`,
+              },
+            },
+          },
+          required: ["reason", "follow_up"],
+        },
+      ],
+    });
+
+    return callReason.data as IFunctionCallResp[];
+  }
+
+  public async getCallReferral(
+    msg: string,
+    callerName: string,
+    reason: string
+  ) {
+    const callReferral = await this.geminiService.functionCall({
+      prompt: msg,
+      tools: [
+        {
+          func_name: "get_call_referral",
+          description: `
+          <instruction>
+          - Extract the referral for the call from the user's message. Do your very best to understand the user's message.
+          - You must be able to tell when a message denotes a referral or where the recipient number was gotten from (this is very important). 
+          - Be smart in your response, if the message doesn't sound like a referral or where the recipient number was gotten from or sounds like it fishy, construct a follow-up message to clarify the call's purpose.
+          - It must be short, concise and straignt to the point. 
+          - Use ${callerName} when addressing the caller. Adjust the reason provided to fit the follow up message.
+          - If the caller dont clearly state where they got the recipient number from, politely redirect their focus on where they got the number from.
+          </instruction>
+
+          <examples>
+            This are just examples, do not use them as is, rather, use it as a guide to construct your response.
+
+            Input: {ONLY IF THE MESSAGE DENOTE A REFERRAL OR WHERE THE NUMBER WAS GOTTEN FROM}
+            Referral: {EXTRACTED REFERRAL} eg "I got your number from a friend. | I was referred by John. | I got your number from the company's website."
+            Follow-up: "Understood ${callerName}. I'll pass that information to the recipient. Have a great day."
+
+            Input: {IF THE MESSAGE DOESN'T SOUND LIKE A REFERRAL OR WHERE THE NUMBER WAS GOTTEN FROM}
+            Referral: null
+            Follow-up: {QUESTION TO CLARIFY THE CALL'S PURPOSE IF NEEDED}
+
+            Do not use the examples above. Construct your response based on the user's message.
+          </examples>
+          
+          <input>
+            <CallerName>${callerName}</CallerName>
+            <CallReason>${reason}</CallReason>
+            <UserMessage>${msg}</UserMessage>
+          </input>
+          
+          
+          Analyze the message and provide:
+          1. Referral: [extracted referral or "null" if unclear]
+          2. Follow-up: [question to clarify the call's purpose if needed]
+          `,
+          parameters: {
+            type: "object",
+            properties: {
+              // @ts-ignore
+              referral: {
+                type: "string",
+                description: `The referral for the call extracted from the user's message. set to null if referral can't be found.`,
+              },
+              // @ts-ignore
+              follow_up: {
+                type: "string",
+                description: `The follow-up response constructed from the extracted referral.`,
+              },
+            },
+          },
+          required: ["referral", "follow_up"],
+        },
+      ],
+    });
+
+    return callReferral.data as IFunctionCallResp[];
+  }
+
+  public async getCallerMessage(msg: string, callerName: string) {
+    const callerMessage = await this.geminiService.functionCall({
+      prompt: msg,
+      tools: [
+        {
+          func_name: "get_caller_message",
+          description: `
+            Extract the caller intent. Do your best to understand the user's message in order to extract the intent. It must be short, concise and straignt to the point.
+            If unclear, prepare a follow-up to clarify the intent.
+            Use ${callerName} when addressing the caller.
+            If the intent is extracted, always construct a follow-up message to clarify the call's reason.
+
+            <examples>
+              input: "I just want to let {recipient name} know i miss him."
+              message: "informing {recipient name} that the caller misses him."
+              follow_up: "Got it, Is there a specific reason for your call today ${callerName}?"
+
+              input: "I love you."
+              message: "expressing love to the recipient."
+              follow_up: "Understood, Is there a specific reason for your call today ${callerName}?"
+
+              input: {IF THE MESSAGE DOESN'T SOUND LIKE A CALL INTENT}
+              message: null
+              follow_up: {QUESTION TO CLARIFY THE CALL'S PURPOSE IF NEEDED}
+
+            </examples>
+
+            <input>
+              <CallerName>${callerName}</CallerName>
+              <UserMessage>${msg}</UserMessage>
+            </input>
+          `,
+          parameters: {
+            type: "object",
+            properties: {
+              // @ts-ignore
+              message: {
+                type: "string",
+                description: `The caller's intent extracted from the user's message. set to null if intent can't be found.`,
+              },
+              // @ts-ignore
+              follow_up: {
+                type: "string",
+                description: `The follow-up response constructed from the extracted caller's message.`,
+              },
+            },
+          },
+          required: ["message", "follow_up"],
+        },
+      ],
+    });
+
+    return callerMessage.data as IFunctionCallResp[];
+  }
+
+  public async getCallerName(msg: string) {
+    const callerName = await this.geminiService.functionCall({
+      prompt: msg,
+      tools: [
+        {
+          func_name: "get_caller_name",
+          description: `Extract the caller's name from the user's message. Do your very best to understand the user's message and extract the caller's name. It must be short, concise and straignt to the point.
+
+          If the user tries either greeting or asking question (as long it within your domain/context), respond to them in short and concise manner but still request the caller's name.
+
+          for eg:
+          input: Hi cassie this is Brad calling
+          caller_name: 'Brad'
+          follow_up_response: Hi Brad, what message would you like me to pass to the recipient?.
+
+          input: I love you.
+          caller_name: 'null'
+          follow_up_response: Thanks for the compliment. Could you please tell me your fullname?
+
+          input: hi cassie, how are you?.
+          caller_name: 'null'
+          follow_up_response: I'm great, thanks for asking. Could you please tell me your fullname?
+
+          If you can't get the caller's name, set the caller_name to null but construct a follow up response by redirecting the user back to the question: 'Could you please tell me your fullname? or construct a better response with that question in mind.
+          
+          <UserMessage>${msg}</UserMessage>,
+          `,
+          parameters: {
+            type: "object",
+            properties: {
+              // @ts-ignore
+              caller_name: {
+                type: "string",
+                description: `The caller's name extracted from the user's message. set to null if name can't be found.`,
+              },
+              // @ts-ignore
+              follow_up_response: {
+                type: "string",
+                description: `The follow-up response constructed from the extracted caller's name.`,
+              },
+            },
+          },
+          required: ["caller_name", "follow_up_response"],
+        },
+      ],
+    });
+
+    return callerName.data as IFunctionCallResp[];
+  }
+
   public async constructFollowUpMessage(msg: string) {
     const requestExtraction = await this.geminiService.functionCall({
       prompt: msg,
@@ -362,7 +590,7 @@ export default class AIService {
   }
 
   // Process ANTI-THEFT request
-  private async processAntiTheftRequest(props: IHandleConversationProps) {
+  private async processAntiTheftRequestV1(props: IHandleConversationProps) {
     const { user_input, agent_info, cached_conv_info } = props;
     let resp = { msg: "", ended: false };
 
@@ -462,6 +690,162 @@ export default class AIService {
     ) {
       //! work on this next
     }
+  }
+
+  private async processAntiTheftRequest(props: IHandleConversationProps) {
+    const { user_input, agent_info, cached_conv_info } = props;
+    const callLogEntry = await this.callLogService.getCallLogEntry({
+      refId: cached_conv_info.callRefId,
+    });
+    const _callerName = callLogEntry?.callerName ?? null;
+    const _callReason = callLogEntry?.callReason ?? null;
+    const _referral = callLogEntry?.referral ?? null;
+    const _message = callLogEntry?.message ?? null;
+
+    if (!_callerName) {
+      logger.info("Extracting caller name");
+      const resp = await this.getCallerName(user_input);
+      const followUp = resp[0]?.args?.follow_up_response;
+      const callerNameExtracted = resp[0]?.args?.caller_name;
+
+      if (
+        followUp &&
+        ["null", "unknown", "undefined"].includes(callerNameExtracted)
+      ) {
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          followUp
+        );
+        return { msg: followUp };
+      }
+      if (!["null", "unknown"].includes(callerNameExtracted)) {
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          callerNameExtracted
+        );
+
+        await this.callLogService.addCallLogEntry({
+          refId: cached_conv_info.callRefId,
+          callerName: callerNameExtracted,
+        });
+
+        return { msg: followUp };
+      }
+    }
+    if (!_message) {
+      logger.info("Extracting caller intent message");
+      const resp = await this.getCallerMessage(user_input, _callerName);
+      const followUp = resp[0]?.args?.follow_up;
+      const intentExtracted = resp[0]?.args?.message;
+
+      if (followUp && ["null", "unknown"].includes(intentExtracted)) {
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          followUp
+        );
+        return { msg: followUp };
+      }
+      if (!["null", "unknown"].includes(intentExtracted)) {
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          intentExtracted
+        );
+
+        await this.callLogService.addCallLogEntry({
+          refId: cached_conv_info.callRefId,
+          message: intentExtracted,
+        });
+
+        return { msg: followUp };
+      }
+    }
+    if (!_callReason) {
+      logger.info("Extracting caller reason");
+      const resp = await this.getCallReason(user_input, _callerName);
+      const followUp = resp[0]?.args?.follow_up;
+      const callReasonExtracted = resp[0]?.args?.reason;
+
+      if (followUp && ["null", "unknown"].includes(callReasonExtracted)) {
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          followUp
+        );
+        return { msg: followUp };
+      }
+      if (!["null", "unknown"].includes(callReasonExtracted)) {
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          callReasonExtracted
+        );
+
+        await this.callLogService.addCallLogEntry({
+          refId: cached_conv_info.callRefId,
+          callReason: callReasonExtracted,
+        });
+
+        return { msg: followUp };
+      }
+    }
+    if (!_referral) {
+      logger.info("Extracting caller referral");
+      const resp = await this.getCallReferral(
+        user_input,
+        _callerName,
+        _callReason
+      );
+      const followUp = resp[0]?.args?.follow_up;
+      const referralExtracted = resp[0]?.args?.referral;
+
+      if (followUp && ["null", "unknown"].includes(referralExtracted)) {
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          followUp
+        );
+        return { msg: followUp };
+      }
+      if (!["null", "unknown"].includes(referralExtracted)) {
+        await this.processCallLog(
+          cached_conv_info,
+          agent_info,
+          user_input,
+          referralExtracted
+        );
+
+        await this.callLogService.addCallLogEntry({
+          refId: cached_conv_info.callRefId,
+          referral: referralExtracted,
+        });
+
+        return { msg: followUp, ended: true };
+      }
+    }
+    const genAiResp = await this.geminiService.callAI({
+      user_prompt: user_input,
+      instruction: antiTheftInstructionPrompt,
+    });
+
+    await this.processCallLog(
+      cached_conv_info,
+      agent_info,
+      user_input,
+      genAiResp.data
+    );
+
+    return { msg: genAiResp.data };
   }
 
   // process SALES-ASSISTANT request
