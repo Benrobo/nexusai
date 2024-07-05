@@ -570,7 +570,7 @@ export default class AIService {
     }
   }
 
-  private async getChatHistoryTxt(refId: string, user_input: string) {
+  private async getChatHistoryTxt(refId: string, user_input?: string) {
     let mainHistory = "";
 
     const callHistory = await this.callLogService.getCallLogById({
@@ -583,10 +583,14 @@ export default class AIService {
       });
 
       // add current user requets to mainHistoiry
-      mainHistory += `\n[user]: ${user_input}\n`;
+      if (user_input) mainHistory += `\n[user]: ${user_input}\n`;
     }
 
     return mainHistory;
+  }
+
+  public async determineLogSentimentAnalysis(refId: string) {
+    const chatHistory = await this.getChatHistoryTxt(refId);
   }
 
   // Process ANTI-THEFT request

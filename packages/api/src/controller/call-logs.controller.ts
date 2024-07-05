@@ -4,9 +4,12 @@ import sendResponse from "../lib/sendResponse.js";
 import { RESPONSE_CODE, IReqObject } from "../types/index.js";
 import prisma from "../prisma/prisma.js";
 import CallLogsService from "../services/call-logs.service.js";
+import AIService from "../services/AI.service.js";
+import HttpException from "../lib/exception.js";
 
 export default class CallLogsController {
   private callLogsService = new CallLogsService();
+  private aiService = new AIService();
   constructor() {}
 
   public async getCallLogs(req: Request & IReqObject, res: Response) {
@@ -53,6 +56,33 @@ export default class CallLogsController {
       RESPONSE_CODE.SUCCESS,
       "Call log marked as read",
       200
+    );
+  }
+
+  public async getSentimentAnalysis(req: Request & IReqObject, res: Response) {
+    const userId = req.user.id;
+    const logId = req.params.id;
+
+    const log = await prisma.callLogs.findFirst({
+      where: {
+        id: logId,
+        userId,
+      },
+      select: {
+        refId: true,
+      },
+    });
+
+    if (!log) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Call log was not found.",
+        404
+      );
+    }
+
+    const analysis = await this.aiService.determineLogSentimentAnalysis(
+      log.refId
     );
   }
 }

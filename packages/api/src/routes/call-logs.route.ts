@@ -39,5 +39,16 @@ export default class CallLogsRoute {
         )
       )
     );
+
+    this.router.get(
+      `${this.path}/analysis/:id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.callLogsController.getSentimentAnalysis.bind(
+            this.callLogsController
+          )
+        )
+      )
+    );
   }
 }
