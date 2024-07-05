@@ -40,7 +40,10 @@ export default function SentimentAnalysisCard({
       <SentimentChart data={analysis} />
 
       {/* remarks and suggested action */}
-      <FlexColStart className="w-full gap-1">
+      <FlexColStart className="w-full gap-1 mt-2">
+        <p className={cn("text-xs text-dark-100 font-bold font-ppM z-[1]")}>
+          Action
+        </p>
         <p className={cn("text-xs text-dark-100 font-normal font-ppReg z-[1]")}>
           {suggested_action}
         </p>

@@ -11,8 +11,53 @@ interface ICallLogsService {}
 export default class CallLogsService {
   constructor() {}
 
-  public async getCallLogs(): Promise<any> {
-    // get all call logs
+  public async getCallLogs(userId: string) {
+    const logs = await prisma.callLogs.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        messages: true,
+      },
+    });
+
+    const finalized_log = [];
+
+    for (const log of logs) {
+      const logEntry = await prisma.callLogEntry.findFirst({
+        where: {
+          refId: log.refId,
+        },
+        select: {
+          id: true,
+          callReason: true,
+          callerName: true,
+          referral: true,
+          message: true,
+        },
+      });
+
+      const analysis = await prisma.callLogsAnalysis.findFirst({
+        where: {
+          callLogId: log.id,
+        },
+        select: {
+          id: true,
+          sentiment: true,
+          type: true,
+          suggested_action: true,
+          created_at: true,
+        },
+      });
+
+      finalized_log.push({
+        ...log,
+        logEntry,
+        analysis,
+      });
+    }
+
+    return finalized_log;
   }
 
   public async getCallLogById({ refId }: { refId: string }) {

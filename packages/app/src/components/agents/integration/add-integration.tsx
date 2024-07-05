@@ -130,7 +130,7 @@ export default function AddIntegration({
                       )}
                       key={idx}
                     >
-                      <FlexRowStartCenter className="w-full">
+                      <FlexRowStartCenter className="w-full gap-1">
                         <img src={int.logo} width={40} />
                         <p className="text-sm font-ppM font-bold">
                           {int.displayName}

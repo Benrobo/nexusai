@@ -14,11 +14,11 @@ const buttonVariants = cva(
         secondary:
           "bg-white-100 text-brand-green-primary hover:bg-[#F4FBF6] focus:shadow-brand-green-shd active:bg-brand-green-shd disabled:bg-brand-disabled border-solid border-[2px] border-brand-green-primary ",
         success:
-          "bg-brand-success-primary hover:bg-brand-success-hover focus:bg-brand-success-focused active:bg-brand-success-pressed disabled:bg-brand-disabled disabled:cursor-not-allowed ",
+          "bg-success-primary hover:bg-brand-success-hover focus:bg-brand-success-focused active:bg-brand-success-pressed disabled:bg-brand-disabled disabled:cursor-not-allowed ",
         tertiary:
-          "bg-brand-green-ttr text-brand-green-primary hover:bg-[#F4FBF6] focus:shadow-brand-green-shd active:bg-brand-green-shd disabled:bg-brand-disabled disabled:cursor-not-allowed ",
+          "bg-green-ttr text-brand-green-primary hover:bg-[#F4FBF6] focus:shadow-brand-green-shd active:bg-brand-green-shd disabled:bg-brand-disabled disabled:cursor-not-allowed ",
         error:
-          "bg-brand-red-primary text-white-100 hover:bg-brand-red-hover focus:bg-brand-red-focused active:bg-brand-red-pressed disabled:bg-brand-disabled disabled:cursor-not-allowed",
+          "bg-red-305 text-white-100 hover:bg-red-305/50 focus:bg-red-305 active:bg-red-305 disabled:bg-red-305/30 disabled:cursor-not-allowed",
         dark: "bg-dark-100/90 text-white-100 hover:bg-dark-100 focus:bg-dark-100 active:bg-dark-100 disabled:bg-brand-disabled disabled:cursor-not-allowed",
       },
       size: {

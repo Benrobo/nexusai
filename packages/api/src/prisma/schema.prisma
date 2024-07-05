@@ -38,9 +38,9 @@ enum CallLogMsgType {
 }
 
 enum CallLogAnalysisType {
-    spam
-    genuine
-    malicious
+    positive
+    negative
+    neutral
 }
 
 enum KnowledgeBaseType {
@@ -354,7 +354,7 @@ model CallLogs {
 
     created_at DateTime @default(now())
 
-    analysis CallLogsAnalysis?
+    analysis CallLogsAnalysis[]
 
     agent    Agents             @relation(fields: [agentId], references: [id])
     user     Users              @relation(fields: [userId], references: [id])
@@ -404,8 +404,9 @@ model CallLogsAnalysis {
 
     // sentiment analysis for each call log
     //  this is to identify if the call was malicious, spam, or genuine
-    sentiment String?
-    type      CallLogAnalysisType?
+    sentiment        String?
+    suggested_action String?
+    type             CallLogAnalysisType?
 
     created_at DateTime @default(now())
 

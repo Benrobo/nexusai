@@ -7,6 +7,7 @@ import WebhookRoute from "./routes/webhook.route.js";
 import CheckoutRoute from "./routes/checkout.route.js";
 import internalTest from "./test.js";
 import SubscriptionRoute from "./routes/subscription.route.js";
+import CallLogsRoute from "./routes/call-logs.route.js";
 
 const server = new App();
 
@@ -18,6 +19,7 @@ server.initializedRoutes([
   new WebhookRoute(),
   new CheckoutRoute(),
   new SubscriptionRoute(),
+  new CallLogsRoute(),
 ]);
 server.listen();
 
