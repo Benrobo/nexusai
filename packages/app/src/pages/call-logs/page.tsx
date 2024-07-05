@@ -7,7 +7,7 @@ import {
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "@/components/Flex";
-import { Info, Telescope } from "@/components/icons";
+import { Glass, Info, Telescope } from "@/components/icons";
 import SentimentAnalysisCard from "@/components/sentiment-analysis/card";
 import { Spinner } from "@/components/Spinner";
 import TooltipComp from "@/components/TooltipComp";
@@ -340,7 +340,7 @@ export default function CallLogsPage() {
                   <FlexColCenter className="w-full h-full absolute z-[3] bg-white-100/30 backdrop-blur-sm">
                     <Button
                       intent={"dark"}
-                      className="w-[160px] h-[40px] scale-[.85] font-ppM text-white-100 text-[10px]"
+                      className="w-[160px] h-[40px] scale-[.85] font-ppM text-white-100 text-[12px]"
                       enableBounceEffect
                       isLoading={getCallLogAnalysisMut.isPending}
                       disabled={getCallLogAnalysisMut.isPending}
@@ -348,7 +348,11 @@ export default function CallLogsPage() {
                         getCallLogAnalysisMut.mutate(selectedCallLog.id);
                       }}
                     >
-                      View Sentiment Analysis
+                      {/* View Sentiment Analysis */}
+                      <FlexRowCenter>
+                        <Glass size={20} />
+                        View Analysis
+                      </FlexRowCenter>
                     </Button>
                   </FlexColCenter>
                 </FlexColCenter>
