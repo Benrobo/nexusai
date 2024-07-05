@@ -31,13 +31,12 @@ export type CallLogsResponseData = {
     referral: string | null;
     message: string | null;
   };
-  analysis:
-    | {
-        id: string;
-        sentiment: string;
-        suggested_action: string;
-        confidence: number;
-        type: Sentiment;
-      }[]
-    | null;
+  analysis: {
+    id: string;
+    sentiment: string;
+    suggested_action: string;
+    confidence: number;
+    type: Sentiment;
+    red_flags: string;
+  } | null;
 };

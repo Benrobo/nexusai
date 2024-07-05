@@ -354,7 +354,7 @@ model CallLogs {
 
     created_at DateTime @default(now())
 
-    analysis CallLogsAnalysis[]
+    analysis CallLogsAnalysis?
 
     agent    Agents             @relation(fields: [agentId], references: [id])
     user     Users              @relation(fields: [userId], references: [id])
@@ -409,6 +409,7 @@ model CallLogsAnalysis {
     suggested_action String?
     confidence       Int?
     type             CallLogAnalysisType?
+    red_flags        String?
 
     created_at DateTime @default(now())
 

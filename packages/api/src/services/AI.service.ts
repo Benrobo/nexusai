@@ -17,8 +17,7 @@ import CallLogsService from "./call-logs.service.js";
 import logger from "../config/logger.js";
 import prisma from "../prisma/prisma.js";
 import redis from "../config/redis.js";
-import { Prisma } from "@prisma/client";
-import retry from "../lib/retry.js";
+import { getSentimentVariations } from "../data/agent/sentiment.js";
 
 type IHandleConversationProps = {
   user_input: string;
@@ -570,7 +569,11 @@ export default class AIService {
     }
   }
 
-  private async getChatHistoryTxt(refId: string, user_input?: string) {
+  private async getChatHistoryTxt(
+    refId: string,
+    user_input?: string,
+    shouldSlice?: boolean
+  ) {
     let mainHistory = "";
 
     const callHistory = await this.callLogService.getCallLogById({
@@ -578,9 +581,15 @@ export default class AIService {
     });
 
     if (callHistory?.messages.length > 0) {
-      callHistory.messages.slice(-5).forEach((m) => {
-        mainHistory += `\n[${m.entity_type}]: ${m.content}\n`;
-      });
+      if (shouldSlice) {
+        callHistory.messages.slice(-5).forEach((m) => {
+          mainHistory += `\n[${m.entity_type}]: ${m.content}\n`;
+        });
+      } else {
+        callHistory.messages.forEach((m) => {
+          mainHistory += `\n[${m.entity_type}]: ${m.content}\n`;
+        });
+      }
 
       // add current user requets to mainHistoiry
       if (user_input) mainHistory += `\n[user]: ${user_input}\n`;
@@ -589,8 +598,94 @@ export default class AIService {
     return mainHistory;
   }
 
-  public async determineLogSentimentAnalysis(refId: string) {
-    const chatHistory = await this.getChatHistoryTxt(refId);
+  // ANTI_THEFT call log sentiment analysis.
+  public async determineATLogSentimentAnalysis(refId: string) {
+    const transcript = await this.getChatHistoryTxt(refId, "", false);
+    const variations = getSentimentVariations("ANTI_THEFT", true);
+    const analysis = await this.geminiService.functionCall({
+      prompt: transcript,
+      tools: [
+        {
+          func_name: "analyze_call_sentiment",
+          description: `
+            <context>
+              Analyze the provided phone call transcript between an agent and a user. Evaluate the overall sentiment focusing on anti-theft concerns. Determine if the call appears safe, suspicious, spam or neutral.
+
+              Important: If no transcript is provided, or if the transcript is incomplete (missing caller name, reason for the call, or source of the phone number), automatically categorize this as a Spam call.
+
+
+              Potential Red Flags:
+              2. Caller avoids saying who they are or how they got the number
+              3. Unexpected offers for business or money
+              4. Rushing to make decisions
+              5. Asking for personal details or bank information
+              6. Caller's story doesn't add up or changes
+              7. Trying to make you feel guilty, scared, or too excited
+
+              Indicators of Normal Calls:
+              1. Caller readily provides identification when asked
+              2. Clear, consistent reason for the call
+              3. No pressure for immediate action
+              4. Willingness to be called back or provide additional verification
+              5. Call relates to expected business or personal matters
+
+              Instructions:
+              1. Carefully read the entire transcript.
+              2. Identify key phrases or behaviors indicating the call's nature.
+              3. Provide sentiment assessments for positive, neutral, and negative categories.
+              4. Choose the most appropriate sentiment variation for each category.
+              5. Assign confidence levels that sum to exactly 100 across all three categories.
+              6. If the transcript is unclear, reflect this in the confidence levels.
+
+              Sentiment Variations:
+              ${variations}
+            </context>
+          `,
+          parameters: {
+            type: "object",
+            properties: {
+              // @ts-ignore
+              sentiment: {
+                type: "string",
+                description: "The specific sentiment variation chosen",
+              },
+              // @ts-ignore
+              type: {
+                type: "string",
+                description:
+                  "The category of sentiment: negative|positive|neutral",
+              },
+              // @ts-ignore
+              confidence: {
+                type: "number",
+                description: "Confidence level (0-100).",
+              },
+              // @ts-ignore
+              suggested_action: {
+                type: "string",
+                description:
+                  "Provide a clear, human-readable action or series of steps based on the sentiment analysis. Be specific and practical. Multiple steps can be included if necessary.",
+              },
+              // @ts-ignore
+              identified_red_flags: {
+                type: "string",
+                description:
+                  "List any identified red flags from the conversation. An array of strings would be needed: ['red-flags', 'red-flags']. Be very short and concise and straight to the point, use simple words. If possible, use one or two words. List min 3 potential red flags.",
+              },
+            },
+          },
+          required: [
+            "sentiment",
+            "type",
+            "confidence",
+            "suggested_action",
+            "identified_red_flags",
+          ],
+        },
+      ],
+    });
+
+    return analysis.data;
   }
 
   // Process ANTI-THEFT request
@@ -866,7 +961,8 @@ export default class AIService {
 
     const mainHistory = await this.getChatHistoryTxt(
       cached_conv_info.callRefId,
-      user_input
+      user_input,
+      true
     );
 
     // perform a similarity search with the vector

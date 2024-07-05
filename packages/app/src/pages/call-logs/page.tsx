@@ -23,7 +23,11 @@ import {
 } from "@/components/ui/table";
 import { useDataContext } from "@/context/DataContext";
 import animatedSvg from "@/data/animated-svg";
-import { getCallLogs, markLogAsRead } from "@/http/requests";
+import {
+  getCallLogAnalysis,
+  getCallLogs,
+  markLogAsRead,
+} from "@/http/requests";
 import {
   cn,
   formatNumber,
@@ -98,6 +102,33 @@ export default function CallLogsPage() {
       const err = (error as any).response.data as ResponseData;
       console.log("Failed to mark log as read: ", err);
       refetchUnreadlogs();
+    },
+  });
+  const getCallLogAnalysisMut = useMutation({
+    mutationFn: async (id: string) => await getCallLogAnalysis(id),
+    onSuccess: (data: any) => {
+      const resp = data as ResponseData;
+      const _data = resp.data;
+      let foundLog = callLogs.find((l) => l.id === selectedCallLog?.id);
+      const selectedLogIdx = callLogs.findIndex(
+        (l) => l.id === selectedCallLog?.id
+      );
+      if (foundLog) {
+        foundLog.analysis = {
+          ..._data,
+          red_flags: Array.isArray(_data?.red_flags)
+            ? _data?.red_flags.join(", ")
+            : _data?.red_flags,
+        };
+        callLogs.splice(selectedLogIdx, 1, foundLog);
+        setCallLogs(callLogs);
+      }
+      getCallLogAnalysisMut.reset();
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      console.log("Failed to mark log as read: ", err);
+      toast.error(err?.message ?? "Failed retrieving analysis.");
     },
   });
 
@@ -296,29 +327,14 @@ export default function CallLogsPage() {
               {!selectedCallLog?.analysis ? (
                 <FlexColCenter className="w-full h-full relative">
                   <SentimentAnalysisCard
-                    analysis={[
-                      {
-                        sentiment: "Malicious Call",
-                        confidence: 70,
-                        suggested_action:
-                          "Lorem ipsum dolor sit, amet consectetur adipisicing elit. ",
-                        type: "negative",
-                      },
-                      {
-                        sentiment: "Malicious Call",
-                        confidence: 10,
-                        suggested_action:
-                          "Lorem ipsum dolor sit, amet consectetur adipisicing elit. ",
-                        type: "positive",
-                      },
-                      {
-                        sentiment: "Malicious Call",
-                        confidence: 20,
-                        suggested_action:
-                          "Lorem ipsum dolor sit, amet consectetur adipisicing elit. ",
-                        type: "neutral",
-                      },
-                    ]}
+                    analysis={{
+                      sentiment: "Malicious Call",
+                      confidence: 70,
+                      suggested_action:
+                        "Lorem ipsum dolor sit, amet consectetur adipisicing elit. ",
+                      type: "negative",
+                      red_flags: "No red flags",
+                    }}
                   />
                   {/* overlay */}
                   <FlexColCenter className="w-full h-full absolute z-[3] bg-white-100/30 backdrop-blur-sm">
@@ -326,6 +342,11 @@ export default function CallLogsPage() {
                       intent={"dark"}
                       className="w-[160px] h-[40px] scale-[.85] font-ppM text-white-100 text-[10px]"
                       enableBounceEffect
+                      isLoading={getCallLogAnalysisMut.isPending}
+                      disabled={getCallLogAnalysisMut.isPending}
+                      onClick={() => {
+                        getCallLogAnalysisMut.mutate(selectedCallLog.id);
+                      }}
                     >
                       View Sentiment Analysis
                     </Button>

@@ -67,6 +67,7 @@ export default class CallLogsService {
           sentiment: true,
           type: true,
           suggested_action: true,
+          red_flags: true,
           confidence: true,
           created_at: true,
         },

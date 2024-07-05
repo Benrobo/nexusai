@@ -1,6 +1,8 @@
+import type { AgentType } from "../../types/index.js";
+
 const SENTIMENT_ANALYSIS_VARIATIONS = {
   positive: {
-    "ANTI-THEFT": [
+    ANTI_THEFT: [
       "Caller Verified Safely",
       "No Issues Detected",
       "Call Deemed Safe",
@@ -13,13 +15,14 @@ const SENTIMENT_ANALYSIS_VARIATIONS = {
     ],
   },
   negative: {
-    "ANTI-THEFT": [
+    ANTI_THEFT: [
       "Suspicious Caller Identified",
       "Potential Scam Call",
       "Possible Fraudulent Activity",
       "Suspicious Call Behavior",
       "Untrusted Caller Warning",
       "Potential Threatening Call",
+      "Potential Spam Call",
     ],
     SALES_ASSISTANT: [
       "Unsatisfactory Service",
@@ -31,7 +34,7 @@ const SENTIMENT_ANALYSIS_VARIATIONS = {
     ],
   },
   neutral: {
-    "ANTI-THEFT": [
+    ANTI_THEFT: [
       "No Significant Activity",
       "Neutral Call Feedback",
       "Average Customer Interaction",
@@ -47,3 +50,38 @@ const SENTIMENT_ANALYSIS_VARIATIONS = {
 };
 
 export default SENTIMENT_ANALYSIS_VARIATIONS;
+
+export function getSentimentVariations(
+  agent_type: AgentType,
+  md_form?: boolean
+) {
+  const positive = SENTIMENT_ANALYSIS_VARIATIONS.positive[
+    agent_type!
+  ] as string[];
+  const negative = SENTIMENT_ANALYSIS_VARIATIONS.negative[
+    agent_type!
+  ] as string[];
+  const neutral = SENTIMENT_ANALYSIS_VARIATIONS.neutral[
+    agent_type!
+  ] as string[];
+
+  if (md_form) {
+    const mainTxt = `
+## Positive variations:
+${positive.join("\n")}
+
+## Negative variations:
+${negative.join("\n")}
+
+## Neutral variations:
+${neutral.join("\n")}
+    `;
+    return mainTxt;
+  }
+
+  return {
+    positive,
+    negative,
+    neutral,
+  };
+}

@@ -4,36 +4,32 @@ import SentimentChart, { type SentimentData } from "./chart";
 import animatedSvg from "@/data/animated-svg";
 
 interface SentimentAnalysisCardProps {
-  analysis: SentimentData[];
+  analysis: SentimentData;
 }
 
 export default function SentimentAnalysisCard({
   analysis,
 }: SentimentAnalysisCardProps) {
-  const highestValue = analysis?.reduce((max, current) => {
-    return current?.confidence > max?.confidence ? current : max;
-  });
-
-  const title = highestValue?.sentiment;
-  const suggested_action = highestValue?.suggested_action;
+  const title = analysis?.sentiment;
+  const suggested_action = analysis?.suggested_action;
 
   return (
     <FlexColStart className="w-full rounded-md bg-white-100 border-[.5px] border-white-400/30 px-4 py-3 relative overflow-hidden">
       <FlexColStart className="w-full gap-1">
-        <p className="text-sm text-gray-100 font-ppM z-[1]">Call Sentiment</p>
+        <p className="text-xs text-gray-100 font-ppM z-[1]">Call Sentiment</p>
         <h1
           className={cn(
-            "text-md font-extrabold font-ppB z-[1]",
-            highestValue?.sentiment === "positive"
+            "text-md font-bold font-ppM z-[1]",
+            analysis?.type === "positive"
               ? "text-green-100"
-              : highestValue?.sentiment === "negative"
+              : analysis?.type === "negative"
                 ? "text-red-305"
-                : highestValue?.sentiment === "neutral"
+                : analysis?.type === "neutral"
                   ? "text-orange-100"
                   : "text-dark-100"
           )}
         >
-          {title ?? "No title"}
+          {title.replace(/\\/g, "") ?? "No title"}
         </h1>
       </FlexColStart>
       <SentimentChart data={analysis} />
@@ -44,13 +40,23 @@ export default function SentimentAnalysisCard({
           Action
         </p>
         <p className={cn("text-xs text-dark-100 font-normal font-ppReg z-[1]")}>
-          {suggested_action}
+          {suggested_action.replace(/\\/g, "")}
+        </p>
+      </FlexColStart>
+
+      <FlexColStart className="w-full gap-1 mt-1">
+        <p className={cn("text-xs text-dark-100 font-bold font-ppM z-[1]")}>
+          Red flags 🚩
+        </p>
+        <p className={cn("text-xs text-dark-100 font-normal font-ppReg z-[1]")}>
+          {analysis?.red_flags?.split(",").join(", ").replace(/\\/g, "") ??
+            "NONE"}
         </p>
       </FlexColStart>
 
       {/* sentiment ID */}
       <div className="absolute top-2 right-2">
-        {highestValue?.sentiment === "positive" && (
+        {analysis?.type === "positive" && (
           <img
             src={animatedSvg.find((d) => d.name === "thumbsup")?.url}
             width={60}
@@ -62,7 +68,7 @@ export default function SentimentAnalysisCard({
           />
         )}
 
-        {highestValue?.sentiment === "negative" && (
+        {analysis?.type === "negative" && (
           <img
             src={animatedSvg.find((d) => d.name === "shield-alert")?.url}
             width={60}
@@ -74,7 +80,7 @@ export default function SentimentAnalysisCard({
           />
         )}
 
-        {highestValue?.sentiment === "neutral" && (
+        {analysis?.type === "neutral" && (
           <img
             src={animatedSvg.find((d) => d.name === "meh")?.url}
             width={60}

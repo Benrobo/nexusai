@@ -163,3 +163,8 @@ export const markLogAsRead = async (id: string) => {
   const req = await $axios.patch(`/call-logs/mark-read/${id}`);
   return req.data;
 };
+
+export const getCallLogAnalysis = async (id: string) => {
+  const req = await $axios.get(`/call-logs/analysis/${id}`);
+  return req.data;
+};
