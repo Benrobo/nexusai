@@ -360,6 +360,7 @@ model CallLogs {
     user     Users              @relation(fields: [userId], references: [id])
     messages CallLogsMessages[]
     entries  CallLogEntry?
+    is_read  Boolean?           @default(false)
 
     @@index([agentId])
     @@index([userId])
@@ -406,6 +407,7 @@ model CallLogsAnalysis {
     //  this is to identify if the call was malicious, spam, or genuine
     sentiment        String?
     suggested_action String?
+    confidence       Int?
     type             CallLogAnalysisType?
 
     created_at DateTime @default(now())

@@ -4,19 +4,18 @@ import SentimentChart, { type SentimentData } from "./chart";
 import animatedSvg from "@/data/animated-svg";
 
 interface SentimentAnalysisCardProps {
-  title: string;
-  suggested_action: string;
   analysis: SentimentData[];
 }
 
 export default function SentimentAnalysisCard({
-  title,
-  suggested_action,
   analysis,
 }: SentimentAnalysisCardProps) {
   const highestValue = analysis?.reduce((max, current) => {
-    return current?.confidence_level > max?.confidence_level ? current : max;
+    return current?.confidence > max?.confidence ? current : max;
   });
+
+  const title = highestValue?.sentiment;
+  const suggested_action = highestValue?.suggested_action;
 
   return (
     <FlexColStart className="w-full rounded-md bg-white-100 border-[.5px] border-white-400/30 px-4 py-3 relative overflow-hidden">

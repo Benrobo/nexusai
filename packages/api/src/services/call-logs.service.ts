@@ -11,7 +11,13 @@ interface ICallLogsService {}
 export default class CallLogsService {
   constructor() {}
 
-  public async getCallLogs(userId: string) {
+  public async getCallLogs(
+    userId: string,
+    pagination: {
+      limit: number;
+      page: number;
+    }
+  ) {
     const logs = await prisma.callLogs.findMany({
       where: {
         userId,
@@ -19,6 +25,11 @@ export default class CallLogsService {
       include: {
         messages: true,
       },
+      orderBy: {
+        created_at: "desc",
+      },
+      take: pagination.limit,
+      skip: (pagination.page - 1) * pagination.limit,
     });
 
     const finalized_log = [];
@@ -37,6 +48,16 @@ export default class CallLogsService {
         },
       });
 
+      const agent = await prisma.agents.findFirst({
+        where: {
+          id: log.agentId,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+
       const analysis = await prisma.callLogsAnalysis.findFirst({
         where: {
           callLogId: log.id,
@@ -46,18 +67,56 @@ export default class CallLogsService {
           sentiment: true,
           type: true,
           suggested_action: true,
+          confidence: true,
           created_at: true,
         },
       });
 
       finalized_log.push({
-        ...log,
+        agent,
         logEntry,
         analysis,
+        ...log,
       });
     }
 
-    return finalized_log;
+    return {
+      logs: finalized_log,
+      meta: {
+        total: logs.length,
+      },
+    };
+  }
+
+  public async getUnreadLogs(userId: string) {
+    const logs = await prisma.callLogs.findMany({
+      where: {
+        userId,
+        is_read: false,
+      },
+      select: {
+        id: true,
+      },
+      orderBy: {
+        id: "asc",
+      },
+    });
+
+    return logs.map((l) => l.id);
+  }
+
+  public async markLogAsRead(logId: string, userId: string) {
+    const log = await prisma.callLogs.update({
+      where: {
+        id: logId,
+        userId,
+      },
+      data: {
+        is_read: true,
+      },
+    });
+
+    return log;
   }
 
   public async getCallLogById({ refId }: { refId: string }) {

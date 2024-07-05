@@ -3,14 +3,20 @@ import { FlexRowCenter, FlexRowStart } from "../Flex";
 export type Sentiment = "positive" | "negative" | "neutral";
 
 export type SentimentData = {
-  sentiment: Sentiment;
-  confidence_level: number;
+  id?: string;
+  sentiment: string;
+  suggested_action: string;
+  confidence: number;
+  type: Sentiment;
 };
 
 interface SentimentChartProps {
   data: {
-    sentiment: Sentiment;
-    confidence_level: number;
+    id?: string;
+    sentiment: string;
+    suggested_action: string;
+    confidence: number;
+    type: Sentiment;
   }[];
 }
 
@@ -18,8 +24,7 @@ export default function SentimentChart({ data }: SentimentChartProps) {
   const getPipeStyle = (sentiment: Sentiment) => {
     return {
       height: "20px",
-      width:
-        data.find((s) => s.sentiment === sentiment)?.confidence_level + "%",
+      width: data.find((s) => s.sentiment === sentiment)?.confidence + "%",
     };
   };
 
@@ -31,7 +36,7 @@ export default function SentimentChart({ data }: SentimentChartProps) {
         style={getPipeStyle("negative")}
       >
         <span className="text-[10px] text-white-100 font-ppM">
-          {data.find((s) => s.sentiment === "negative")?.confidence_level + "%"}
+          {data.find((s) => s.sentiment === "negative")?.confidence + "%"}
         </span>
       </FlexRowCenter>
       <FlexRowCenter
@@ -39,7 +44,7 @@ export default function SentimentChart({ data }: SentimentChartProps) {
         style={getPipeStyle("neutral")}
       >
         <span className="text-[10px] text-white-100 font-ppM">
-          {data.find((s) => s.sentiment === "neutral")?.confidence_level + "%"}
+          {data.find((s) => s.sentiment === "neutral")?.confidence + "%"}
         </span>
       </FlexRowCenter>
       <FlexRowCenter
@@ -47,7 +52,7 @@ export default function SentimentChart({ data }: SentimentChartProps) {
         style={getPipeStyle("positive")}
       >
         <span className="text-[10px] text-white-100 font-ppM">
-          {data.find((s) => s.sentiment === "positive")?.confidence_level + "%"}
+          {data.find((s) => s.sentiment === "positive")?.confidence + "%"}
         </span>
       </FlexRowCenter>
     </FlexRowStart>

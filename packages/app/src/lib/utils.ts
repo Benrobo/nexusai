@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import env from "@/config/env";
 import parsePhoneNumber from "libphonenumber-js";
+import countryJson from "@/data/country.json";
 
 dayjs.extend(relativeTime);
 
@@ -67,3 +68,7 @@ export const validateUrl = (url: string) => {
   ); // fragment locator
   return !!pattern.test(url);
 };
+
+export function getCountryByCode(code: string) {
+  return countryJson.find((c) => c.code === code);
+}

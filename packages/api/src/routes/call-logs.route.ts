@@ -21,5 +21,23 @@ export default class CallLogsRoute {
         )
       )
     );
+
+    this.router.get(
+      `${this.path}/unread`,
+      useCatchErrors(
+        isAuthenticated(
+          this.callLogsController.getUnreadLogs.bind(this.callLogsController)
+        )
+      )
+    );
+
+    this.router.patch(
+      `${this.path}/mark-read/:id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.callLogsController.markLogAsRead.bind(this.callLogsController)
+        )
+      )
+    );
   }
 }

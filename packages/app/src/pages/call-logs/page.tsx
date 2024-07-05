@@ -1,6 +1,7 @@
 import {
   FlexColCenter,
   FlexColStart,
+  FlexRowCenter,
   FlexRowEnd,
   FlexRowStart,
   FlexRowStartBtw,
@@ -8,6 +9,7 @@ import {
 } from "@/components/Flex";
 import { Info, Telescope } from "@/components/icons";
 import SentimentAnalysisCard from "@/components/sentiment-analysis/card";
+import { Spinner } from "@/components/Spinner";
 import TooltipComp from "@/components/TooltipComp";
 import Button from "@/components/ui/button";
 import {
@@ -19,16 +21,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDataContext } from "@/context/DataContext";
 import animatedSvg from "@/data/animated-svg";
-import { cn, formatNumber, maskPhoneNumber } from "@/lib/utils";
+import { getCallLogs, markLogAsRead } from "@/http/requests";
+import {
+  cn,
+  formatNumber,
+  getCountryByCode,
+  maskPhoneNumber,
+} from "@/lib/utils";
+import type { ResponseData } from "@/types";
+import type { CallLogsResponseData } from "@/types/call-log.type";
+import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 dayjs.extend(relativeTime);
 
 const tableHeader = [
   {
-    title: "Name",
+    title: "Caller Name",
   },
   {
     title: "Date/Time",
@@ -45,7 +60,53 @@ const tableHeader = [
   },
 ];
 
+type PaginationState = {
+  limit: number;
+  page: number;
+};
+
 export default function CallLogsPage() {
+  const { unreadLogs, refetchUnreadlogs } = useDataContext();
+  const [pageLoading, setPageLoading] = useState(true);
+  const [callLogs, setCallLogs] = useState<CallLogsResponseData[]>([]);
+  const [selectedCallLog, setSelectedCallLog] =
+    useState<CallLogsResponseData | null>(null);
+  const [pagination, setPagination] = useState<PaginationState>({
+    limit: 8,
+    page: 1,
+  });
+  const getCallLogMut = useMutation({
+    mutationFn: async (data: PaginationState) =>
+      await getCallLogs(data.page, data.limit),
+    onSuccess: (data: any) => {
+      const resp = data as ResponseData;
+      setCallLogs(resp.data["logs"]);
+      setPageLoading(false);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+      setPageLoading(false);
+    },
+  });
+  const markLogAsReadMut = useMutation({
+    mutationFn: async (id: string) => await markLogAsRead(id),
+    onSuccess: () => {
+      refetchUnreadlogs();
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      console.log("Failed to mark log as read: ", err);
+      refetchUnreadlogs();
+    },
+  });
+
+  useEffect(() => {
+    getCallLogMut.mutate(pagination);
+    setPageLoading(true);
+    setSelectedCallLog(null);
+  }, [pagination]);
+
   return (
     <FlexRowStart className="w-full gap-0">
       {/* call logs */}
@@ -87,196 +148,285 @@ export default function CallLogsPage() {
                 ))}
               </TableRow>
             </TableHeader>
-            <TableBody>
-              <TableRow key={1}>
-                <TableCell className="">
-                  <FlexRowStartCenter className="">
-                    <img
-                      src="https://api.dicebear.com/9.x/initials/svg?seed=unknown"
-                      width={30}
-                    />
-                    <p className="font-ppM text-xs text-dark-100">Unknown</p>
-                  </FlexRowStartCenter>
-                </TableCell>
+            {callLogs?.length > 0 &&
+              (!getCallLogMut.isPending || !pageLoading) && (
+                <TableBody>
+                  {callLogs.map((log, i) => (
+                    <TableRow
+                      key={i}
+                      className={cn(
+                        "relative hover:bg-white-300",
+                        selectedCallLog?.id === log.id && "bg-white-300"
+                      )}
+                    >
+                      <TableCell className="relative">
+                        <FlexRowStartCenter className="relative">
+                          <img
+                            src={`https://api.dicebear.com/9.x/initials/svg?seed=${log?.logEntry?.callerName ?? "unknown"}`}
+                            width={30}
+                          />
+                          <p className="font-ppM text-xs text-dark-100">
+                            {log?.logEntry?.callerName ?? "Unknown"}
+                          </p>
+                          {unreadLogs.includes(log.id) && (
+                            <span className="w-[10px] h-[10px] absolute top-0 left-0 translate-x-8 -translate-y-3 bg-red-305 text-[10px] font-ppM flex items-center justify-center rounded-full text-white-100 scale-[.95]"></span>
+                          )}
+                        </FlexRowStartCenter>
+                      </TableCell>
 
-                <TableCell className="">
-                  <FlexRowStartCenter className="w-full gap-1">
-                    <p className="font-jb text-xs text-dark-100">
-                      {dayjs(new Date()).format("DD MMM, YYYY")}
-                    </p>
-                    <p className="font-jb text-xs text-white-400">|</p>
-                    <p className="font-jb font-bold text-xs text-dark-100">
-                      {dayjs(new Date()).format("hh:mm A")}
-                    </p>
-                  </FlexRowStartCenter>
-                </TableCell>
+                      <TableCell className="">
+                        <FlexRowStartCenter className="w-full gap-1">
+                          <p className="font-jb text-xs text-dark-100">
+                            {dayjs(log.created_at).format("DD MMM, YYYY")}
+                          </p>
+                          <p className="font-jb text-xs text-white-400">|</p>
+                          <p className="font-jb font-bold text-xs text-dark-100">
+                            {dayjs(log.created_at).format("hh:mm A")}
+                          </p>
+                        </FlexRowStartCenter>
+                      </TableCell>
 
-                <TableCell className="">
-                  <FlexRowStartCenter className="w-full gap-1">
-                    <p className="font-jb font-bold text-xs text-dark-100">
-                      {maskPhoneNumber("+2347084701066")}
-                    </p>
-                  </FlexRowStartCenter>
-                </TableCell>
+                      <TableCell className="">
+                        <FlexRowStartCenter className="w-full gap-1">
+                          <p className="font-jb font-bold text-xs text-dark-100">
+                            {maskPhoneNumber(log?.from_number)}
+                          </p>
+                        </FlexRowStartCenter>
+                      </TableCell>
 
-                <TableCell className="">
-                  <FlexRowStartCenter className="w-full gap-1">
-                    <p className="font-jb font-bold text-xs text-dark-100 underline">
-                      Baymax
-                    </p>
-                  </FlexRowStartCenter>
-                </TableCell>
+                      <TableCell className="">
+                        <FlexRowStartCenter className="w-full gap-1">
+                          <Link
+                            to={`/agents/${log?.agent.id}?tab=settings`}
+                            className="font-jb font-bold text-xs text-dark-100 underline"
+                          >
+                            {log?.agent?.name ?? "N/A"}
+                          </Link>
+                        </FlexRowStartCenter>
+                      </TableCell>
 
-                <TableCell className="text-right">
-                  <FlexRowEnd className="w-full gap-1">
-                    <TooltipComp text="View details">
-                      <button className="w-[40px] h-[35px] px-2 py-1 scale-[.85] rounded-sm bg-dark-100 text-white-100 font-ppReg text-xs active:scale-[.90] transition-all">
-                        <Telescope size={20} />
-                      </button>
-                    </TooltipComp>
-                  </FlexRowEnd>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-            <TableCaption className="pb-3">
-              <p className="font-ppReg text-xs text-white-400">
-                No call logs available
-              </p>
-            </TableCaption>
+                      <TableCell className="text-right">
+                        <FlexRowEnd className="w-full gap-1">
+                          <TooltipComp text="View details">
+                            <button
+                              className="w-[40px] h-[35px] px-2 py-1 scale-[.85] rounded-sm bg-dark-100 text-white-100 font-ppReg text-xs active:scale-[.90] transition-all"
+                              onClick={() => {
+                                setSelectedCallLog(null);
+                                setTimeout(() => {
+                                  setSelectedCallLog(log);
+                                }, 100);
+                                markLogAsReadMut.mutate(log.id);
+                              }}
+                            >
+                              <Telescope size={20} />
+                            </button>
+                          </TooltipComp>
+                        </FlexRowEnd>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              )}
+
+            {callLogs.length === 0 && !pageLoading ? (
+              <TableCaption className="pb-3">
+                <p className="font-ppReg text-xs text-white-400">
+                  No call logs available
+                </p>
+              </TableCaption>
+            ) : pageLoading ? (
+              <TableCaption className="pb-3">
+                <Spinner color="#000" size={15} />
+              </TableCaption>
+            ) : null}
+            {callLogs.length > 0 && (
+              <TableCaption className="pb-3">
+                <p className="font-ppReg text-xs text-white-400">
+                  Showing{" "}
+                  <span className="text-dark-100 font-ppB">
+                    {pagination.page}
+                  </span>{" "}
+                  of{" "}
+                  <span className="text-dark-100 font-ppB">
+                    {callLogs.length}
+                  </span>{" "}
+                  call logs
+                </p>
+                <FlexRowCenter className="w-auto mt-1">
+                  <button
+                    className="w-[45px] h-[30px] bg-dark-100 text-white-100 font-ppReg text-xs rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() =>
+                      setPagination({
+                        ...pagination,
+                        page: pagination.page - 1,
+                      })
+                    }
+                    disabled={pagination.page === 1}
+                  >
+                    Prev
+                  </button>
+                  <button
+                    className="w-[45px] h-[30px] bg-dark-100 text-white-100 font-ppReg text-xs rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() =>
+                      setPagination({
+                        ...pagination,
+                        page: pagination.page + 1,
+                      })
+                    }
+                    disabled={
+                      pagination.page === callLogs.length ||
+                      callLogs.length < pagination.limit
+                    }
+                  >
+                    Next
+                  </button>
+                </FlexRowCenter>
+              </TableCaption>
+            )}
           </Table>
         </div>
       </FlexColStart>
 
       {/* call log info */}
       <FlexColStart className="w-full h-screen overflow-auto max-w-[350px] bg-white-200/20 py-5">
-        {/* header */}
-        <FlexColCenter className="w-full px-3">
-          {true ? (
-            <FlexColCenter className="w-full h-full relative">
-              <SentimentAnalysisCard
-                title="Malicious Call"
-                analysis={[
-                  {
-                    sentiment: "negative",
-                    confidence_level: 70,
-                  },
-                  {
-                    sentiment: "neutral",
-                    confidence_level: 10,
-                  },
-                  {
-                    sentiment: "positive",
-                    confidence_level: 20,
-                  },
-                ]}
-                suggested_action="The caller seems to have a cunny response."
-              />
-              {/* overlay */}
-              <FlexColCenter className="w-full h-full absolute z-[3] bg-white-100/30 backdrop-blur-sm">
-                <Button
-                  intent={"dark"}
-                  className="w-[160px] h-[40px] scale-[.85] font-ppM text-white-100 text-[10px]"
-                  enableBounceEffect
-                >
-                  View Sentiment Analysis
-                </Button>
-              </FlexColCenter>
+        {selectedCallLog && (
+          <>
+            {/* header */}
+            <FlexColCenter className="w-full px-3">
+              {!selectedCallLog?.analysis ? (
+                <FlexColCenter className="w-full h-full relative">
+                  <SentimentAnalysisCard
+                    analysis={[
+                      {
+                        sentiment: "Malicious Call",
+                        confidence: 70,
+                        suggested_action:
+                          "Lorem ipsum dolor sit, amet consectetur adipisicing elit. ",
+                        type: "negative",
+                      },
+                      {
+                        sentiment: "Malicious Call",
+                        confidence: 10,
+                        suggested_action:
+                          "Lorem ipsum dolor sit, amet consectetur adipisicing elit. ",
+                        type: "positive",
+                      },
+                      {
+                        sentiment: "Malicious Call",
+                        confidence: 20,
+                        suggested_action:
+                          "Lorem ipsum dolor sit, amet consectetur adipisicing elit. ",
+                        type: "neutral",
+                      },
+                    ]}
+                  />
+                  {/* overlay */}
+                  <FlexColCenter className="w-full h-full absolute z-[3] bg-white-100/30 backdrop-blur-sm">
+                    <Button
+                      intent={"dark"}
+                      className="w-[160px] h-[40px] scale-[.85] font-ppM text-white-100 text-[10px]"
+                      enableBounceEffect
+                    >
+                      View Sentiment Analysis
+                    </Button>
+                  </FlexColCenter>
+                </FlexColCenter>
+              ) : (
+                <SentimentAnalysisCard analysis={selectedCallLog?.analysis} />
+              )}
             </FlexColCenter>
-          ) : (
-            <SentimentAnalysisCard
-              title="Malicious Call"
-              analysis={[
-                {
-                  sentiment: "negative",
-                  confidence_level: 70,
-                },
-                {
-                  sentiment: "neutral",
-                  confidence_level: 10,
-                },
-                {
-                  sentiment: "positive",
-                  confidence_level: 20,
-                },
-              ]}
-              suggested_action="The caller seems to have a cunny response."
-            />
-          )}
-        </FlexColCenter>
 
-        {/* call info */}
-        <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 py-6 px-3">
-          <FlexRowStartBtw className="w-full">
-            <p className="text-dark-100 font-ppM text-sm">Call Breakdown</p>
+            {/* call info */}
+            <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 py-6 px-3">
+              <FlexRowStartBtw className="w-full">
+                <p className="text-dark-100 font-ppM text-sm">Call Breakdown</p>
 
-            <TooltipComp text="Some responses might be a little bit off.">
-              <Info size={15} color="#000" />
-            </TooltipComp>
-          </FlexRowStartBtw>
-          <p className="text-white-400 font-ppReg text-xs mb-2">
-            Below is further information regarding the caller's motives and
-            analysis.
-          </p>
-          <FlexColStart className="gap-4">
-            <CallBreakdownContent
-              label="Reason for the call?"
-              content="The caller want to invite John for a meeting."
-            />
-            <CallBreakdownContent
-              label="Was the caller's name provided?"
-              content="Mark"
-            />
-            <CallBreakdownContent
-              label="How did they obtain your phone number??"
-              content="N/A"
-            />
-          </FlexColStart>
-        </FlexColStart>
+                <TooltipComp text="Some responses might be a little bit off.">
+                  <Info size={15} color="#000" />
+                </TooltipComp>
+              </FlexRowStartBtw>
+              <p className="text-white-400 font-ppReg text-xs mb-2">
+                Below is further information regarding the caller's motives and
+                analysis.
+              </p>
+              <FlexColStart className="gap-4">
+                <CallBreakdownContent
+                  label="Reason for the call?"
+                  content={selectedCallLog?.logEntry?.callReason ?? "N/A"}
+                />
+                <CallBreakdownContent
+                  label="Was the caller's name provided?"
+                  content={selectedCallLog?.logEntry?.callerName ?? "N/A"}
+                />
+                <CallBreakdownContent
+                  label="How did they obtain your phone number??"
+                  content={selectedCallLog?.logEntry?.referral ?? "N/A"}
+                />
+              </FlexColStart>
+            </FlexColStart>
 
-        {/* caller details */}
-        <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 pt-5 pb-0 px-3">
-          <p className="text-dark-100 font-ppM text-sm mb-2">Caller Details</p>
-          <CallerDetails leftValue="Country" rightValue={"United State"} />
-          <CallerDetails leftValue="City" rightValue={"Alabama"} />
-          <CallerDetails leftValue="Zipcode" rightValue={"19002"} />
-          <CallerDetails
-            leftValue="Time"
-            rightValue={dayjs(new Date()).format("DD MMM,YYYY hh:mm A")}
-          />
-          <CallerDetails
-            leftValue="Phone number"
-            rightValue={formatNumber("+12345678899")!}
-          />
-        </FlexColStart>
+            {/* caller details */}
+            <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 pt-5 pb-0 px-3">
+              <p className="text-dark-100 font-ppM text-sm mb-2">
+                Caller Details
+              </p>
+              <CallerDetails
+                leftValue="Country"
+                rightValue={
+                  `${getCountryByCode(selectedCallLog?.caller_country!)?.name + " " + getCountryByCode(selectedCallLog?.caller_country!)?.emoji} ` ??
+                  "N/A"
+                }
+              />
+              <CallerDetails
+                leftValue="City"
+                rightValue={selectedCallLog?.caller_city ?? "N/A"}
+              />
+              <CallerDetails
+                leftValue="Zipcode"
+                rightValue={selectedCallLog?.zip_code ?? "N/A"}
+              />
+              <CallerDetails
+                leftValue="Time"
+                rightValue={dayjs(selectedCallLog?.created_at).format(
+                  "DD MMM,YYYY hh:mm A"
+                )}
+              />
+              <CallerDetails
+                leftValue="Phone number"
+                rightValue={formatNumber(selectedCallLog?.from_number)!}
+              />
+            </FlexColStart>
 
-        {/* conversation */}
-        <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 py-6 px-3">
-          {/* <p className="text-dark-400/80 font-ppM text-sm mb-2">
+            {/* conversation */}
+            <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 px-3">
+              {/* <p className="text-dark-400/80 font-ppM text-sm mb-2">
             Conversations
           </p> */}
-          <Button
-            intent={"dark"}
-            className="w-full h-[40px] scale-[.55] font-ppM text-white-100 text-xs -translate-y-3"
-            enableBounceEffect
-            leftIcon={<Telescope size={20} />}
-          >
-            View Conversation
-          </Button>
-        </FlexColStart>
+              <Button
+                intent={"dark"}
+                className="w-full h-[40px] scale-[.55] font-ppM text-white-100 text-xs -translate-y-3"
+                enableBounceEffect
+                leftIcon={<Telescope size={20} />}
+              >
+                View Conversation
+              </Button>
+            </FlexColStart>
 
-        {/* call entry settings */}
-        <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 py-6 px-3">
-          <Button
-            intent={"error"}
-            className="w-full h-[40px] scale-[.85] font-ppM text-white-100 text-xs bg-red-305 hover:bg-red-200 active:bg-red-305/30"
-            enableBounceEffect
-          >
-            Add to blacklist
-          </Button>
-        </FlexColStart>
+            {/* call entry settings */}
+            <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 py-6 px-3">
+              <Button
+                intent={"error"}
+                className="w-full h-[40px] scale-[.85] font-ppM text-white-100 text-xs bg-red-305 hover:bg-red-200 active:bg-red-305/30"
+                enableBounceEffect
+              >
+                Add to blacklist
+              </Button>
+            </FlexColStart>
+          </>
+        )}
 
         {/* if no call log is selected */}
-        {false && (
+        {!selectedCallLog && (
           <FlexColCenter className="w-full h-full">
             <img
               src={animatedSvg.find((d) => d.name === "scroll-txt")?.url}

@@ -44,6 +44,7 @@ const sidebarRoutes = [
     key: "call-logs",
     path: "/call-logs",
     isExtensible: false,
+    notification: true,
   },
   {
     title: "Inbox",
@@ -57,22 +58,10 @@ const sidebarRoutes = [
     path: "/agents",
     isExtensible: true,
   },
-  // {
-  //   title: "Knowledge Base",
-  //   key: "knowledge-base",
-  //   path: "/knowledge-base",
-  //   isExtensible: false,
-  // },
-  // {
-  //   title: "Integration",
-  //   key: "integration",
-  //   path: "/integration",
-  //   isExtensible: false,
-  // },
 ];
 
 export default function DashboardSidebar() {
-  const { userInfo, agents, setAgents } = useDataContext();
+  const { userInfo, unreadLogs, setAgents } = useDataContext();
   const [activePage, setActivePage] = React.useState("dashboard");
   const [activeAgentPage, setActiveAgentPage] = React.useState("");
   const [openNavList, setOpenNavList] = React.useState(false);
@@ -168,13 +157,19 @@ export default function DashboardSidebar() {
                 {renderIcons(route.key, activePage)}
                 <span
                   className={cn(
-                    "text-sm",
+                    "text-sm relative",
                     activePage === route.key
                       ? "font-ppM text-dark-100 "
                       : "font-ppL font-light text-white-100 "
                   )}
                 >
                   {route.title}
+
+                  {route?.notification && unreadLogs.length > 0 && (
+                    <span className="w-[20px] h-[20px] absolute top-0 right-0 translate-x-8 -translate-y-1 bg-red-305 text-[10px] font-ppM flex items-center justify-center rounded-full text-white-100 scale-[.95]">
+                      {unreadLogs.length}
+                    </span>
+                  )}
                 </span>
               </FlexRowStart>
             </Link>

@@ -147,3 +147,19 @@ export const deleteIntegration = async (agent_id: string, int_id: string) => {
   const req = await $axios.delete(`/agent/integration/${agent_id}/${int_id}`);
   return req.data;
 };
+
+// Call Logs
+export const getCallLogs = async (page: number, limit: number) => {
+  const req = await $axios.get(`/call-logs?page=${page}&limit=${limit}`);
+  return req.data;
+};
+
+export const getUnreadLogs = async () => {
+  const req = await $axios.get(`/call-logs/unread`);
+  return req.data;
+};
+
+export const markLogAsRead = async (id: string) => {
+  const req = await $axios.patch(`/call-logs/mark-read/${id}`);
+  return req.data;
+};
