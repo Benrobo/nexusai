@@ -362,7 +362,10 @@ export default function CallLogsPage() {
                   </FlexColCenter>
                 </FlexColCenter>
               ) : (
-                <SentimentAnalysisCard analysis={selectedCallLog?.analysis} />
+                <SentimentAnalysisCard
+                  agent_type={selectedCallLog.agent.type}
+                  analysis={selectedCallLog?.analysis}
+                />
               )}
             </FlexColCenter>
 

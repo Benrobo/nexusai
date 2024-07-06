@@ -188,11 +188,103 @@ export default class CallLogsController {
           red_flags: identified_red_flags,
         }
       );
-    } else {
-      throw new HttpException(RESPONSE_CODE.BAD_REQUEST, "Not ready yet", 400);
-      //   const SA_analysis = await this.aiService.determineATLogSentimentAnalysis(
-      //     log.refId
-      //   );
+    }
+    if (log.agent.type === "SALES_ASSISTANT") {
+      let analysis = await this.aiService.determineSALogSentimentAnalysis(
+        log.refId
+      );
+
+      const resp = analysis[0];
+
+      if (!resp) {
+        logger.error("No AI response was returned");
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "Could not retrieve sentiment analysis. Try again later.",
+          400
+        );
+      }
+      if (analysis.length > 1) {
+        logger.error("Incorrect AI response length was sent.");
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "Could not retrieve sentiment analysis. Try again later.",
+          400
+        );
+      }
+
+      const validTypes = ["positive", "neutral", "negative"];
+      const data = resp.args as any;
+      const confidence = data?.confidence;
+      const sentiment = sanitizeString(data?.sentiment);
+      const suggested_action = sanitizeString(data?.suggested_action);
+      let identified_red_flags = data?.identified_red_flags;
+      const type = data?.type;
+
+      if (!Array.isArray(identified_red_flags)) {
+        identified_red_flags = null;
+      }
+
+      if (!validTypes.includes(type)) {
+        logger.error(`Incorrect sentiment type: [${type}] returned.`);
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "Could not retrieve sentiment analysis. Try again later.",
+          400
+        );
+      }
+
+      // save or update analysis
+      const _analysis = await prisma.callLogsAnalysis.findFirst({
+        where: { callLogId: logId },
+      });
+
+      if (_analysis) {
+        logger.info("Updating call log analysis..");
+        await prisma.callLogsAnalysis.update({
+          where: { id: _analysis.id },
+          data: {
+            sentiment,
+            confidence,
+            suggested_action,
+            red_flags:
+              identified_red_flags !== null
+                ? identified_red_flags.join(",")
+                : identified_red_flags,
+            type,
+          },
+        });
+      } else {
+        logger.info("Saving call log analysis..");
+        await prisma.callLogsAnalysis.create({
+          data: {
+            id: shortUUID.generate(),
+            callLogId: logId,
+            sentiment,
+            confidence,
+            suggested_action,
+            red_flags:
+              identified_red_flags !== null
+                ? identified_red_flags.join(",")
+                : identified_red_flags,
+            type,
+          },
+        });
+      }
+
+      sendResponse.success(
+        res,
+        RESPONSE_CODE.SUCCESS,
+        "Sentiment analysis retrieved successfully.",
+        200,
+        {
+          type,
+          sentiment,
+          confidence,
+          suggested_action,
+          red_flags: identified_red_flags,
+        }
+      );
     }
   }
 }

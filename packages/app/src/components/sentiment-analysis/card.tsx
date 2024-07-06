@@ -2,13 +2,16 @@ import { FlexColStart } from "../Flex";
 import { cn } from "@/lib/utils";
 import SentimentChart, { type SentimentData } from "./chart";
 import animatedSvg from "@/data/animated-svg";
+import type { AgentType } from "@/types";
 
 interface SentimentAnalysisCardProps {
   analysis: SentimentData;
+  agent_type: AgentType;
 }
 
 export default function SentimentAnalysisCard({
   analysis,
+  agent_type,
 }: SentimentAnalysisCardProps) {
   const title = analysis?.sentiment;
   const suggested_action = analysis?.suggested_action;
@@ -46,7 +49,7 @@ export default function SentimentAnalysisCard({
 
       <FlexColStart className="w-full gap-1 mt-1">
         <p className={cn("text-xs text-dark-100 font-bold font-ppM z-[1]")}>
-          Red flags 🚩
+          {agent_type === "ANTI_THEFT" ? "Red flags 🚩" : "Challenges ⚠️"}
         </p>
         <p className={cn("text-xs text-dark-100 font-normal font-ppReg z-[1]")}>
           {analysis?.red_flags?.split(",").join(", ").replace(/\\/g, "") ??

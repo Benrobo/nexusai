@@ -711,6 +711,96 @@ export default class AIService {
     return analysis.data;
   }
 
+  // SALES_ASSISTANT call log sentiment analysis.
+  public async determineSALogSentimentAnalysis(refId: string) {
+    const transcript = await this.getChatHistoryTxt(refId, "", false);
+    const variations = getSentimentVariations("SALES_ASSISTANT", true);
+    const analysis = await this.geminiService.functionCall({
+      prompt: transcript,
+      tools: [
+        {
+          func_name: "analyze_call_sentiment",
+          description: `
+            <context>
+              Analyze the provided phone call transcript between a sales agent and a potential customer. Evaluate the overall sentiment focusing on sales opportunities and customer engagement. Determine if the call appears promising, neutral, or challenging for a sale.
+
+              Important: If no transcript is provided, or if the transcript is incomplete categorize this as a Low Priority lead.
+
+
+              Positive Indicators:
+              1. Customer shows interest in products, services, or additional information
+              2. Caller asks relevant questions about offerings or the company
+              3. Customer expresses a desire to book an appointment or follow up
+              4. Caller seems satisfied with the information provided
+              5. The conversation flows smoothly with good engagement
+
+              Potential Challenges / Red Flags:
+              1. Customer seems disinterested or rushes to end the call
+              2. Caller expresses frustration or dissatisfaction
+              3. Customer is vague or evasive in their responses
+              4. The conversation is difficult to maintain or feels forced
+              5. Caller declines any form of follow-up or further interaction
+
+              Instructions:
+              1. Carefully read the entire transcript.
+              2. Identify key phrases or behaviors indicating the call's nature and potential.
+              3. Provide sentiment assessments for positive, neutral, and negative categories.
+              4. Choose the most appropriate sentiment variation for each category from the provided list.
+              5. Assign confidence levels that sum to exactly 100 across all three categories.
+              6. If the transcript is unclear or incomplete, reflect this in the confidence levels.
+              7. Suggest a general follow-up strategy or next step based on the call's outcome.
+
+              Sentiment Variations:
+              ${variations}
+            </context>
+          `,
+          parameters: {
+            type: "object",
+            properties: {
+              // @ts-ignore
+              sentiment: {
+                type: "string",
+                description: "The specific sentiment variation chosen",
+              },
+              // @ts-ignore
+              type: {
+                type: "string",
+                description:
+                  "The category of sentiment: negative|positive|neutral",
+              },
+              // @ts-ignore
+              confidence: {
+                type: "number",
+                description: "Confidence level (0-100).",
+              },
+              // @ts-ignore
+              suggested_action: {
+                type: "string",
+                description:
+                  "Provide a clear, human-readable action or series of steps based on the sentiment analysis. Be specific and practical. Multiple steps can be included if necessary.",
+              },
+              // @ts-ignore
+              identified_red_flags: {
+                type: "string",
+                description:
+                  "List any identified red flags from the conversation. An array of strings would be needed: ['red-flags', 'red-flags']. Be very short and concise and straight to the point, use simple words. If possible, use one or two words. List min 3 potential red flags.",
+              },
+            },
+          },
+          required: [
+            "sentiment",
+            "type",
+            "confidence",
+            "suggested_action",
+            "identified_red_flags",
+          ],
+        },
+      ],
+    });
+
+    return analysis.data;
+  }
+
   // Process ANTI-THEFT request
   private async processAntiTheftRequestV1(props: IHandleConversationProps) {
     const { user_input, agent_info, cached_conv_info } = props;
