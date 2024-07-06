@@ -75,6 +75,7 @@ export default function CallLogsPage() {
   const [callLogs, setCallLogs] = useState<CallLogsResponseData[]>([]);
   const [selectedCallLog, setSelectedCallLog] =
     useState<CallLogsResponseData | null>(null);
+  const [totalLogs, setTotalLogs] = useState<number>(0);
   const [pagination, setPagination] = useState<PaginationState>({
     limit: 8,
     page: 1,
@@ -85,6 +86,7 @@ export default function CallLogsPage() {
     onSuccess: (data: any) => {
       const resp = data as ResponseData;
       setCallLogs(resp.data["logs"]);
+      setTotalLogs(resp.data["meta"]["total"]);
       setPageLoading(false);
     },
     onError: (error) => {
@@ -275,11 +277,11 @@ export default function CallLogsPage() {
                 <p className="font-ppReg text-xs text-white-400">
                   Showing{" "}
                   <span className="text-dark-100 font-ppB">
-                    {pagination.page}
-                  </span>{" "}
-                  of{" "}
-                  <span className="text-dark-100 font-ppB">
                     {callLogs.length}
+                  </span>{" "}
+                  out of {""}
+                  <span className="text-dark-100 font-ppB">
+                    {totalLogs}
                   </span>{" "}
                   call logs
                 </p>

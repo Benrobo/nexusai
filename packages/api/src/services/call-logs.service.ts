@@ -31,6 +31,11 @@ export default class CallLogsService {
       take: pagination.limit,
       skip: (pagination.page - 1) * pagination.limit,
     });
+    const allLogs = await prisma.callLogs.findMany({
+      where: {
+        userId,
+      },
+    });
 
     const finalized_log = [];
 
@@ -84,7 +89,7 @@ export default class CallLogsService {
     return {
       logs: finalized_log,
       meta: {
-        total: logs.length,
+        total: allLogs.length,
       },
     };
   }
