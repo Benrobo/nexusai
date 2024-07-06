@@ -20,7 +20,8 @@ export const DEFAULT_SA_CALL_INTENTS = [
   "GREETINGS",
   "ENQUIRY",
   "APPOINTMENT",
-  "FURTHER_REQUEST",
+  // "USER_DETAILS",
+  // "FURTHER_REQUEST",
   "HANDOVER",
   "CALL_ESCALATION",
 ] satisfies DefaultIntents[];

@@ -176,6 +176,8 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
     );
   }
 
+  console.log({ handoverEditMode });
+
   return (
     <div className="w-full max-w-[100%] h-full px-10 py-10 overflow-y-scroll pb-[50em] hideScrollBar2">
       <FlexColStart className="w-full h-full ">
@@ -323,7 +325,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                     placeholder="+1 234 567 8890"
                     value={
                       handoverEditMode
-                        ? forwardingNum ?? ""
+                        ? handoverNum ?? ""
                         : formatNumber(forwardingNum ?? "") ?? handoverNum
                     }
                     onChange={(e: any) => {
@@ -352,6 +354,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                           sendOTPMut.mutate({
                             phone: handoverNum,
                           });
+                          return;
                         }
                         setHandoverEditMode((prev) => !prev);
                       }}

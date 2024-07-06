@@ -8,6 +8,7 @@ import HandleErrors from "./middlewares/error.js";
 import { Routes } from "./types";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import { inngestServe } from "./inngest/serve.js";
 
 // init dot env
 dotenv.config();
@@ -59,6 +60,8 @@ export default class App {
         },
       })
     );
+    // inngest route
+    this.app.use("/api/inngest", inngestServe);
   }
 
   listen() {

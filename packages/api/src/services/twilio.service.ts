@@ -175,7 +175,7 @@ export class TwilioService {
         action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
         method: "POST",
         timeout: 3,
-        speechTimeout: "1",
+        speechTimeout: "3",
       });
 
       sendXMLResponse(res, twiml.toString());
@@ -192,7 +192,7 @@ export class TwilioService {
         action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
         method: "POST",
         timeout: 3,
-        speechTimeout: "1",
+        speechTimeout: "3",
       });
 
       sendXMLResponse(res, twiml.toString());
@@ -338,6 +338,9 @@ export class TwilioService {
         twiml.hangup();
 
         await redis.del(callRefId);
+      } else if (conv?.escallated?.number) {
+        twiml.say(conv.msg);
+        twiml.dial(conv.escallated.number);
       } else {
         twiml
           .gather({
@@ -345,7 +348,7 @@ export class TwilioService {
             action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
             method: "POST",
             timeout: 3,
-            speechTimeout: "auto",
+            speechTimeout: "3",
           })
           .say(conv.msg!);
       }

@@ -146,13 +146,34 @@ export default class AgentController extends BaseController {
     const otp = await this.otpManager.verifyOTP(user.id, otpcode);
 
     // save the number in forwarded numbers
-    await prisma.forwardingNumber.create({
-      data: {
-        phone: otp.phone,
+    // check if phone number exists
+    const forwardingNum = await prisma.forwardingNumber.findFirst({
+      where: {
         agentId: payload.agentId,
-        country: "US",
       },
     });
+
+    if (!forwardingNum) {
+      await prisma.forwardingNumber.create({
+        data: {
+          phone: otp.phone,
+          agentId: payload.agentId,
+          country: "US",
+        },
+      });
+    } else {
+      // update
+      await prisma.forwardingNumber.update({
+        where: {
+          id: forwardingNum.id,
+        },
+        data: {
+          phone: otp.phone,
+          agentId: payload.agentId,
+          country: "US",
+        },
+      });
+    }
 
     await redis.del(user.id);
 

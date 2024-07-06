@@ -7,6 +7,7 @@ export type DefaultIntents =
   | "APPOINTMENT"
   | "FURTHER_REQUEST"
   | "CALL_ESCALATION"
+  | "USER_DETAILS"
   | "HANDOVER";
 
 export type FunctionCallingNames =
