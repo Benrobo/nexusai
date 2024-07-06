@@ -233,9 +233,9 @@ export class TwilioService {
         callerPhone: callerPhone,
         calledPhone: calledPhone,
         callRefId,
-        city: body.CalledCity,
-        country_code: body.CalledCountry,
-        zipcode: body.CalledZip,
+        city: body.CallerCity,
+        country_code: body.CallerCountry,
+        zipcode: body.CallerZip,
       };
 
       const conv = await this.aiService.handleConversation({
@@ -320,9 +320,9 @@ export class TwilioService {
         callerPhone: callerPhone,
         calledPhone: calledPhone,
         callRefId,
-        city: body.CalledCity,
-        country_code: body.CalledCountry,
-        zipcode: body.CalledZip,
+        city: body.CallerCity,
+        country_code: body.CallerCountry,
+        zipcode: body.CallerZip,
         kb_ids: linkedKb.map((kb) => kb.kb_id),
       };
 
