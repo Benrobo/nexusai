@@ -60,6 +60,7 @@ export default class CallLogsService {
         select: {
           id: true,
           name: true,
+          type: true,
         },
       });
 

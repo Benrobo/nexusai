@@ -1,4 +1,5 @@
 import type { Sentiment } from "@/components/sentiment-analysis/chart";
+import type { AgentType } from ".";
 
 export type CallLogsResponseData = {
   id: string;
@@ -14,6 +15,7 @@ export type CallLogsResponseData = {
   agent: {
     id: string;
     name: string;
+    type: AgentType;
   };
   messages: {
     id: string;

@@ -379,23 +379,26 @@ export default function CallLogsPage() {
                 Below is further information regarding the caller's motives and
                 analysis.
               </p>
-              <FlexColStart className="gap-4">
-                <CallBreakdownContent
-                  label="Reason for the call?"
-                  content={selectedCallLog?.logEntry?.callReason ?? "N/A"}
-                />
-                <CallBreakdownContent
-                  label="Was the caller's name provided?"
-                  content={selectedCallLog?.logEntry?.callerName ?? "N/A"}
-                />
-                <CallBreakdownContent
-                  label="How did they obtain your phone number??"
-                  content={selectedCallLog?.logEntry?.referral ?? "N/A"}
-                />
-              </FlexColStart>
+              {selectedCallLog.agent.type === "ANTI_THEFT" && (
+                <FlexColStart className="gap-4">
+                  <CallBreakdownContent
+                    label="Reason for the call?"
+                    content={selectedCallLog?.logEntry?.callReason ?? "N/A"}
+                  />
+                  <CallBreakdownContent
+                    label="Was the caller's name provided?"
+                    content={selectedCallLog?.logEntry?.callerName ?? "N/A"}
+                  />
+                  <CallBreakdownContent
+                    label="How did they obtain your phone number??"
+                    content={selectedCallLog?.logEntry?.referral ?? "N/A"}
+                  />
+                </FlexColStart>
+              )}
             </FlexColStart>
 
             {/* caller details */}
+
             <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 pt-5 pb-0 px-3">
               <p className="text-dark-100 font-ppM text-sm mb-2">
                 Caller Details
