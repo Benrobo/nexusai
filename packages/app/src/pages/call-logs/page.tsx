@@ -275,15 +275,16 @@ export default function CallLogsPage() {
             {callLogs.length > 0 && (
               <TableCaption className="pb-3">
                 <p className="font-ppReg text-xs text-white-400">
-                  Showing{" "}
+                  Page{" "}
                   <span className="text-dark-100 font-ppB">
-                    {callLogs.length}
+                    {pagination.page}
                   </span>{" "}
-                  out of {""}
+                  of {""}
                   <span className="text-dark-100 font-ppB">
-                    {totalLogs}
+                    {/* total pages left */}
+                    {Math.ceil(totalLogs / pagination.limit)}
                   </span>{" "}
-                  call logs
+                  {/* call logs */}
                 </p>
                 <FlexRowCenter className="w-auto mt-1">
                   <button
@@ -308,7 +309,9 @@ export default function CallLogsPage() {
                     }
                     disabled={
                       pagination.page === callLogs.length ||
-                      callLogs.length < pagination.limit
+                      callLogs.length < pagination.limit ||
+                      pagination.page ===
+                        Math.ceil(totalLogs / pagination.limit)
                     }
                   >
                     Next
