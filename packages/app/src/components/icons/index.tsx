@@ -463,3 +463,10 @@ export const SendHorizontal = (props: SvgIconProps) => (
     <path d="M6 12h16" />
   </IconMarkup>
 );
+
+export const ArrowLeft = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M6 8L2 12L6 16" />
+    <path d="M2 12H22" />
+  </IconMarkup>
+);

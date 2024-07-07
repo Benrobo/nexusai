@@ -2,7 +2,15 @@ import { FlexColCenter, FlexColStart, FlexRowStart } from "../Flex";
 import type { AgentType } from "@/types";
 import { agentTypes } from "@/data/agent";
 import { cn } from "@/lib/utils";
-import { Box, Cog, Library, Pallete, ShieldCheck, UnPlug } from "../icons";
+import {
+  ArrowLeft,
+  Box,
+  Cog,
+  Library,
+  Pallete,
+  ShieldCheck,
+  UnPlug,
+} from "../icons";
 import type { AgentActiveTabs } from "@/types";
 import { Link, useLocation } from "react-router-dom";
 
@@ -38,22 +46,6 @@ const sidebarItems = [
   },
 ] satisfies { name: string; key: AgentActiveTabs }[];
 
-interface IAgentInfo {
-  id?: string;
-  name?: string;
-  date?: Date;
-  type?: AgentType;
-  protected_numbers?: {
-    id: string;
-    phone: string;
-    dial_code: string;
-    country: string;
-  }[];
-  integrations?: number;
-  contact_number?: string;
-  created_at?: Date;
-}
-
 export default function AgentSidebar({
   agent_info,
   activeTab,
@@ -62,7 +54,10 @@ export default function AgentSidebar({
   if (!agent_info) return null;
 
   return (
-    <FlexColStart className="w-full h-screen max-w-[250px] bg-white-300/80 border-[.5px] border-white-400/40">
+    <FlexColStart className="w-full h-screen max-w-[250px] bg-white-300/80 border-[.5px] border-white-400/40 gap-0">
+      <Link to="/agents" className="mt-2 px-4">
+        <ArrowLeft size={20} color="#000" />
+      </Link>
       <FlexRowStart className="w-auto px-3 py-4 border-b-[1px] border-b-white-400/30 bg-white-300">
         <FlexColCenter className="w-auto border-[1px] border-white-400 bg-white-100 rounded-full p-1 relative">
           {renderMiniAgentIcon(agent_info?.type!)}
