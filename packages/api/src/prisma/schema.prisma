@@ -134,6 +134,7 @@ model Agents {
     purchased_number      PurchasedPhoneNumbers?
     call_logs             CallLogs[]
     integrations          Integration[]
+    chatbot_config        ChatbotConfig?
 
     @@index([userId])
     @@map(name: "agents")
@@ -155,6 +156,24 @@ model AgentSettings {
 
     @@index([agentId])
     @@map(name: "agent_settings")
+}
+
+// CHATBOT AGENT CONFIG
+model ChatbotConfig {
+    id      String @id @default(cuid())
+    agentId String @unique
+
+    brand_name  String?
+    logo        String?
+    brand_color String?
+    text_color  String?
+
+    welcome_message String?
+
+    agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+    @@index([agentId])
+    @@map(name: "chatbot_config")
 }
 
 model ForwardingNumber {
