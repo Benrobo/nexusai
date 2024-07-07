@@ -180,7 +180,7 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
         <FlexColStart className="w-full gap-1 mt-2">
           <p className="text-sm font-ppM text-dark-100">Welcome message</p>
           <Input
-            className=""
+            className="font-ppReg"
             placeholder="How can i help you?"
             value={
               newBotConfig?.welcome_message ?? botConfig?.welcome_message ?? ""
