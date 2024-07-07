@@ -169,7 +169,7 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
         <FlexColStart className="w-full gap-1">
           <p className="text-sm font-ppM text-dark-100">Brand name</p>
           <Input
-            className=""
+            className="font-ppReg"
             placeholder="Cassie"
             value={newBotConfig?.brand_name ?? botConfig?.brand_name ?? ""}
             onChange={(e) =>
