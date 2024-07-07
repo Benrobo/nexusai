@@ -7,7 +7,16 @@ import {
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "@/components/Flex";
-import { Glass, Info, Telescope } from "@/components/icons";
+import {
+  Glass,
+  Inbox,
+  Info,
+  MessageSquare,
+  Telescope,
+  Trash,
+  X,
+} from "@/components/icons";
+import Modal from "@/components/Modal";
 import SentimentAnalysisCard from "@/components/sentiment-analysis/card";
 import { Spinner } from "@/components/Spinner";
 import TooltipComp from "@/components/TooltipComp";
@@ -27,6 +36,7 @@ import {
   getCallLogAnalysis,
   getCallLogs,
   markLogAsRead,
+  deleteCallLog,
 } from "@/http/requests";
 import {
   cn,
@@ -76,6 +86,7 @@ export default function CallLogsPage() {
   const [selectedCallLog, setSelectedCallLog] =
     useState<CallLogsResponseData | null>(null);
   const [totalLogs, setTotalLogs] = useState<number>(0);
+  const [convOpen, setConvOpen] = useState<boolean>(false);
   const [pagination, setPagination] = useState<PaginationState>({
     limit: 8,
     page: 1,
@@ -133,11 +144,26 @@ export default function CallLogsPage() {
       toast.error(err?.message ?? "Failed retrieving analysis.");
     },
   });
+  const deleteLogMut = useMutation({
+    mutationFn: async (id: string) => await deleteCallLog(id),
+    onSuccess: () => {
+      getCallLogMut.mutate(pagination);
+      setSelectedCallLog(null);
+      toast.success("Call log deleted successfully.");
+      refetchUnreadlogs();
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err?.message ?? "Failed to delete log.");
+      refetchUnreadlogs();
+    },
+  });
 
   useEffect(() => {
     getCallLogMut.mutate(pagination);
     setPageLoading(true);
     setSelectedCallLog(null);
+    setConvOpen(false);
   }, [pagination]);
 
   return (
@@ -324,7 +350,7 @@ export default function CallLogsPage() {
       </FlexColStart>
 
       {/* call log info */}
-      <FlexColStart className="w-full h-screen overflow-auto max-w-[350px] bg-white-200/20 py-5">
+      <FlexColStart className="w-full h-screen overflow-auto max-w-[350px] bg-white-200/20 py-5 relative">
         {selectedCallLog && (
           <>
             {/* header */}
@@ -435,15 +461,13 @@ export default function CallLogsPage() {
             </FlexColStart>
 
             {/* conversation */}
-            <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 px-3">
-              {/* <p className="text-dark-400/80 font-ppM text-sm mb-2">
-            Conversations
-          </p> */}
+            <FlexColStart className="w-full mt-2 border-t-[.5px] border-t-white-400/50 px-3">
               <Button
                 intent={"dark"}
                 className="w-full h-[40px] scale-[.55] font-ppM text-white-100 text-xs -translate-y-3"
                 enableBounceEffect
                 leftIcon={<Telescope size={20} />}
+                onClick={() => setConvOpen(true)}
               >
                 View Conversation
               </Button>
@@ -453,10 +477,19 @@ export default function CallLogsPage() {
             <FlexColStart className="w-full mt-3 border-t-[.5px] border-t-white-400/50 py-6 px-3">
               <Button
                 intent={"error"}
-                className="w-full h-[40px] scale-[.85] font-ppM text-white-100 text-xs bg-red-305 hover:bg-red-200 active:bg-red-305/30"
+                className="w-full h-[40px] scale-[.85] font-ppM text-xs bg-red-305 active:bg-red-305/60 text-white-100"
                 enableBounceEffect
+                isLoading={deleteLogMut.isPending}
+                disabled={deleteLogMut.isPending}
+                onClick={() => {
+                  const confirm = window.confirm(
+                    "Are you sure you want to delete this log?"
+                  );
+                  if (!confirm) return;
+                  deleteLogMut.mutate(selectedCallLog.id);
+                }}
               >
-                Add to blacklist
+                <Trash size={15} className="stroke-white-100" /> Delete Log
               </Button>
             </FlexColStart>
           </>
@@ -479,6 +512,93 @@ export default function CallLogsPage() {
           </FlexColCenter>
         )}
       </FlexColStart>
+
+      <Modal
+        isOpen={convOpen}
+        onClose={() => setConvOpen(false)}
+        isBlurBg
+        fixed={false}
+        className=""
+      >
+        <FlexColStart className="w-full max-h-[600px] min-w-[500px] h-full bg-white-300 rounded-[22px] p-1">
+          <FlexColStart className="w-full h-auto bg-white-100 rounded-[20px] relative">
+            <button
+              className="w-[30px] h-[30px] rounded-full border-none outline-none flex flex-col items-center justify-center absolute top-3 right-3 bg-white-400/20 scale-[.85] active:scale-[.95] transition-all"
+              onClick={() => {
+                setConvOpen(false);
+              }}
+            >
+              <X size={15} color="#000" />
+            </button>
+
+            <FlexRowStart className="w-full px-4 py-5 border-b-[1px] border-dashed border-b-white-400/20 ">
+              <FlexColCenter className="w-auto border-[2px] bg-dark-100 rounded-full p-1 relative">
+                <MessageSquare size={20} className="stroke-white-100 p-1" />
+              </FlexColCenter>
+
+              <FlexColStart className="w-full gap-1">
+                <h1 className="font-ppM font-bold text-lg">Conversations</h1>
+                <p className="text-xs font-ppReg font-light text-gray-500">
+                  Call transcript between user and agent.
+                </p>
+              </FlexColStart>
+            </FlexRowStart>
+
+            {/* messages lists */}
+            <div className="w-full h-auto max-h-[450px] flex flex-col px-3 overflow-y-auto gap-5 pb-10">
+              {selectedCallLog && selectedCallLog?.messages.length > 0 ? (
+                selectedCallLog?.messages.map((msg) => {
+                  if (msg.entity_type === "user") {
+                    return (
+                      <FlexRowEnd className="w-full gap-1">
+                        <FlexColStart
+                          className={cn(
+                            "w-auto max-w-[300px] bg-white-400/20 p-2 rounded-tl-md rounded-bl-md rounded-br-md relative "
+                          )}
+                          key={msg.id}
+                        >
+                          <span className="text-[10px] text-white-400">
+                            {dayjs(msg.created_at).format("hh:mm A")}
+                          </span>
+                          <p className="text-dark-100 font-ppReg text-xs">
+                            {msg.content}
+                          </p>
+                        </FlexColStart>
+                      </FlexRowEnd>
+                    );
+                  } else {
+                    return (
+                      <FlexRowStart className="w-full gap-1">
+                        <FlexColStart
+                          className={cn(
+                            "w-auto max-w-[300px] bg-dark-100 p-2 rounded-tr-md rounded-br-md rounded-bl-md relative"
+                          )}
+                          key={msg.id}
+                        >
+                          <span className="text-[10px] text-white-300">
+                            {dayjs(msg.created_at).format("hh:mm A")} (
+                            {selectedCallLog.agent.name})
+                          </span>
+                          <p className="text-white-100 font-ppReg text-xs">
+                            {msg.content}
+                          </p>
+                        </FlexColStart>
+                      </FlexRowStart>
+                    );
+                  }
+                })
+              ) : (
+                <FlexColCenter className="w-full h-full gap-1 mt-4">
+                  <Inbox size={20} color="#000" />
+                  <p className="text-xs font-bold font-ppReg text-white-400">
+                    No conversation available
+                  </p>
+                </FlexColCenter>
+              )}
+            </div>
+          </FlexColStart>
+        </FlexColStart>
+      </Modal>
     </FlexRowStart>
   );
 }

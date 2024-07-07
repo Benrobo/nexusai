@@ -440,3 +440,9 @@ export const Glass = (props: SvgIconProps) => (
     <path d="M21.5 13 19 7c-.7-1.3-1.5-2-3-2" />
   </IconMarkup>
 );
+
+export const MessageSquare = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </IconMarkup>
+);

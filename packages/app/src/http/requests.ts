@@ -173,3 +173,8 @@ export const getCallLogAnalysis = async (id: string) => {
   const req = await $axios.get(`/call-logs/analysis/${id}`);
   return req.data;
 };
+
+export const deleteCallLog = async (id: string) => {
+  const req = await $axios.delete(`/call-logs/${id}`);
+  return req.data;
+};

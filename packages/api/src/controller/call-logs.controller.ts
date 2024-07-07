@@ -287,4 +287,46 @@ export default class CallLogsController {
       );
     }
   }
+
+  public async deleteCallLog(req: Request & IReqObject, res: Response) {
+    const userId = req.user.id;
+    const logId = req.params.id;
+
+    const log = await prisma.callLogs.findFirst({
+      where: {
+        id: logId,
+        userId,
+      },
+    });
+
+    if (!log) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Call log was not found.",
+        404
+      );
+    }
+
+    // delete the messages first
+    const deleteLogMsg = prisma.callLogsMessages.deleteMany({
+      where: {
+        call_log_id: logId,
+      },
+    });
+
+    const deleteLog = prisma.callLogs.delete({
+      where: {
+        id: logId,
+      },
+    });
+
+    await prisma.$transaction([deleteLogMsg, deleteLog]);
+
+    sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Call log deleted successfully",
+      200
+    );
+  }
 }

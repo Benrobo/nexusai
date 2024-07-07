@@ -40,6 +40,15 @@ export default class CallLogsRoute {
       )
     );
 
+    this.router.delete(
+      `${this.path}/:id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.callLogsController.deleteCallLog.bind(this.callLogsController)
+        )
+      )
+    );
+
     this.router.get(
       `${this.path}/analysis/:id`,
       useCatchErrors(

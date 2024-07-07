@@ -45,9 +45,7 @@ function DataContextProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    setInterval(() => {
-      getUnreadLogsQuery.mutate();
-    }, 15000);
+    getUnreadLogsQuery.mutate();
   }, []);
 
   const refetchUnreadlogs = () => {
