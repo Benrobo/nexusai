@@ -282,7 +282,12 @@ export default class AgentController extends BaseController {
         },
       });
 
-      if (knowledgeBase?.linked_knowledge_base.length === 0) {
+      if (
+        knowledgeBase?.linked_knowledge_base.length === 0 ||
+        !knowledgeBase?.linked_knowledge_base
+          .map((d) => d.agentId)
+          .includes(agentId)
+      ) {
         throw new HttpException(
           RESPONSE_CODE.BAD_REQUEST,
           "Link or Add at least one knowledge base",
@@ -367,7 +372,12 @@ export default class AgentController extends BaseController {
         },
       });
 
-      if (knowledgeBase?.linked_knowledge_base.length === 0) {
+      if (
+        knowledgeBase?.linked_knowledge_base.length === 0 ||
+        !knowledgeBase?.linked_knowledge_base
+          .map((d) => d.agentId)
+          .includes(agentId)
+      ) {
         throw new HttpException(
           RESPONSE_CODE.BAD_REQUEST,
           "Link or Add at least one knowledge base",
