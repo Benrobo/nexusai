@@ -2,7 +2,7 @@ import { FlexColCenter, FlexColStart, FlexRowStart } from "../Flex";
 import type { AgentType } from "@/types";
 import { agentTypes } from "@/data/agent";
 import { cn } from "@/lib/utils";
-import { Box, Cog, Library, ShieldCheck, UnPlug } from "../icons";
+import { Box, Cog, Library, Pallete, ShieldCheck, UnPlug } from "../icons";
 import type { AgentActiveTabs } from "@/types";
 import { Link, useLocation } from "react-router-dom";
 
@@ -24,20 +24,19 @@ const sidebarItems = [
     name: "Integrations",
     key: "integrations",
   },
-  // No longer needed since users are now purchasing their own phone number
-  // {
-  //   name: "Protected Numbers",
-  //   key: "protected-numbers",
-  // },
   {
     name: "Knowledge Base",
     key: "knowledge-base",
   },
   {
+    name: "Appearance",
+    key: "appearance",
+  },
+  {
     name: "Settings",
     key: "settings",
   },
-] as { name: string; key: AgentActiveTabs }[];
+] satisfies { name: string; key: AgentActiveTabs }[];
 
 interface IAgentInfo {
   id?: string;
@@ -81,12 +80,6 @@ export default function AgentSidebar({
       <FlexColStart className="w-full h-full px-3 py-2">
         {sidebarItems.map((item) => {
           if (item.key === "integrations" && agent_info.type === "ANTI_THEFT")
-            return null;
-
-          if (
-            item.key === "protected-numbers" &&
-            agent_info.type !== "ANTI_THEFT"
-          )
             return null;
 
           const location = useLocation();
@@ -171,6 +164,10 @@ function renderIcons(name: AgentActiveTabs, active: string) {
 
     case "integrations":
       icon = <UnPlug size={15} className={mainStyle} />;
+      break;
+
+    case "appearance":
+      icon = <Pallete size={15} className={mainStyle} />;
       break;
 
     case "protected-numbers":

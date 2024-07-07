@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import SettingsPage from "./settings";
 import Integrations from "./integrations";
 import KnowledgeBase from "@/components/agents/knowledge-base";
+import Appearance from "./appearance";
 
 interface IAgentInfo {
   id?: string;
@@ -97,6 +98,9 @@ export default function SelectedAgent() {
         {activeTab === "general" && <GeneralPage />}
         {activeTab === "settings" && (
           <SettingsPage agent_id={agentId!} type={agentInfo.type!} />
+        )}
+        {activeTab === "appearance" && (
+          <Appearance agent_id={agentId!} type={agentInfo.type!} />
         )}
         {activeTab === "knowledge-base" && <KnowledgeBase />}
         {activeTab === "integrations" && <Integrations />}
