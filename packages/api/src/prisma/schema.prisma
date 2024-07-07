@@ -342,14 +342,14 @@ model ChatMessages {
 
 // call logs
 model CallLogs {
-    id             String @id @default(cuid())
-    refId          String @unique
+    id             String  @id @default(cuid())
+    refId          String  @unique
     agentId        String
     userId         String
     from_number    String
     to_number      String
     caller_country String
-    caller_city    String
+    caller_state   String?
     zip_code       String
 
     created_at DateTime @default(now())

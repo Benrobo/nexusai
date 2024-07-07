@@ -24,6 +24,7 @@ export const logout = () => {
 };
 
 export const formatPhoneNumber = (input: string) => {
+  if (input.length === 0) return input;
   // Remove all non-digit characters
   const digits = input.replace(/\D/g, "");
 
@@ -40,6 +41,7 @@ export const formatPhoneNumber = (input: string) => {
 };
 
 export const formatNumber = (number: string) => {
+  if (!number) return number;
   const phoneNumber = parsePhoneNumber(number);
   return phoneNumber?.formatInternational();
 };

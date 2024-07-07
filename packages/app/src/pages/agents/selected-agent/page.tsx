@@ -84,7 +84,7 @@ export default function SelectedAgent() {
   }
 
   return (
-    <FlexRowStart className="w-full h-full bg-white-200/20  overflow-y-hidden">
+    <FlexRowStart className="w-full h-full bg-white-200/20  overflow-y-hidden p-0 m-0 gap-0">
       {/* sidebar */}
       <AgentSidebar
         agent_info={agentInfo!}
@@ -93,7 +93,7 @@ export default function SelectedAgent() {
       />
 
       {/* main content */}
-      <div className="w-full h-full overflow-auto">
+      <div className="w-full h-full overflow-auto relative">
         {activeTab === "general" && <GeneralPage />}
         {activeTab === "settings" && (
           <SettingsPage agent_id={agentId!} type={agentInfo.type!} />

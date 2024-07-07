@@ -190,7 +190,7 @@ export default class CallLogsService {
       caller_number,
       called_number,
       country_code,
-      city,
+      state,
       zipcode,
     } = props.data;
 
@@ -202,9 +202,10 @@ export default class CallLogsService {
         userId,
         from_number: caller_number,
         to_number: called_number,
-        caller_city: city,
+        caller_state: state,
         caller_country: country_code,
         zip_code: zipcode,
+        is_read: false,
       },
     });
 

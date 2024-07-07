@@ -9,7 +9,7 @@ export type CallLogsResponseData = {
   from_number: string;
   to_number: string;
   caller_country: string;
-  caller_city: string;
+  caller_state: string;
   zip_code: string;
   created_at: Date;
   agent: {

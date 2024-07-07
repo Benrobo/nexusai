@@ -340,6 +340,7 @@ export default function CallLogsPage() {
                       type: "negative",
                       red_flags: "No red flags",
                     }}
+                    agent_type="ANTI_THEFT"
                   />
                   {/* overlay */}
                   <FlexColCenter className="w-full h-full absolute z-[3] bg-white-100/30 backdrop-blur-sm">
@@ -414,8 +415,8 @@ export default function CallLogsPage() {
                 }
               />
               <CallerDetails
-                leftValue="City"
-                rightValue={selectedCallLog?.caller_city ?? "N/A"}
+                leftValue="State"
+                rightValue={selectedCallLog?.caller_state ?? "N/A"}
               />
               <CallerDetails
                 leftValue="Zipcode"

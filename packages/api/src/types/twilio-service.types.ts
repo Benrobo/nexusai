@@ -21,7 +21,7 @@ export type ConvVoiceCallCacheInfo = {
   callerPhone: string;
   calledPhone: string;
   callRefId: string;
-  city: string;
+  state: string;
   country_code: string;
   zipcode: string;
   kb_ids?: string[];

@@ -179,11 +179,9 @@ function AgentCard({
   name,
   date,
   type,
-  protected_numbers,
   contact_number,
   integrations,
   id,
-  // active_number
 }: IAgentCardProps) {
   return (
     <FlexColStart className="w-full max-w-[350px] pt-4 rounded-md outline outline-[.5px] outline-white-400/80">

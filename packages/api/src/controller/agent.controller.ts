@@ -271,41 +271,127 @@ export default class AgentController extends BaseController {
       throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
     }
 
-    //! PERFORM SOME CHECKS BEFORE ACTIVATING AGENT
-    // * SALES_ASSISTANT
-    /**
-     * - contact number is available
-     * - Check if user added at least one knowledge base
-     *
-     **/
-    // * ANTI_THEFT
-    /**
-     * - Check if user linked at least one protected number
-     *
-     **/
+    if (agent.type === "SALES_ASSISTANT") {
+      // check if user added at least one knowledge base
+      const knowledgeBase = await prisma.knowledgeBase.findFirst({
+        where: {
+          userId: user.id,
+        },
+        select: {
+          linked_knowledge_base: true,
+        },
+      });
 
-    // * CHATBOT
-    /**
-     * - Check if user added at least one knowledge base
-     *
-     **/
+      if (knowledgeBase?.linked_knowledge_base.length === 0) {
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "Link or Add at least one knowledge base",
+          400
+        );
+      }
 
-    // activate agent
-    // await prisma.agents.update({
-    //   where: {
-    //     id: agentId as string,
-    //   },
-    //   data: {
-    //     activated: true
-    //   },
-    // });
+      const purchasedNumber = await prisma.purchasedPhoneNumbers.findFirst({
+        where: {
+          userId: user.id,
+          agent_id: agentId as string,
+        },
+      });
 
-    return sendResponse.success(
-      res,
-      RESPONSE_CODE.SUCCESS,
-      "Agent activated successfully",
-      200
-    );
+      if (!purchasedNumber) {
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "Buy a number to activate agent",
+          400
+        );
+      }
+
+      // activate agent
+      await prisma.agents.update({
+        where: {
+          id: agentId as string,
+        },
+        data: {
+          activated: true,
+        },
+      });
+
+      return sendResponse.success(
+        res,
+        RESPONSE_CODE.SUCCESS,
+        "Agent activated successfully",
+        200
+      );
+    }
+    if (agent.type === "ANTI_THEFT") {
+      // check if user bought a number
+      const purchasedNumber = await prisma.purchasedPhoneNumbers.findFirst({
+        where: {
+          userId: user.id,
+          agent_id: agentId as string,
+        },
+      });
+
+      if (!purchasedNumber) {
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "Buy a number to activate agent",
+          400
+        );
+      }
+
+      // activate agent
+      await prisma.agents.update({
+        where: {
+          id: agentId as string,
+        },
+        data: {
+          activated: true,
+        },
+      });
+
+      return sendResponse.success(
+        res,
+        RESPONSE_CODE.SUCCESS,
+        "Agent activated successfully",
+        200
+      );
+    }
+    if (agent.type === "CHATBOT") {
+      // check if user added at least one knowledge base
+      const knowledgeBase = await prisma.knowledgeBase.findFirst({
+        where: {
+          userId: user.id,
+        },
+        select: {
+          linked_knowledge_base: true,
+        },
+      });
+
+      if (knowledgeBase?.linked_knowledge_base.length === 0) {
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "Link or Add at least one knowledge base",
+          400
+        );
+      }
+
+      // activate agent
+      await prisma.agents.update({
+        where: {
+          id: agentId as string,
+        },
+        data: {
+          activated: true,
+        },
+      });
+
+      return sendResponse.success(
+        res,
+        RESPONSE_CODE.SUCCESS,
+        "Agent activated successfully",
+        200
+      );
+    }
   }
 
   async getAgents(req: Request & IReqObject, res: Response) {
@@ -406,6 +492,7 @@ export default class AgentController extends BaseController {
             security_code: true,
           },
         },
+        activated: true,
       },
     });
 
@@ -419,6 +506,7 @@ export default class AgentController extends BaseController {
       allow_handover: settings?.allow_handover ?? false,
       handover_condition: settings?.handover_condition ?? null,
       security_code: settings?.security_code ?? null,
+      activated: agentSettings.activated,
     };
 
     return sendResponse.success(

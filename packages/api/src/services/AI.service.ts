@@ -424,6 +424,8 @@ export default class AIService {
           2. Choose ONE action from AllowedActions.
           3. Return ONLY the action word, formatted as specified.
           4. Based on the last conversation, determine the user's intent as well if necessary.
+          5. Make sure you understand the user's request before choosing an action, otherwise set it to ENQUIRY.
+          6. As for HANDOVER or ESCALATION, do your best to understand the user's request and make sure it aligns to either handover or escalation before setting it to that action.
           `,
           parameters: {
             type: "object",
@@ -431,7 +433,7 @@ export default class AIService {
               // @ts-expect-error
               action: {
                 type: "string",
-                description: `The user request action gotten from the prompt, supported actions/intents are ${DEFAULT_CALL_INTENTS.join(
+                description: `supported actions/intents are ${DEFAULT_SA_CALL_INTENTS.join(
                   ""
                 )}`,
               },
@@ -466,7 +468,7 @@ export default class AIService {
           caller_number: cached_conv_info.callerPhone,
           called_number: cached_conv_info.calledPhone,
           refId: cached_conv_info.callRefId,
-          city: cached_conv_info.city,
+          state: cached_conv_info.state,
           country_code: cached_conv_info.country_code,
           zipcode: cached_conv_info.zipcode,
         },

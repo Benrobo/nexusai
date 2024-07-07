@@ -8,7 +8,7 @@ export type CreateCallLogProps = {
     caller_number: string;
     called_number: string;
     country_code: string;
-    city: string;
+    state: string;
     zipcode: string;
   };
 };

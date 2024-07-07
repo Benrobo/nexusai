@@ -42,6 +42,15 @@ export default class AgentRoute {
       )
     );
 
+    this.router.patch(
+      `${this.path}/activate/:id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.activateAgent.bind(this.agentController)
+        )
+      )
+    );
+
     // get agent active phone number
     this.router.get(
       `${this.path}/active-number/:id`,

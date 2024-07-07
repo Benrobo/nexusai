@@ -27,6 +27,7 @@ import {
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
+  activateAgent,
   getAgentFwdNumber,
   getAgentSettings,
   sendOTP,
@@ -54,6 +55,7 @@ interface AgentSettings {
   allow_handover: boolean;
   handover_condition: "emergency" | "help";
   security_code: string;
+  activated: boolean;
 }
 
 interface SettingsProps {
@@ -70,6 +72,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
   const [settingsDetails, setSettingsDetails] = useState<AgentSettings>(
     {} as AgentSettings
   );
+  const [activatingAgent, setActivatingAgent] = useState(false);
   const [forwardingNum, setForwardingNum] = useState<string | null>(null);
   const [handoverEditMode, setHandoverEditMode] = useState(false);
   const [addHandoverNumber, setAddHandoverNumber] = useState(false);
@@ -176,47 +179,78 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
     );
   }
 
-  console.log({ handoverEditMode });
-
   return (
-    <div className="w-full max-w-[100%] h-full px-10 py-10 overflow-y-scroll pb-[50em] hideScrollBar2">
-      <FlexColStart className="w-full h-full ">
-        <FlexRowStartBtw className="w-full px-3">
-          <FlexColStart className="gap-0 w-full">
-            <h1 className="text-2xl font-jb font-extrabold text-dark-100">
-              Settings
-            </h1>
-            <p className="text-sm font-jb text-white-400 mt-1">
-              Manage configurations and settings for the agent.
-            </p>
-          </FlexColStart>
-
-          <Button
-            intent={"primary"}
-            className="w-[150px] h-[36px] px-4 text-xs font-ppReg drop-shadow disabled:bg-blue-100/70 disabled:text-white-100"
-            disabled={enableSaveChangesButton()}
-            onClick={saveChanges}
-            enableBounceEffect={true}
-            isLoading={updateAgentSettingsMut.isPending || tabLoading}
+    <>
+      {!agentSettings?.activated && (
+        <FlexRowCenterBtw className="w-full top-0 left-0 bg-yellow-100 py-1 px-3 font-ppReg text-xs text-dark-100">
+          <span>
+            ⚠️ Your agent is currently inactive. Activate it to start receiving
+            calls.
+          </span>
+          <button
+            className="w-[90px] h-[30px] bg-dark-100 px-3 text-xs font-ppReg drop-shadow disabled:bg-dark-100/50 disabled:text-white-100 scale-[.85] active:scale-[.90] target:scale-[.80] scale-1 transition-all outline-none border-none text-white-100 rounded-md"
+            disabled={activatingAgent}
+            onClick={() => {
+              setActivatingAgent(true);
+              toast.promise(activateAgent(agent_id), {
+                loading: "Activating agent..",
+                success: () => {
+                  setActivatingAgent(false);
+                  getAgentSettingsQuery.mutate(agent_id);
+                  return "Agent activated";
+                },
+                error: (error: any) => {
+                  setActivatingAgent(false);
+                  const err = error.response.data as ResponseData;
+                  return err.message ?? "Failed to activate agent";
+                },
+              });
+            }}
           >
-            Save Changes
-          </Button>
-        </FlexRowStartBtw>
+            Activate
+          </button>
+        </FlexRowCenterBtw>
+      )}
+      <div className="w-full max-w-[100%] h-full px-10 py-10 overflow-y-scroll pb-[50em] hideScrollBar2">
+        <FlexColStart className="w-full h-full ">
+          <FlexRowStartBtw className="w-full px-3">
+            <FlexColStart className="gap-0 w-full">
+              <h1 className="text-2xl font-jb font-extrabold text-dark-100">
+                Settings
+              </h1>
+              <p className="text-sm font-jb text-white-400 mt-1">
+                Manage configurations and settings for the agent.
+              </p>
+            </FlexColStart>
 
-        <br />
+            <FlexRowEnd className="w-auto">
+              <Button
+                intent={"primary"}
+                className="w-[150px] h-[36px] px-4 text-xs font-ppReg drop-shadow disabled:bg-blue-100/70 disabled:text-white-100"
+                disabled={enableSaveChangesButton()}
+                onClick={saveChanges}
+                enableBounceEffect={true}
+                isLoading={updateAgentSettingsMut.isPending || tabLoading}
+              >
+                Save Changes
+              </Button>
+            </FlexRowEnd>
+          </FlexRowStartBtw>
 
-        <span className="w-full p-[.2px] h-auto bg-white-400/20"></span>
+          <br />
 
-        {(["ANTI_THEFT", "SALES_ASSISTANT"] as AgentType[]).includes(type) && (
-          <ManagePhoneNumber agent_id={agent_id} />
-        )}
+          <span className="w-full p-[.2px] h-auto bg-white-400/20"></span>
 
-        {/* settings sections  */}
-        <FlexColStart
-          className={cn("w-full min-h-[250px] mt-10 relative px-1")}
-        >
-          {/* handover settings */}
-          {type === "ANTI_THEFT" && (
+          {(["ANTI_THEFT", "SALES_ASSISTANT"] as AgentType[]).includes(
+            type
+          ) && <ManagePhoneNumber agent_id={agent_id} />}
+
+          {/* settings sections  */}
+          <FlexColStart
+            className={cn("w-full min-h-[250px] mt-10 relative px-1")}
+          >
+            {/* handover settings */}
+            {/* {type === "ANTI_THEFT" && (
             <>
               <FlexColStart className="w-auto gap-0">
                 <h1 className="text-lg font-bold font-jb text-dark-100">
@@ -300,87 +334,91 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                 />
               </FlexRowCenterBtw>
             </>
-          )}
+          )} */}
 
-          {/* Escallation number */}
-          {["ANTI_THEFT", "SALES_ASSISTANT"].includes(type) && (
-            <>
-              <FlexRowStartBtw className="w-full gap-1 rounded-md bg-white-300 px-4 py-2">
-                <FlexColStart className="w-auto gap-1">
-                  <FlexRowStart className="w-auto">
-                    <p className="text-sm font-ppM text-dark-100">
-                      Handover number
+            {/* Escallation number */}
+            {["SALES_ASSISTANT"].includes(type) && (
+              <>
+                <FlexRowStartBtw className="w-full gap-1 rounded-md bg-white-300 px-4 py-2">
+                  <FlexColStart className="w-auto gap-1">
+                    <FlexRowStart className="w-auto">
+                      <p className="text-sm font-ppM text-dark-100">
+                        Forwarding number
+                      </p>
+                    </FlexRowStart>
+                    <p className="text-xs font-jb text-white-400">
+                      The number to which the agent would be handed over to. (US
+                      only)
                     </p>
-                  </FlexRowStart>
-                  <p className="text-xs font-jb text-white-400">
-                    The number to which the agent would be handed over to. (US
-                    only)
-                  </p>
-                </FlexColStart>
+                  </FlexColStart>
 
-                <FlexRowEnd className="w-auto">
-                  <Input
-                    type="text"
-                    className="w-auto text-xs text-dark-100 font-bold font-jb placeholder:text-white-400/50 tracking-wide disabled:cursor-not-allowed disabled:opacity-1"
-                    placeholder="+1 234 567 8890"
-                    value={
-                      handoverEditMode
-                        ? handoverNum ?? ""
-                        : formatNumber(forwardingNum ?? "") ?? handoverNum
-                    }
-                    onChange={(e: any) => {
-                      if (e.target.value.length > 12) return;
-                      setHandoverNum(e.target.value);
-                    }}
-                    disabled={forwardingNum && !handoverEditMode ? true : false}
-                  />
-
-                  {(!forwardingNum || handoverEditMode) && (
-                    <button
-                      className="w-[38px] h-[38px] bg-dark-100 flex flex-col items-center justify-center rounded-sm active:scale-[.95] target:scale-[.90] transition-all disabled:bg-dark-100/50 disabled:text-white-100"
-                      onClick={() => {
-                        if (handoverEditMode || !forwardingNum) {
-                          if (handoverNum.length < 12) {
-                            return toast.error("Invalid phone number");
-                          }
-                          if (!handoverNum.startsWith("+1")) {
-                            return toast.error(
-                              "Phone number must start with +1"
-                            );
-                          }
-                          if (!validatePhoneNumber(handoverNum)) {
-                            return toast.error("Invalid phone number");
-                          }
-                          sendOTPMut.mutate({
-                            phone: handoverNum,
-                          });
-                          return;
-                        }
-                        setHandoverEditMode((prev) => !prev);
+                  <FlexRowEnd className="w-auto">
+                    <Input
+                      type="text"
+                      className="w-auto text-xs text-dark-100 font-bold font-jb placeholder:text-white-400/50 tracking-wide disabled:cursor-not-allowed disabled:opacity-1"
+                      placeholder="+1 234 567 8890"
+                      value={
+                        handoverEditMode
+                          ? handoverNum ?? ""
+                          : forwardingNum
+                            ? formatNumber(forwardingNum ?? "")
+                            : handoverNum
+                      }
+                      onChange={(e: any) => {
+                        if (e.target.value.length > 12) return;
+                        setHandoverNum(e.target.value);
                       }}
-                      disabled={sendOTPMut.isPending}
-                    >
-                      {sendOTPMut.isPending ? (
-                        <Spinner size={15} />
-                      ) : (
-                        <CheckCheck className="stroke-white-100" size={15} />
-                      )}
-                    </button>
-                  )}
+                      disabled={
+                        forwardingNum && !handoverEditMode ? true : false
+                      }
+                    />
 
-                  {forwardingNum && (
-                    <button
-                      className="w-[38px] h-[38px] bg-dark-100 flex flex-col items-center justify-center rounded-sm active:scale-[.95] target:scale-[.90] transition-all disabled:bg-dark-100/50 disabled:text-white-100"
-                      onClick={() => {
-                        setHandoverEditMode((prev) => !prev);
-                      }}
-                    >
-                      <Pen className="stroke-white-100" size={15} />
-                    </button>
-                  )}
-                </FlexRowEnd>
-              </FlexRowStartBtw>
-              {/* 
+                    {(!forwardingNum || handoverEditMode) && (
+                      <button
+                        className="w-[38px] h-[38px] bg-dark-100 flex flex-col items-center justify-center rounded-sm active:scale-[.95] target:scale-[.90] transition-all disabled:bg-dark-100/50 disabled:text-white-100"
+                        onClick={() => {
+                          if (handoverEditMode || !forwardingNum) {
+                            if (handoverNum.length < 12) {
+                              return toast.error("Invalid phone number");
+                            }
+                            if (!handoverNum.startsWith("+1")) {
+                              return toast.error(
+                                "Phone number must start with +1"
+                              );
+                            }
+                            if (!validatePhoneNumber(handoverNum)) {
+                              return toast.error("Invalid phone number");
+                            }
+                            sendOTPMut.mutate({
+                              phone: handoverNum,
+                            });
+                            return;
+                          }
+                          setHandoverEditMode((prev) => !prev);
+                        }}
+                        disabled={sendOTPMut.isPending}
+                      >
+                        {sendOTPMut.isPending ? (
+                          <Spinner size={15} />
+                        ) : (
+                          <CheckCheck className="stroke-white-100" size={15} />
+                        )}
+                      </button>
+                    )}
+
+                    {forwardingNum && (
+                      <button
+                        className="w-[38px] h-[38px] bg-dark-100 flex flex-col items-center justify-center rounded-sm active:scale-[.95] target:scale-[.90] transition-all disabled:bg-dark-100/50 disabled:text-white-100"
+                        onClick={() => {
+                          setHandoverEditMode((prev) => !prev);
+                        }}
+                      >
+                        <Pen className="stroke-white-100" size={15} />
+                      </button>
+                    )}
+                  </FlexRowEnd>
+                </FlexRowStartBtw>
+                {/* 
               {otpSent && (
                 <FlexRowEnd className="w-full">
                   <Timer
@@ -394,24 +432,25 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                 </FlexRowEnd>
               )} */}
 
-              {/* verify phone modal */}
-              {addHandoverNumber && (
-                <VerifyPhoneModal
-                  closeModal={() => setAddHandoverNumber(false)}
-                  isOpen={addHandoverNumber}
-                  refetchVerifiedPhone={() => {
-                    getAgentSettingsQuery.mutate(agent_id);
-                    getFwdNumberQuery.mutate(agent_id);
-                    setHandoverNum("");
-                  }}
-                  agent_id={agent_id}
-                />
-              )}
-            </>
-          )}
+                {/* verify phone modal */}
+                {addHandoverNumber && (
+                  <VerifyPhoneModal
+                    closeModal={() => setAddHandoverNumber(false)}
+                    isOpen={addHandoverNumber}
+                    refetchVerifiedPhone={() => {
+                      getAgentSettingsQuery.mutate(agent_id);
+                      getFwdNumberQuery.mutate(agent_id);
+                      setHandoverNum("");
+                    }}
+                    agent_id={agent_id}
+                  />
+                )}
+              </>
+            )}
+          </FlexColStart>
         </FlexColStart>
-      </FlexColStart>
-    </div>
+      </div>
+    </>
   );
 }
 

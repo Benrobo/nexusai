@@ -174,8 +174,8 @@ export class TwilioService {
         input: ["speech"],
         action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
         method: "POST",
-        timeout: 3,
-        speechTimeout: "3",
+        timeout: 5,
+        speechTimeout: "5",
       });
 
       sendXMLResponse(res, twiml.toString());
@@ -191,8 +191,8 @@ export class TwilioService {
         input: ["speech"],
         action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
         method: "POST",
-        timeout: 3,
-        speechTimeout: "3",
+        timeout: 5,
+        speechTimeout: "5",
       });
 
       sendXMLResponse(res, twiml.toString());
@@ -233,7 +233,7 @@ export class TwilioService {
         callerPhone: callerPhone,
         calledPhone: calledPhone,
         callRefId,
-        city: body.CallerCity,
+        state: body.CallerState,
         country_code: body.CallerCountry,
         zipcode: body.CallerZip,
       };
@@ -257,7 +257,7 @@ export class TwilioService {
             action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
             method: "POST",
             timeout: 5,
-            // speechModel: "experimental_conversations",
+            speechTimeout: "5",
           })
           .say(conv.msg!);
       }
@@ -320,7 +320,7 @@ export class TwilioService {
         callerPhone: callerPhone,
         calledPhone: calledPhone,
         callRefId,
-        city: body.CallerCity,
+        state: body.CallerState,
         country_code: body.CallerCountry,
         zipcode: body.CallerZip,
         kb_ids: linkedKb.map((kb) => kb.kb_id),
@@ -347,8 +347,8 @@ export class TwilioService {
             input: ["speech"],
             action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
             method: "POST",
-            timeout: 3,
-            speechTimeout: "3",
+            timeout: 5,
+            speechTimeout: "5",
           })
           .say(conv.msg!);
       }
