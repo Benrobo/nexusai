@@ -115,7 +115,6 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
   };
 
   const handleSave = () => {
-    // validate newBotConfig
     if (!newBotConfig?.brand_name || newBotConfig?.brand_name.length === 0) {
       toast.error("Brand name is required.");
       return;
@@ -128,8 +127,8 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
       return;
     }
 
-    // get rid of null value from newBotConfig
     const newBotConfigKeys = Object.keys(newBotConfig);
+
     newBotConfigKeys.forEach((key) => {
       if (!newBotConfig[key as keyof NewBotConfigData]) {
         // @ts-expect-error
@@ -147,7 +146,7 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
 
   if (type !== "CHATBOT") return null;
 
-  if (getBotConfigMut.isPending) {
+  if (getBotConfigMut.isPending || pageLoading) {
     return (
       <FlexColCenter className="w-full h-full">
         <Spinner size={25} color="#000" />
