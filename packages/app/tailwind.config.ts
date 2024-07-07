@@ -155,5 +155,20 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    ({ addUtilities }) => {
+      addUtilities({
+        ".enableBounceEffect": {
+          transition: "all 0.1s",
+          "&:target": {
+            transform: "scale(0.90)",
+          },
+          "&:active": {
+            transform: "scale(0.85)",
+          },
+        },
+      });
+    },
+  ],
 };

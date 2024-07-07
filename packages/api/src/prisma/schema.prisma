@@ -168,7 +168,8 @@ model ChatbotConfig {
     brand_color String?
     text_color  String?
 
-    welcome_message String?
+    welcome_message     String?
+    suggested_questions String?
 
     agents Agents @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
