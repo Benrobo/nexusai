@@ -21,7 +21,8 @@ export default class GeminiService {
 
   public async generateEmbedding(data: string) {
     if (!data) {
-      throw new Error("Data is required");
+      // throw new Error("Data is required");
+      data = "Hello there.";
     }
 
     const model = this.genAI.getGenerativeModel({ model: "embedding-001" });
