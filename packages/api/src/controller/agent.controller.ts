@@ -9,6 +9,7 @@ import {
   createAgentSchema,
   LinkPhoneNumberSchema,
   updateAgentSettingsSchema,
+  updateChatBotConfigSchema,
   VerifyOTPCode,
   verifyUsPhoneSchema,
 } from "../lib/schema_validation.js";
@@ -209,6 +210,9 @@ export default class AgentController extends BaseController {
       );
     }
 
+    // create agent
+    const agentId = shortUUID.generate();
+
     // prevent user from creating more than 1 ANTI_THEFT agent
     if (type === "ANTI_THEFT") {
       const antiTheftAgent = await prisma.agents.findFirst({
@@ -227,8 +231,21 @@ export default class AgentController extends BaseController {
       }
     }
 
-    // create agent
-    const agentId = shortUUID.generate();
+    if (type === "CHATBOT") {
+      // add default chat config
+      await prisma.chatbotConfig.create({
+        data: {
+          id: shortUUID.generate(),
+          agentId,
+          logo: null,
+          brand_color: "#000",
+          text_color: "#fff",
+          welcome_message: `Hi, i'm ${payload.name}. How can I help you?`,
+          brand_name: payload.name,
+        },
+      });
+    }
+
     await prisma.agents.create({
       data: {
         id: agentId,
@@ -252,6 +269,106 @@ export default class AgentController extends BaseController {
       res,
       RESPONSE_CODE.SUCCESS,
       "Agent created successfully",
+      200
+    );
+  }
+
+  async getChatbotConfig(req: Request & IReqObject, res: Response) {
+    const agentId = req.params["id"];
+
+    const chatbotConfig = await prisma.chatbotConfig.findFirst({
+      where: {
+        agentId,
+      },
+    });
+
+    if (!chatbotConfig) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Chatbot config not found",
+        404
+      );
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Chatbot config retrieved successfully",
+      200,
+      chatbotConfig
+    );
+  }
+
+  async updateChatbotConfig(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const payload = req.body as {
+      agentId: string;
+      logo: string;
+      brand_color: string;
+      text_color: string;
+      welcome_message: string;
+      brand_name: string;
+      suggested_questions: string;
+    };
+
+    const {
+      agentId,
+      logo,
+      brand_color,
+      text_color,
+      welcome_message,
+      brand_name,
+      suggested_questions,
+    } = payload;
+
+    await ZodValidation(updateChatBotConfigSchema, payload, req.serverUrl!);
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: agentId,
+        userId: user.id,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    // check if chatbot config exists
+    const chatbotConfig = await prisma.chatbotConfig.findFirst({
+      where: {
+        agentId,
+      },
+    });
+
+    if (!chatbotConfig) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Chatbot config not found",
+        404
+      );
+    }
+
+    // update chatbot config
+    await prisma.chatbotConfig.update({
+      where: {
+        id: chatbotConfig.id,
+      },
+      data: {
+        logo,
+        brand_color,
+        text_color,
+        welcome_message,
+        brand_name,
+        suggested_questions,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Chatbot config updated successfully",
       200
     );
   }

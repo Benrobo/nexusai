@@ -1,3 +1,4 @@
+import type { NewBotConfigData } from "@/pages/agents/selected-agent/appearance";
 import $axios from "./axios";
 
 export const signInUser = async (data: any) => {
@@ -24,6 +25,18 @@ export const getAgents = async () => {
 
 export const getAgent = async (id: string) => {
   const req = await $axios.get(`/agent/${id}`);
+  return req.data;
+};
+
+export const getChatbotConfig = async (id: string) => {
+  const req = await $axios.get(`/agent/chatbot-config/${id}`);
+  return req.data;
+};
+
+export const updateChatbotConfig = async (
+  data: NewBotConfigData & { agent_id: string }
+) => {
+  const req = await $axios.patch(`/agent/chatbot-config`, data);
   return req.data;
 };
 

@@ -233,3 +233,35 @@ export const addIntegrationSchema = zod.object({
       "URL must start with http:// or https://"
     ),
 });
+
+export const updateChatBotConfigSchema = zod.object({
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
+  }),
+  brand_name: zod.string({
+    required_error: "Brand name is required",
+  }),
+  logo: zod
+    .string({
+      required_error: "Brand logo is required",
+    })
+    .optional(),
+  welcome_message: zod.string({
+    required_error: "Welcome message is required",
+  }),
+  brand_color: zod
+    .string({
+      required_error: "Brand color is required",
+    })
+    .optional(),
+  text_color: zod
+    .string({
+      required_error: "Text color is required",
+    })
+    .optional(),
+  suggested_questions: zod
+    .string({
+      required_error: "Suggested questions is required",
+    })
+    .optional(),
+});
