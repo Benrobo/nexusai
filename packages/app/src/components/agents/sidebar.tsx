@@ -94,6 +94,11 @@ export default function AgentSidebar({
             item.key === "knowledge-base"
           ) {
             tabComp = null;
+          } else if (
+            agent_info.type !== "CHATBOT" &&
+            item.key === "appearance"
+          ) {
+            tabComp = null;
           } else {
             tabComp = (
               <Link
