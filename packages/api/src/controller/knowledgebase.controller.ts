@@ -652,10 +652,6 @@ export default class KnowledgeBaseController extends BaseController {
       },
     });
 
-    // const kbData = kb.map((k) => k.kb_data[0])[0];
-
-    // i need a well structure data which contain the data of the kb and the agent id
-
     const allKb: {
       id: string;
       type: KnowledgeBaseType;
