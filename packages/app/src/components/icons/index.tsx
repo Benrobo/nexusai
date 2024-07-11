@@ -470,3 +470,11 @@ export const ArrowLeft = (props: SvgIconProps) => (
     <path d="M2 12H22" />
   </IconMarkup>
 );
+
+export const ElipsisVertical = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <circle cx="12" cy="12" r="1" />
+    <circle cx="12" cy="5" r="1" />
+    <circle cx="12" cy="19" r="1" />
+  </IconMarkup>
+);
