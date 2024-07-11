@@ -20,13 +20,12 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 dayjs.extend(relativeTime);
-
 export default function Inbox() {
   const data = useSession();
   return (
     <FlexRowStart className="w-full h-screen relative gap-0">
       {/* conversation lists */}
-      <FlexColStart className="w-full h-full max-w-[350px] gap-0">
+      <FlexColStart className="w-full h-screen max-w-[350px] gap-0 bg-white-300">
         {/* header */}
         <FlexRowStartBtw className="w-full h-[90px] px-3 py-4 bg-white-300">
           <Select
@@ -83,7 +82,7 @@ export default function Inbox() {
       </FlexColStart>
 
       {/* user info */}
-      <FlexColStart className="w-full h-full max-w-[350px] gap-0"></FlexColStart>
+      <FlexColStart className="w-full h-screen max-w-[350px] gap-0 border-l-[.5px] border-l-white-400/30"></FlexColStart>
     </FlexRowStart>
   );
 }
