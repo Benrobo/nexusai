@@ -28,7 +28,7 @@ enum AgentType {
 
 enum ChatMsgEntityType {
     agent
-    user
+    admin
     conversation_account
 }
 

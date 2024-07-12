@@ -44,3 +44,21 @@ export type AgentActiveTabs =
 export type AgentType = "ANTI_THEFT" | "SALES_ASSISTANT" | "CHATBOT";
 
 export type KBType = "TXT" | "WEB_PAGES" | "PDF" | "YT_VIDEOS" | "NOTION";
+
+export type ConversationsData = {
+  id: string;
+  messages: {
+    id: string;
+    account: {
+      id: string;
+      name: string;
+      avatar: string;
+    };
+    role: "conversation_account" | "admin" | "agent";
+    content: string;
+    escalated?: {
+      date: string;
+    };
+    date: string;
+  }[];
+};

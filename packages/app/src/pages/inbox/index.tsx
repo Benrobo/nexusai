@@ -37,6 +37,7 @@ dayjs.extend(relativeTime);
 
 export default function Inbox() {
   const data = useSession();
+  const [conversations, setCopversations] = useState<any[]>([]);
   const [more, setMore] = useState(false);
 
   const agentConfig = {
@@ -136,7 +137,7 @@ export default function Inbox() {
             {tmpMessages.map((msg, i) => {
               if (msg?.is_escalated) {
                 return (
-                  <FlexRowCenterBtw className="w-full">
+                  <FlexRowCenterBtw className="w-full mt-5 mb-3">
                     <div className="w-full max-w-[150px] border-[.5px] border-white-400/50"></div>
                     <TooltipComp
                       text={`Human support requested on ${dayjs(
