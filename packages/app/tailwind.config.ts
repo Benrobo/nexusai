@@ -168,6 +168,11 @@ module.exports = {
             transform: "scale(0.85)",
           },
         },
+        ".flex-center": {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        },
       });
     },
   ],
