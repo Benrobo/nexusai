@@ -15,6 +15,8 @@ import {
   MapPin,
   PersonStanding,
   Send,
+  Trash,
+  X,
 } from "@/components/icons";
 import TooltipComp from "@/components/TooltipComp";
 import {
@@ -29,11 +31,14 @@ import useSession from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useState } from "react";
 
 dayjs.extend(relativeTime);
 
 export default function Inbox() {
   const data = useSession();
+  const [more, setMore] = useState(false);
+
   const agentConfig = {
     brand_color: "#000",
     text_color: "#fff",
@@ -86,14 +91,32 @@ export default function Inbox() {
             </p>
           </FlexColStart>
 
-          <FlexRowEnd className="w-auto">
-            <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
-              <ElipsisVertical
-                size={20}
-                strokeWidth={3}
-                className="stroke-white-400 rotate-90"
-              />
-            </button>
+          <FlexRowEnd className="w-full">
+            <FlexRowEnd className="w-full relative">
+              <div
+                className={cn(
+                  "overflow-hidden h-full flex-center gap-2 transition-all duration-100 ease-in-out absolute right-4",
+                  !more ? "w-0" : "w-[100px]"
+                )}
+              >
+                <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
+                  <X size={20} strokeWidth={3} className="stroke-red-305" />
+                </button>
+                <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
+                  <Trash size={16} strokeWidth={2} className="stroke-red-305" />
+                </button>
+              </div>
+              <button
+                className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center"
+                onClick={() => setMore(!more)}
+              >
+                <ElipsisVertical
+                  size={20}
+                  strokeWidth={3}
+                  className="stroke-white-400 rotate-90"
+                />
+              </button>
+            </FlexRowEnd>
 
             <TooltipComp text="Escalate Chat?">
               <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
