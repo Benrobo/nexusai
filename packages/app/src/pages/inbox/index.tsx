@@ -37,6 +37,7 @@ export default function Inbox() {
     brand_color: "#000",
     text_color: "#fff",
   };
+
   return (
     <FlexRowStart className="w-full h-screen relative gap-0">
       {/* conversation lists */}
@@ -74,8 +75,8 @@ export default function Inbox() {
       </FlexColStart>
 
       {/* selected conversation */}
-      <FlexColStart className="w-full h-screen bg-white-100 relative">
-        <FlexRowStartCenter className="w-full h-[91px] px-5 py-4 border-b-white-400/30 border-b-[.5px]">
+      <FlexColStart className="w-full h-screen bg-white-100 relative gap-0">
+        <FlexRowStartCenter className="w-full h-[96px] px-5 py-4 border-b-white-400/30 border-b-[.5px]">
           <FlexColStart className="w-full gap-1">
             <h1 className="font-ppB text-xl text-dark-100">John Doe</h1>
             <p className="font-ppReg text-sm text-white-400/50">
@@ -106,42 +107,56 @@ export default function Inbox() {
         </FlexRowStartCenter>
 
         {/* messages */}
-        <FlexColStart className="w-full h-full pb-[100em] px-9 py-9 gap-5 overflow-y-scroll hideScrollBar ">
-          {tmpMessages.map((msg, i) => {
-            if (msg.role === "agent" || msg.role === "admin") {
+        <FlexColStart className="w-full h-screen overflow-y-hidden mt-0 p-0 gap-0">
+          <FlexColStart className="w-full h-screen px-9 gap-5 overflow-y-scroll hideScrollBar pb-[10em]">
+            {tmpMessages.map((msg, i) => {
+              if (msg?.is_escalated) {
+                return (
+                  <FlexRowCenter className="w-full">
+                    <div className="w-full border-2 border-white-300"></div>
+                    <span className="text-sm font-ppReg bg-white-300 rounded-md p-1">
+                      {msg?.message}
+                    </span>
+                    <div className="w-full border-2 border-white-300"></div>
+                  </FlexRowCenter>
+                );
+              }
+
+              if (msg.role === "agent" || msg.role === "admin") {
+                return (
+                  <MessageListItem
+                    key={i}
+                    role={msg.role}
+                    pos={"left"}
+                    message={msg.message}
+                    date={msg.date}
+                    agent_config={agentConfig}
+                  />
+                );
+              }
+
+              // check if the message created_at is < than
+              // the time the chat was escalated
+              // for test
+
               return (
                 <MessageListItem
                   key={i}
-                  role={msg.role}
-                  pos={"left"}
+                  role={msg.role as any}
+                  pos={"right"}
                   message={msg.message}
-                  date={msg.date}
-                  agent_config={agentConfig}
+                  date={msg.date!}
+                  admin_name={msg.admin_name}
+                  customer_name={msg.customer_name}
                 />
               );
-            }
-
-            return (
-              <MessageListItem
-                key={i}
-                role={msg.role as any}
-                pos={"right"}
-                message={msg.message}
-                date={msg.date}
-                admin_name={msg.admin_name}
-                customer_name={msg.customer_name}
-              />
-            );
-          })}
-
+            })}
+          </FlexColStart>
           {/* spacer */}
-          {tmpMessages.length > 5 && (
-            <div className="w-full h-[350px] bg-red-200"></div>
-          )}
         </FlexColStart>
 
         {/* input control */}
-        <FlexRowStartCenter className="w-full absolute bottom-4 left-0 px-10 z-[10]">
+        <FlexRowStartCenter className="w-full h-[100px] absolute bottom-0 left-0 px-10 z-[10] backdrop-blur-sm">
           <FlexRowCenter className="w-full h-[70px] shadow-xl border-[.5px] border-white-400/30 rounded-full bg-white-100 overflow-hidden">
             <input
               type="text"

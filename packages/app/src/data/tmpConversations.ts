@@ -53,42 +53,8 @@ export const tmpMessages = [
     customer_name: "John Doe",
   },
   {
-    role: "customer",
-    message: "Hi, I'm having trouble accessing my account.",
-    date: new Date(),
-    admin_name: "Admin",
-    customer_name: "John Doe",
-  },
-  {
-    role: "agent",
-    message:
-      "I'm sorry to hear that. Can you please provide me with your account email or username?",
-    date: new Date(),
-    admin_name: "Admin",
-    customer_name: "John Doe",
-  },
-  {
-    role: "customer",
-    message: "Sure, my email is johndoe@example.com.",
-    date: new Date(),
-    admin_name: "Admin",
-    customer_name: "John Doe",
-  },
-  {
-    role: "agent",
-    message:
-      "Thank you. Let me check your account details. Please hold on for a moment.",
-    date: new Date(),
-    admin_name: "Admin",
-    customer_name: "John Doe",
-  },
-  {
-    role: "agent",
-    message:
-      "Your account has been unlocked. You should now be able to log in. Please try and let me know if you encounter any issues.",
-    date: new Date(),
-    admin_name: "Admin",
-    customer_name: "John Doe",
+    is_escalated: true,
+    message: "Conversation escalated.",
   },
   {
     role: "customer",

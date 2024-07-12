@@ -317,10 +317,11 @@ model Conversations {
     created_at            DateTime @default(now())
     conversationAccountId String?
 
-    user          Users                @relation(fields: [userId], references: [id])
-    Agents        Agents?              @relation(fields: [agentId], references: [id])
-    chat_messages ChatMessages[]
-    conv_account  ConversationAccount? @relation(fields: [conversationAccountId], references: [id])
+    user               Users                         @relation(fields: [userId], references: [id])
+    Agents             Agents?                       @relation(fields: [agentId], references: [id])
+    chat_messages      ChatMessages[]
+    conv_account       ConversationAccount?          @relation(fields: [conversationAccountId], references: [id])
+    escalation_periods ConversationEscalationPeriod?
 
     @@index([agentId])
     @@index([userId])
@@ -358,6 +359,21 @@ model ChatMessages {
     @@index([agentId])
     @@index([convId])
     @@map(name: "messages")
+}
+
+// keep track when a specific conversation was escalated to human support
+model ConversationEscalationPeriod {
+    id             String   @id @default(cuid())
+    conv_id        String   @unique
+    agent_id       String
+    is_escalated   Boolean  @default(false)
+    last_msg_index Int? // last message index before escalation
+    start_date     DateTime
+    released_date  DateTime
+
+    conversations Conversations @relation(fields: [conv_id], references: [id])
+
+    @@index([conv_id])
 }
 
 // call logs
