@@ -55,6 +55,7 @@ export const tmpMessages = [
   {
     is_escalated: true,
     message: "Conversation escalated.",
+    date: new Date(),
   },
   {
     role: "customer",
@@ -92,6 +93,11 @@ export const tmpMessages = [
     date: new Date(),
     admin_name: "Admin",
     customer_name: "John Doe",
+  },
+  {
+    is_escalated: true,
+    message: "Conversation escalated.",
+    date: new Date(),
   },
   {
     role: "customer",

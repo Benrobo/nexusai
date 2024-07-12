@@ -3,6 +3,7 @@ import {
   FlexColEnd,
   FlexColStart,
   FlexRowCenter,
+  FlexRowCenterBtw,
   FlexRowEnd,
   FlexRowStart,
   FlexRowStartBtw,
@@ -94,7 +95,7 @@ export default function Inbox() {
               />
             </button>
 
-            <TooltipComp text="Chat Escalation">
+            <TooltipComp text="Escalate Chat?">
               <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
                 <PersonStanding
                   size={20}
@@ -112,13 +113,27 @@ export default function Inbox() {
             {tmpMessages.map((msg, i) => {
               if (msg?.is_escalated) {
                 return (
-                  <FlexRowCenter className="w-full">
-                    <div className="w-full border-2 border-white-300"></div>
-                    <span className="text-sm font-ppReg bg-white-300 rounded-md p-1">
-                      {msg?.message}
-                    </span>
-                    <div className="w-full border-2 border-white-300"></div>
-                  </FlexRowCenter>
+                  <FlexRowCenterBtw className="w-full">
+                    <div className="w-full max-w-[150px] border-[.5px] border-white-400/50"></div>
+                    <TooltipComp
+                      text={`Human support requested on ${dayjs(
+                        msg.is_escalated?.date as any
+                      ).format("DD MMM YYYY")}`}
+                    >
+                      <div className="w-auto bg-white-300/50 rounded-md px-3 py-1 flex-center gap-2 scale-[.85] border-[.5px] border-white-400/30">
+                        <span className="font-ppM text-sm">
+                          Conversation escalated
+                        </span>
+                        <span className="font-ppReg text-xs">
+                          <PersonStanding
+                            size={20}
+                            className="stroke-dark-400"
+                          />
+                        </span>
+                      </div>
+                    </TooltipComp>
+                    <div className="w-full max-w-[150px] border-[.5px] border-white-400/50"></div>
+                  </FlexRowCenterBtw>
                 );
               }
 
@@ -134,10 +149,6 @@ export default function Inbox() {
                   />
                 );
               }
-
-              // check if the message created_at is < than
-              // the time the chat was escalated
-              // for test
 
               return (
                 <MessageListItem
@@ -160,10 +171,14 @@ export default function Inbox() {
           <FlexRowCenter className="w-full h-[70px] shadow-xl border-[.5px] border-white-400/30 rounded-full bg-white-100 overflow-hidden">
             <input
               type="text"
-              className="w-full h-full bg-transparent outline-none px-8 font-ppReg"
+              className="w-full h-full bg-transparent outline-none px-8 font-ppReg disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
               placeholder="Type a message..."
+              disabled={true}
             />
-            <button className="w-[75px] h-[70px] bg-dark-100 text-white-100 flex-center rounded-full enableBounceEffect scale-[.80]">
+            <button
+              className="w-[80px] h-[70px] bg-dark-100 text-white-100 flex-center rounded-full enableBounceEffect scale-[.80] disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
+              disabled={true}
+            >
               <Send size={20} className="stroke-white-100" />
             </button>
           </FlexRowCenter>

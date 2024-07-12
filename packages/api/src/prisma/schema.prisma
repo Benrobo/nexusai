@@ -317,11 +317,11 @@ model Conversations {
     created_at            DateTime @default(now())
     conversationAccountId String?
 
-    user               Users                         @relation(fields: [userId], references: [id])
-    Agents             Agents?                       @relation(fields: [agentId], references: [id])
+    user               Users                          @relation(fields: [userId], references: [id])
+    Agents             Agents?                        @relation(fields: [agentId], references: [id])
     chat_messages      ChatMessages[]
-    conv_account       ConversationAccount?          @relation(fields: [conversationAccountId], references: [id])
-    escalation_periods ConversationEscalationPeriod?
+    conv_account       ConversationAccount?           @relation(fields: [conversationAccountId], references: [id])
+    escalation_periods ConversationEscalationPeriod[]
 
     @@index([agentId])
     @@index([userId])
