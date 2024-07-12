@@ -265,3 +265,59 @@ export const updateChatBotConfigSchema = zod.object({
     })
     .optional(),
 });
+
+// CONVERSATIONS STUFF
+export const signUpConvAccountSchema = zod.object({
+  email: zod
+    .string({
+      required_error: "Email is required",
+    })
+    .email({
+      message: "Invalid email",
+    }),
+  name: zod
+    .string({
+      required_error: "Name is required",
+    })
+    .max(20, "Name must be at most 20 characters"),
+  // optional fields
+  country_code: zod.string().optional(),
+  state: zod.string().optional(),
+  city: zod.string().optional(),
+});
+
+export const verifyConvAccountSchema = zod.object({
+  email: zod
+    .string({
+      required_error: "Email is required",
+    })
+    .email({
+      message: "Invalid email",
+    }),
+  otp: zod
+    .string({
+      required_error: "OTP is required",
+    })
+    .regex(/^[0-9]{6}$/, {
+      message: "Invalid OTP",
+    }),
+});
+
+export const otpConvAccountSignInSchema = zod.object({
+  email: zod
+    .string({
+      required_error: "Email is required",
+    })
+    .email({
+      message: "Invalid email",
+    })
+    .optional(),
+  otp: zod
+    .string({
+      required_error: "OTP is required",
+    })
+    .regex(/^[0-9]{6}$/, {
+      message: "Invalid OTP",
+    })
+    .optional(),
+});

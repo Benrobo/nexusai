@@ -9,6 +9,7 @@ import { Routes } from "./types";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import { inngestServe } from "./inngest/serve.js";
+import env from "./config/env.js";
 
 // init dot env
 dotenv.config();
@@ -43,7 +44,12 @@ export default class App {
       bodyParser.json({
         // @ts-ignore
         // ( just so rawBody is available during WH validation)
-        verify: (req: Request, res: Response, buf) => (req["rawBody"] = buf),
+        verify: (req: Request, res: Response, buf) => {
+          req["rawBody"] = buf;
+          // set serverUrl (would be used globally in the app)
+          req["serverUrl"] = `${env.API_URL}${req.url}`;
+          return req;
+        },
       })
     );
     this.app.use(cookieParser());

@@ -8,6 +8,7 @@ import CheckoutRoute from "./routes/checkout.route.js";
 import internalTest from "./test.js";
 import SubscriptionRoute from "./routes/subscription.route.js";
 import CallLogsRoute from "./routes/call-logs.route.js";
+import ConversationRoute from "./routes/conversation.route.js";
 
 const server = new App();
 
@@ -20,6 +21,7 @@ server.initializedRoutes([
   new CheckoutRoute(),
   new SubscriptionRoute(),
   new CallLogsRoute(),
+  new ConversationRoute(),
 ]);
 server.listen();
 

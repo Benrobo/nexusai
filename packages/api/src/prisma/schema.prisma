@@ -330,10 +330,18 @@ model Conversations {
 }
 
 model ConversationAccount {
-    id         String   @id @default(cuid())
-    email      String
-    name       String
-    verified   Boolean  @default(false)
+    id       String  @id @default(cuid())
+    email    String
+    name     String
+    verified Boolean @default(false)
+
+    refresh_token String?
+
+    // location metadata
+    country_code String?
+    state        String?
+    city         String?
+
     created_at DateTime @default(now())
 
     conversations Conversations[]

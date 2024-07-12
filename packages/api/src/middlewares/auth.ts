@@ -4,13 +4,11 @@ import { RESPONSE_CODE, type IReqObject } from "../types/index.js";
 import prisma from "../prisma/prisma.js";
 import GoogleAuth, { googleClient } from "../lib/google.auth.js";
 import type { TokenInfo, Credentials } from "google-auth-library";
-import env from "../config/env.js";
+import JWT from "../lib/jwt.js";
+import logger from "../config/logger.js";
 
 export function isAuthenticated(fn: Function) {
   return async (req: Request & IReqObject, res: Response) => {
-    // set serverUrl (would be used globally in the app)
-    req["serverUrl"] = `${env.API_URL}${req.url}`;
-
     const token = req.cookies["token"];
     const userId = req.cookies["_uId"];
 
@@ -110,5 +108,48 @@ export function isAuthenticated(fn: Function) {
     };
 
     return await fn(req, res);
+  };
+}
+
+// conversation account middleware
+export function isConvAcctAuthenticated(fn: Function) {
+  return async (req: Request & IReqObject, res: Response) => {
+    const token = req.cookies["conv_token"]; // access_token
+
+    if (!token) {
+      throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
+    }
+
+    let decoded: {
+      uId: string;
+    } | null = null;
+    try {
+      // decode jwt token
+      decoded = (await JWT.verifyToken(token)) as { uId: string };
+
+      // check if user exists in our db
+      const user = await prisma.conversationAccount.findFirst({
+        where: {
+          id: decoded.uId,
+        },
+      });
+
+      if (!user) {
+        throw new HttpException(
+          RESPONSE_CODE.UNAUTHORIZED,
+          "Unauthorized, conversation account doesn't exists",
+          401
+        );
+      }
+
+      req["user"] = {
+        id: user.id,
+      };
+
+      return await fn(req, res);
+    } catch (e: any) {
+      logger.error(`Error verifying token: ${e.message}`);
+      throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
+    }
   };
 }

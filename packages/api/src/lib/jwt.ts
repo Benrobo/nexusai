@@ -23,22 +23,15 @@ export default class JWT {
   }
 
   public async getToken(req: Request) {
-    // // get token (if i decide to use headers)
-    // const authHeader = req.headers["authorization"];
-    // const token = authHeader?.split(" ")[1];
     const token = req.cookies["token"];
-
     if (!token) {
       return null;
     }
-
     // verify token
     const decoded = await JWT.verifyToken(token);
-
     if (!decoded) {
       return null;
     }
-
     return decoded as DecodedToken;
   }
 }
