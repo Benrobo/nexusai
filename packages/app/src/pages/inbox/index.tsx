@@ -1,4 +1,5 @@
 import {
+  FlexColCenter,
   FlexColEnd,
   FlexColStart,
   FlexRowEnd,
@@ -6,7 +7,8 @@ import {
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "@/components/Flex";
-import { ElipsisVertical } from "@/components/icons";
+import { ElipsisVertical, PersonStanding } from "@/components/icons";
+import TooltipComp from "@/components/TooltipComp";
 import {
   Select,
   SelectContent,
@@ -77,14 +79,44 @@ export default function Inbox() {
                 className="stroke-white-400 rotate-90"
               />
             </button>
+
+            <TooltipComp text="Chat Escalation">
+              <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
+                <PersonStanding
+                  size={20}
+                  strokeWidth={3}
+                  className="stroke-white-400"
+                />
+              </button>
+            </TooltipComp>
           </FlexRowEnd>
         </FlexRowStartCenter>
       </FlexColStart>
 
       {/* user info */}
-      <FlexColStart className="w-full h-screen max-w-[350px] gap-0 border-l-[.5px] border-l-white-400/30"></FlexColStart>
+      <FlexColStart className="w-full h-screen max-w-[350px] gap-0 border-l-[.5px] border-l-white-400/30">
+        <FlexColCenter className="w-full h-auto min-h-[20%] gap-1">
+          <img
+            width={100}
+            className="rounded-full "
+            src={`https://api.dicebear.com/9.x/initials/svg?seed=ben`}
+            alt="user"
+          />
+          <p className="text-lg font-ppB text-dark-100">John Doe</p>
+          <p className="text-sm font-ppReg text-white-400">Sent a week ago</p>
+        </FlexColCenter>
+
+        <br />
+        <FlexColStart className="w-full border-t-[.5px] border-t-white-400/30 px-4 py-4">
+          <p className="text-dark-400 font-ppB text">User Details</p>
+        </FlexColStart>
+      </FlexColStart>
     </FlexRowStart>
   );
+}
+
+function DetailsCard() {
+  return <FlexRowStartBtw className="w-full"></FlexRowStartBtw>;
 }
 
 interface IMessageItemProps {
