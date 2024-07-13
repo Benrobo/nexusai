@@ -178,6 +178,27 @@ export class ConversationAuthController {
     }
   }
 
+  public async getConversationAccount(
+    req: Request & IReqObject,
+    res: Response
+  ) {
+    const user = req.user;
+
+    const account = await prisma.conversationAccount.findFirst({
+      where: {
+        id: user.id,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Conversation account retrieved successfully",
+      200,
+      account
+    );
+  }
+
   private setCookie(name: string, value: string, res: Response) {
     res.cookie(name, value, {
       httpOnly: true,

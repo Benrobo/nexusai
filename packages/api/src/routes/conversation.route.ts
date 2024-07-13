@@ -3,7 +3,10 @@ import useCatchErrors from "../lib/error.js";
 import ConversationController, {
   ConversationAuthController,
 } from "../controller/conversation.controller.js";
-import { isAuthenticated } from "../middlewares/auth.js";
+import {
+  isAuthenticated,
+  isConvAcctAuthenticated,
+} from "../middlewares/auth.js";
 
 export default class ConversationRoute {
   router = express.Router();
@@ -27,6 +30,17 @@ export default class ConversationRoute {
       )
     );
 
+    // Conversation Account Section
+    this.router.get(
+      `${this.path}/account`,
+      useCatchErrors(
+        isConvAcctAuthenticated(
+          this.convAuthController.getConversationAccount.bind(
+            this.convAuthController
+          )
+        )
+      )
+    );
     // signup conversation acct
     this.router.post(
       `${this.path}/auth/signup`,

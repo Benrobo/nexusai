@@ -138,13 +138,13 @@ export default function Inbox() {
               if (msg?.is_escalated) {
                 return (
                   <FlexRowCenterBtw className="w-full mt-5 mb-3">
-                    <div className="w-full max-w-[150px] border-[.5px] border-white-400/50"></div>
+                    <div className="w-full border-[.5px] border-white-400/50"></div>
                     <TooltipComp
                       text={`Human support requested on ${dayjs(
                         msg.is_escalated?.date as any
                       ).format("DD MMM YYYY")}`}
                     >
-                      <div className="w-auto bg-white-300/50 rounded-md px-3 py-1 flex-center gap-2 scale-[.85] border-[.5px] border-white-400/30">
+                      <div className="w-[250px] bg-white-300/50 rounded-md px-3 py-1 flex-center gap-2 scale-[.85] border-[.5px] border-white-400/30">
                         <span className="font-ppM text-sm">
                           Conversation escalated
                         </span>
@@ -156,7 +156,7 @@ export default function Inbox() {
                         </span>
                       </div>
                     </TooltipComp>
-                    <div className="w-full max-w-[150px] border-[.5px] border-white-400/50"></div>
+                    <div className="w-full border-[.5px] border-white-400/50"></div>
                   </FlexRowCenterBtw>
                 );
               }
