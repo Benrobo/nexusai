@@ -231,6 +231,20 @@ export default class ConversationController {
       agent_id: agent.id,
     });
 
+    // check if conversation has been escalated to admin
+    const convEscalated = await prisma.conversationEscalationPeriod.findFirst({
+      where: {
+        conv_id: data.conv_id,
+      },
+    });
+
+    if (convEscalated && convEscalated?.is_escalated) {
+      logger.info(
+        `[Conversation]: ${data.conv_id} has been escalated to admin`
+      );
+      return;
+    }
+
     const knowledgebase = await prisma.knowledgeBase.findMany({
       where: {
         userId: agent.userId,
