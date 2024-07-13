@@ -214,20 +214,21 @@ export default class ConversationController {
     const agent = conversation.agents;
 
     // check if agent is activated
-    if (!agent.activated) {
-      logger.error(`[Agent]: ${agent.name} is not activated.`);
-      throw new HttpException(
-        RESPONSE_CODE.BAD_REQUEST,
-        `${agent.name} is currently unavailable`,
-        403
-      );
-    }
+    // if (!agent.activated) {
+    //   logger.error(`[Agent]: ${agent.name} is not activated.`);
+    //   throw new HttpException(
+    //     RESPONSE_CODE.BAD_REQUEST,
+    //     `${agent.name} is currently unavailable`,
+    //     403
+    //   );
+    // }
 
     // store user query
     await this.storeChatMessage({
       conv_id: data.conv_id,
       role: "customer",
       content: data.query,
+      agent_id: agent.id,
     });
 
     const knowledgebase = await prisma.knowledgeBase.findMany({
