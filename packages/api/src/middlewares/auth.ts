@@ -112,7 +112,7 @@ export function isAuthenticated(fn: Function) {
 }
 
 // conversation account middleware
-export function isConvAcctAuthenticated(fn: Function) {
+export function isWidgetAccountAuthenticated(fn: Function) {
   return async (req: Request & IReqObject, res: Response) => {
     const token = req.cookies["conv_token"]; // access_token
 
@@ -128,7 +128,7 @@ export function isConvAcctAuthenticated(fn: Function) {
       // decode jwt token
       decoded = (await JWT.verifyToken(token)) as { uId: string };
       // check if user exists in our db
-      const user = await prisma.conversationAccount.findFirst({
+      const user = await prisma.chatWidgetAccount.findFirst({
         where: {
           id: decoded.uId,
         },
@@ -151,6 +151,27 @@ export function isConvAcctAuthenticated(fn: Function) {
       console.log(e);
       logger.error(`Error verifying token: ${e.message}`);
       throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
+    }
+  };
+}
+
+// unified middleware to handle both middlewares above
+export function dualUserAuthenticator(fn: Function) {
+  return async (req: Request & IReqObject, res: Response) => {
+    const headers = req.headers;
+    const userAccount = headers["x-nexus-admin-account"];
+    const widgetUserAccount = headers["x-nexus-widget-account"];
+
+    if (userAccount) {
+      return await isAuthenticated(fn)(req, res);
+    } else if (widgetUserAccount) {
+      return await isWidgetAccountAuthenticated(fn)(req, res);
+    } else {
+      throw new HttpException(
+        RESPONSE_CODE.UNAUTHORIZED,
+        "Unauthorized, token not found in headers",
+        401
+      );
     }
   };
 }

@@ -1,17 +1,15 @@
 import express from "express";
 import useCatchErrors from "../lib/error.js";
-import ConversationController, {
-  ConversationAuthController,
-} from "../controller/conversation.controller.js";
+import ConversationController from "../controller/conversation.controller.js";
 import {
+  dualUserAuthenticator,
   isAuthenticated,
-  isConvAcctAuthenticated,
+  isWidgetAccountAuthenticated,
 } from "../middlewares/auth.js";
 
 export default class ConversationRoute {
   router = express.Router();
   conversationController = new ConversationController();
-  convAuthController = new ConversationAuthController();
   path = "/conversation";
 
   constructor() {
@@ -43,12 +41,12 @@ export default class ConversationRoute {
       )
     );
 
-    // get all conversations tied to a conversation account
+    // get all conversations tied to a widget user account
     this.router.get(
-      `${this.path}s/conv-account`,
+      `${this.path}s/widget-account`,
       useCatchErrors(
-        isConvAcctAuthenticated(
-          this.conversationController.getAllConversationsByConvAccount.bind(
+        isWidgetAccountAuthenticated(
+          this.conversationController.getAllConversationsByWidgetAccount.bind(
             this.conversationController
           )
         )
@@ -59,7 +57,7 @@ export default class ConversationRoute {
     this.router.post(
       `${this.path}`,
       useCatchErrors(
-        isConvAcctAuthenticated(
+        isWidgetAccountAuthenticated(
           this.conversationController.createConversation.bind(
             this.conversationController
           )
@@ -67,29 +65,15 @@ export default class ConversationRoute {
       )
     );
 
-    // Conversation Account Section
-    this.router.get(
-      `${this.path}/account`,
+    // process interaction
+    this.router.post(
+      `${this.path}/process/:conversation_id`,
       useCatchErrors(
-        isConvAcctAuthenticated(
-          this.convAuthController.getConversationAccount.bind(
-            this.convAuthController
+        dualUserAuthenticator(
+          this.conversationController.processConversation.bind(
+            this.conversationController
           )
         )
-      )
-    );
-    // signup conversation acct
-    this.router.post(
-      `${this.path}/auth/signup`,
-      useCatchErrors(
-        this.convAuthController.signUp.bind(this.convAuthController)
-      )
-    );
-
-    this.router.post(
-      `${this.path}/auth/signin`,
-      useCatchErrors(
-        this.convAuthController.otpSignIn.bind(this.convAuthController)
       )
     );
   }

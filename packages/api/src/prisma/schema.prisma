@@ -316,17 +316,17 @@ model Conversations {
     created_at            DateTime @default(now())
     conversationAccountId String?
 
-    Agents             Agents?                        @relation(fields: [agentId], references: [id])
-    chat_messages      ChatMessages[]
-    conv_account       ConversationAccount?           @relation(fields: [conversationAccountId], references: [id])
-    escalation_periods ConversationEscalationPeriod[]
+    Agents              Agents?                        @relation(fields: [agentId], references: [id])
+    chat_messages       ChatMessages[]
+    widget_user_account ChatWidgetAccount?             @relation(fields: [conversationAccountId], references: [id])
+    escalation_periods  ConversationEscalationPeriod[]
 
     @@index([agentId])
     @@index([conversationAccountId])
     @@map(name: "conversations")
 }
 
-model ConversationAccount {
+model ChatWidgetAccount {
     id       String  @id @default(cuid())
     email    String
     name     String
@@ -343,7 +343,7 @@ model ConversationAccount {
 
     conversations Conversations[]
 
-    @@map(name: "conversation_account")
+    @@map(name: "chat_widget_account")
 }
 
 model ChatMessages {
