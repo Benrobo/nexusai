@@ -321,3 +321,9 @@ export const otpConvAccountSignInSchema = zod.object({
     })
     .optional(),
 });
+
+export const createConversationSchema = zod.object({
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
+  }),
+});

@@ -5,3 +5,7 @@ export type ConvSignupPayload = {
   state?: string;
   city?: string;
 };
+
+export type CreateConversationPayload = {
+  agent_id: string;
+};

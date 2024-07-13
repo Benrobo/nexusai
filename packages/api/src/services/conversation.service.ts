@@ -100,7 +100,14 @@ export default class ConversationService {
     // get all conversations
   }
 
-  public async createConversation(data: any): Promise<any> {
-    // create conversation
+  public async createConversation(data: { agent_id: string; userId: string }) {
+    const conversation = await prisma.conversations.create({
+      data: {
+        agentId: data.agent_id,
+        conversationAccountId: data.userId,
+      },
+    });
+
+    return conversation;
   }
 }

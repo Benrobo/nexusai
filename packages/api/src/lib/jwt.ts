@@ -11,10 +11,10 @@ export default class JWT {
   public static async generateToken(payload: any, type: "access" | "refresh") {
     // generate token
     if (type === "access") {
-      return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "2hr" });
+      return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "60hr" });
     }
-    // 1 month
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1m" });
+    // 12 month
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "12m" });
   }
 
   public static async verifyToken(token: string) {

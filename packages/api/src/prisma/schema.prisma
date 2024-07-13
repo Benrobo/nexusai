@@ -99,7 +99,6 @@ model Users {
     role              Role                    @default(user)
     google_ref_token  String?
     createdAt         DateTime                @default(now())
-    conversations     Conversations[]
     used_numbers      UsedPhoneNumbers[]
     purchased_numbers PurchasedPhoneNumbers[]
     agents            Agents[]
@@ -310,21 +309,19 @@ model Integration {
     @@map(name: "integrations")
 }
 
+// Conversation can only be initiated from a conversation account via (chat widget)
 model Conversations {
     id                    String   @id @default(cuid())
     agentId               String
-    userId                String
     created_at            DateTime @default(now())
     conversationAccountId String?
 
-    user               Users                          @relation(fields: [userId], references: [id])
     Agents             Agents?                        @relation(fields: [agentId], references: [id])
     chat_messages      ChatMessages[]
     conv_account       ConversationAccount?           @relation(fields: [conversationAccountId], references: [id])
     escalation_periods ConversationEscalationPeriod[]
 
     @@index([agentId])
-    @@index([userId])
     @@index([conversationAccountId])
     @@map(name: "conversations")
 }

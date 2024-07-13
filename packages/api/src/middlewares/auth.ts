@@ -123,10 +123,10 @@ export function isConvAcctAuthenticated(fn: Function) {
     let decoded: {
       uId: string;
     } | null = null;
+
     try {
       // decode jwt token
       decoded = (await JWT.verifyToken(token)) as { uId: string };
-
       // check if user exists in our db
       const user = await prisma.conversationAccount.findFirst({
         where: {
@@ -148,6 +148,7 @@ export function isConvAcctAuthenticated(fn: Function) {
 
       return await fn(req, res);
     } catch (e: any) {
+      console.log(e);
       logger.error(`Error verifying token: ${e.message}`);
       throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
     }

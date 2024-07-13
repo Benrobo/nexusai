@@ -19,11 +19,48 @@ export default class ConversationRoute {
   }
 
   initializeRoutes() {
+    // get all conversations created by admin / owner of the account
     this.router.get(
-      `${this.path}`,
+      `${this.path}s/admin`,
       useCatchErrors(
         isAuthenticated(
-          this.conversationController.getConversations.bind(
+          this.conversationController.getAllConversations.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
+    // get all conversations created by admin / owner of the account filtered by agent
+    this.router.get(
+      `${this.path}s/admin/:agent_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.conversationController.getConversationsByAgent.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
+    // get all conversations tied to a conversation account
+    this.router.get(
+      `${this.path}s/conv-account`,
+      useCatchErrors(
+        isConvAcctAuthenticated(
+          this.conversationController.getAllConversationsByConvAccount.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
+    // create conversation
+    this.router.post(
+      `${this.path}`,
+      useCatchErrors(
+        isConvAcctAuthenticated(
+          this.conversationController.createConversation.bind(
             this.conversationController
           )
         )
