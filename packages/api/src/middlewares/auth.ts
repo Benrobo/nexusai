@@ -147,10 +147,15 @@ export function isWidgetAccountAuthenticated(fn: Function) {
       };
 
       return await fn(req, res);
-    } catch (e: any) {
-      console.log(e);
-      logger.error(`Error verifying token: ${e.message}`);
-      throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
+    } catch (err: any) {
+      console.log(err);
+      const code = RESPONSE_CODE[err.code as any];
+      throw new HttpException(
+        // @ts-expect-error
+        RESPONSE_CODE[code as any] ?? RESPONSE_CODE.UNAUTHORIZED,
+        err?.message ?? "Unauthorized",
+        401
+      );
     }
   };
 }

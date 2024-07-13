@@ -10,9 +10,15 @@ import ConversationService from "../services/conversation.service.js";
 import sendResponse from "../lib/sendResponse.js";
 import prisma from "../prisma/prisma.js";
 import HttpException from "../lib/exception.js";
+import AIService from "../services/AI.service.js";
+import { chatbotTemplatePrompt } from "../data/agent/prompt.js";
+import GeminiService from "../services/gemini.service.js";
+import logger from "../config/logger.js";
 
 export default class ConversationController {
   private conversationService = new ConversationService();
+  private aiService = new AIService();
+  private geminiService = new GeminiService();
   constructor() {}
 
   public getConversationById(req: Request & IReqObject, res: Response) {
@@ -168,14 +174,14 @@ export default class ConversationController {
 
     if (chatwidgetAccount && !userAccount) {
       // agent -> customer  | customer -> agent
-      await this.manageCustomerAgentInteraction(req, res, {
+      return await this.manageCustomerAgentInteraction(req, res, {
         query: payload.query,
         conv_id: conversation_id,
       });
     }
     if (userAccount && !chatwidgetAccount) {
       // customer -> admin | admin -> customer
-      await this.manageCustomerAdminInteraction(req, res, {
+      return await this.manageCustomerAdminInteraction(req, res, {
         query: payload.query,
         conv_id: conversation_id,
       });
@@ -187,7 +193,119 @@ export default class ConversationController {
     req: Request & IReqObject,
     res: Response,
     data: { query: string; conv_id: string }
-  ) {}
+  ) {
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: data.conv_id,
+      },
+      include: {
+        agents: {
+          select: {
+            activated: true,
+            id: true,
+            type: true,
+            userId: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const agent = conversation.agents;
+
+    // check if agent is activated
+    if (!agent.activated) {
+      logger.error(`[Agent]: ${agent.name} is not activated.`);
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        `${agent.name} is currently unavailable`,
+        403
+      );
+    }
+
+    // store user query
+    await this.storeChatMessage({
+      conv_id: data.conv_id,
+      role: "customer",
+      content: data.query,
+    });
+
+    const knowledgebase = await prisma.knowledgeBase.findMany({
+      where: {
+        userId: agent.userId,
+      },
+      include: {
+        linked_knowledge_base: {
+          select: {
+            kb_id: true,
+            agentId: true,
+          },
+        },
+      },
+    });
+
+    const data_source_ids = [];
+
+    for (const kb of knowledgebase) {
+      const linked_kb = kb.linked_knowledge_base.find(
+        (d) => d.agentId === agent.id
+      );
+      data_source_ids.push(linked_kb.kb_id);
+    }
+
+    const similarities = await this.aiService.vectorSimilaritySearch({
+      user_input: data.query,
+      data_source_ids,
+      agent_id: agent.id,
+    });
+
+    const closestMatch = similarities
+      .slice(0, 2)
+      .map((d) => d.content)
+      .join("\n");
+
+    let chatHistoryTxt = "";
+    const history = await this.getChatHistory({
+      conv_id: data.conv_id,
+    });
+
+    history.slice(-5).forEach((h) => {
+      chatHistoryTxt += `[${h.role}]: ${h.message}\n`;
+    });
+
+    const systemInstruction = chatbotTemplatePrompt({
+      agentName: agent.name,
+      context: closestMatch.trim(),
+      history: chatHistoryTxt,
+      query: data.query,
+    });
+
+    const aiResp = await this.geminiService.callAI({
+      instruction: systemInstruction,
+      user_prompt: data.query,
+    });
+
+    const aiMsg = aiResp.data;
+
+    // agent
+    await this.storeChatMessage({
+      conv_id: data.conv_id,
+      role: "agent",
+      content: aiMsg,
+      agent_id: agent.id,
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Conversation processed successfully",
+      200,
+      {
+        user_query: data.query,
+        response: aiMsg,
+      }
+    );
+  }
 
   // CUSTOMER -> ADMIN | ADMIN -> CUSTOMER
   public async manageCustomerAdminInteraction(
@@ -195,6 +313,50 @@ export default class ConversationController {
     res: Response,
     data: { query: string; conv_id: string }
   ) {}
+
+  private async storeChatMessage(props: {
+    conv_id: string;
+    role: "agent" | "admin" | "customer";
+    content: string;
+    from?: string | null;
+    to?: string | null;
+    agent_id?: string | null;
+  }) {
+    const message = await prisma.chatMessages.create({
+      data: {
+        convId: props.conv_id,
+        role: props.role,
+        content: props.content,
+        fromId: props.from,
+        toId: props.to,
+        agentId: props.agent_id,
+      },
+    });
+
+    return message;
+  }
+
+  private async getChatHistory(props: { conv_id: string }) {
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: props.conv_id,
+      },
+      include: {
+        chat_messages: {
+          orderBy: {
+            created_at: "asc",
+          },
+        },
+      },
+    });
+
+    return conversation.chat_messages.map((d) => {
+      return {
+        role: d.role,
+        message: d.content,
+      };
+    });
+  }
 }
 
 // create conversation account (mean't for users interracting via chatbot widget)

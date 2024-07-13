@@ -512,7 +512,7 @@ export default class AIService {
       userMsgEmbedding = await this.geminiService.generateEmbedding(user_input);
 
       await redis.set(user_input, JSON.stringify(userMsgEmbedding));
-      await redis.expire(user_input, 60 * 30); // expire in 30mins
+      await redis.expire(user_input, 60 * 5); // expire in 5mins
     } else {
       userMsgEmbedding = JSON.parse(cachedEmbedding);
     }
@@ -558,7 +558,7 @@ export default class AIService {
     }
   }
 
-  private async getChatHistoryTxt(
+  private async getCallLogHistory(
     refId: string,
     user_input?: string,
     shouldSlice?: boolean
@@ -625,7 +625,7 @@ export default class AIService {
 
   // ANTI_THEFT call log sentiment analysis.
   public async determineATLogSentimentAnalysis(refId: string) {
-    const transcript = await this.getChatHistoryTxt(refId, "", false);
+    const transcript = await this.getCallLogHistory(refId, "", false);
     const variations = getSentimentVariations("ANTI_THEFT", true);
     const analysis = await this.geminiService.functionCall({
       prompt: transcript,
@@ -715,7 +715,7 @@ export default class AIService {
 
   // SALES_ASSISTANT call log sentiment analysis.
   public async determineSALogSentimentAnalysis(refId: string) {
-    const transcript = await this.getChatHistoryTxt(refId, "", false);
+    const transcript = await this.getCallLogHistory(refId, "", false);
     const variations = getSentimentVariations("SALES_ASSISTANT", true);
     const analysis = await this.geminiService.functionCall({
       prompt: transcript,
@@ -808,7 +808,7 @@ export default class AIService {
     const { user_input, agent_info, cached_conv_info } = props;
     let resp = { msg: "", ended: false };
 
-    const mainHistory = await this.getChatHistoryTxt(
+    const mainHistory = await this.getCallLogHistory(
       cached_conv_info.callRefId,
       user_input
     );
@@ -1082,7 +1082,7 @@ export default class AIService {
 
     const agentName = agent.name;
 
-    const mainHistory = await this.getChatHistoryTxt(
+    const mainHistory = await this.getCallLogHistory(
       cached_conv_info.callRefId,
       user_input,
       true
