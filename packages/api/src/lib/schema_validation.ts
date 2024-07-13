@@ -328,4 +328,8 @@ export const createConversationSchema = zod.object({
   }),
 });
 
-// export const
+export const processConversationSchema = zod.object({
+  query: zod.string({
+    required_error: "Query is required",
+  }),
+});

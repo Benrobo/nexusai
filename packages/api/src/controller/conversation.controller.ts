@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { RESPONSE_CODE, type IReqObject } from "../types/index.js";
 import ZodValidation from "../lib/zodValidation.js";
-import { createConversationSchema } from "../lib/schema_validation.js";
+import {
+  createConversationSchema,
+  processConversationSchema,
+} from "../lib/schema_validation.js";
 import type { CreateConversationPayload } from "../types/conversation.type.js";
 import ConversationService from "../services/conversation.service.js";
 import sendResponse from "../lib/sendResponse.js";
@@ -133,6 +136,23 @@ export default class ConversationController {
   public async processConversation(req: Request & IReqObject, res: Response) {
     const user = req.user;
     const conversation_id = req.params.conversation_id;
+    const payload = req.body as { query: string };
+
+    await ZodValidation(processConversationSchema, payload, req.serverUrl);
+
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: conversation_id,
+      },
+    });
+
+    if (!conversation) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Conversation not found",
+        404
+      );
+    }
 
     const userAccount = await prisma.users.findFirst({
       where: {
@@ -145,18 +165,35 @@ export default class ConversationController {
         id: user.id,
       },
     });
+
+    if (chatwidgetAccount && !userAccount) {
+      // agent -> customer  | customer -> agent
+      await this.manageCustomerAgentInteraction(req, res, {
+        query: payload.query,
+        conv_id: conversation_id,
+      });
+    }
+    if (userAccount && !chatwidgetAccount) {
+      // customer -> admin | admin -> customer
+      await this.manageCustomerAdminInteraction(req, res, {
+        query: payload.query,
+        conv_id: conversation_id,
+      });
+    }
   }
 
   // CUSTOMER -> AGENT | AGENT -> CUSTOMER
   public async manageCustomerAgentInteraction(
     req: Request & IReqObject,
-    res: Response
+    res: Response,
+    data: { query: string; conv_id: string }
   ) {}
 
   // CUSTOMER -> ADMIN | ADMIN -> CUSTOMER
   public async manageCustomerAdminInteraction(
     req: Request & IReqObject,
-    res: Response
+    res: Response,
+    data: { query: string; conv_id: string }
   ) {}
 }
 
