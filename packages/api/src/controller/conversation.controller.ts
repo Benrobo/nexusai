@@ -142,7 +142,7 @@ export default class ConversationController {
   public async processConversation(req: Request & IReqObject, res: Response) {
     const user = req.user;
     const conversation_id = req.params.conversation_id;
-    const payload = req.body as { query: string };
+    const payload = req.body as { query: string; response: string };
 
     await ZodValidation(processConversationSchema, payload, req.serverUrl);
 
@@ -181,8 +181,8 @@ export default class ConversationController {
     }
     if (userAccount && !chatwidgetAccount) {
       // customer -> admin | admin -> customer
-      return await this.manageCustomerAdminInteraction(req, res, {
-        query: payload.query,
+      return await this.manageAdminCustomerInteraction(req, res, {
+        response: payload.response,
         conv_id: conversation_id,
       });
     }
@@ -323,11 +323,70 @@ export default class ConversationController {
   }
 
   // CUSTOMER -> ADMIN | ADMIN -> CUSTOMER
-  public async manageCustomerAdminInteraction(
+  public async manageAdminCustomerInteraction(
     req: Request & IReqObject,
     res: Response,
-    data: { query: string; conv_id: string }
-  ) {}
+    data: { response: string; conv_id: string }
+  ) {
+    if (!data.response || data.response.length === 0) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Response is empty",
+        400
+      );
+    }
+
+    const convEscalated = await prisma.conversationEscalationPeriod.findFirst({
+      where: {
+        conv_id: data.conv_id,
+      },
+    });
+
+    if (!convEscalated || !convEscalated.is_escalated) {
+      logger.error(
+        `[Conversation | Admin]: ${data.conv_id} has not been escalated to admin`
+      );
+      throw new HttpException(
+        RESPONSE_CODE.CONVERSATION_NOT_ESCALATED,
+        "Conversation not escalated to admin",
+        403
+      );
+    }
+
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: data.conv_id,
+      },
+      include: {
+        agents: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    const agent = conversation.agents;
+
+    // store admin response
+    await this.storeChatMessage({
+      conv_id: data.conv_id,
+      role: "admin",
+      content: data.response,
+      agent_id: agent.id,
+    });
+
+    // send response to customer
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Conversation processed successfully",
+      200,
+      {
+        response: data.response,
+      }
+    );
+  }
 
   private async storeChatMessage(props: {
     conv_id: string;

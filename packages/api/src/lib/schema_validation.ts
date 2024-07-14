@@ -329,7 +329,14 @@ export const createConversationSchema = zod.object({
 });
 
 export const processConversationSchema = zod.object({
-  query: zod.string({
-    required_error: "Query is required",
-  }),
+  query: zod
+    .string({
+      required_error: "Query is required",
+    })
+    .optional(),
+  response: zod
+    .string({
+      required_error: "Response is required",
+    })
+    .optional(),
 });
