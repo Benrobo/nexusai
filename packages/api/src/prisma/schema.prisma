@@ -367,12 +367,11 @@ model ChatMessages {
 // keep track when a specific conversation was escalated to human support
 model ConversationEscalationPeriod {
     id             String    @id @default(cuid())
-    conv_id        String    @unique
+    conv_id        String
     agent_id       String
     is_escalated   Boolean   @default(false)
     last_msg_index Int? // last message index before escalation
     start_date     DateTime?
-    released_date  DateTime?
 
     conversations Conversations @relation(fields: [conv_id], references: [id])
 

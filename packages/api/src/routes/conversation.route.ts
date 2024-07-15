@@ -65,6 +65,18 @@ export default class ConversationRoute {
       )
     );
 
+    // get conversation messages
+    this.router.get(
+      `${this.path}/messages/admin/:conversation_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.conversationController.getChatMessagesAdmin.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
     // escalate conversation
     this.router.patch(
       `${this.path}/escalate/:conversation_id`,
