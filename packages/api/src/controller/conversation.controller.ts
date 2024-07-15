@@ -678,7 +678,7 @@ export default class ConversationController {
     const last_msg_index = allMsg.map((d) => d.id).length - 1;
 
     if (
-      last_msg_index === lastEscalation?.last_msg_index ||
+      last_msg_index === lastEscalation?.last_msg_index &&
       lastEscalation?.is_escalated
     ) {
       logger.info("[Conversation]: Conversation de-escalated");
