@@ -65,6 +65,18 @@ export default class ConversationRoute {
       )
     );
 
+    // escalate conversation
+    this.router.patch(
+      `${this.path}/escalate/:conversation_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.conversationController.escalateConversation.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
     // process interaction
     this.router.post(
       `${this.path}/process/:conversation_id`,
