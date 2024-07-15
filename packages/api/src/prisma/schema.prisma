@@ -350,8 +350,7 @@ model ChatMessages {
     id         String       @id @default(cuid())
     convId     String
     role       ChatMsgRoles
-    fromId     String?
-    toId       String?
+    senderId   String?
     content    String
     created_at DateTime     @default(now())
     agentId    String?
@@ -359,8 +358,7 @@ model ChatMessages {
 
     conversations Conversations @relation(fields: [convId], references: [id])
 
-    @@index([fromId])
-    @@index([toId])
+    @@index([senderId])
     @@index([agentId])
     @@index([convId])
     @@map(name: "messages")

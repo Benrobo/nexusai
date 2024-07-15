@@ -31,27 +31,88 @@ export default class ConversationController {
     res: Response
   ) {
     const user = req.user;
-
     const conversations = await prisma.conversations.findMany({
       where: {
         conversationAccountId: user.id,
       },
     });
 
-    //! format the response sent to client
-    // ! should contain last message, date, sender / receiver name, etc
+    console.log(user);
+
+    const convWithMessages = [];
+    for (const nc of conversations) {
+      const lastMsg = await prisma.chatMessages.findFirst({
+        where: {
+          convId: nc.id,
+          // senderId: user.id,
+        },
+        orderBy: {
+          created_at: "desc",
+        },
+      });
+
+      const sender =
+        lastMsg?.role === "admin"
+          ? await prisma.users.findFirst({
+              where: {
+                uId: lastMsg.senderId,
+              },
+              select: {
+                id: true,
+                fullname: true,
+                avatar: true,
+                email: true,
+              },
+            })
+          : lastMsg?.role === "customer"
+            ? await prisma.chatWidgetAccount.findFirst({
+                where: {
+                  id: lastMsg.senderId,
+                },
+                select: {
+                  id: true,
+                  name: true,
+                },
+              })
+            : await prisma.agents.findFirst({
+                where: {
+                  id: lastMsg?.agentId,
+                },
+                select: {
+                  id: true,
+                  name: true,
+                },
+              });
+
+      if (lastMsg) {
+        convWithMessages.push({
+          ...nc,
+          lastMsg: {
+            message: lastMsg.content,
+            date: lastMsg.created_at,
+            sender: {
+              ...sender,
+              role: lastMsg.role,
+            },
+          },
+        });
+      }
+    }
 
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Conversations retrieved successfully",
       200,
-      conversations
+      convWithMessages
     );
   }
 
   // Admin / Owner Specific
-  public async getAllConversations(req: Request & IReqObject, res: Response) {
+  public async getAllConversationsAdmin(
+    req: Request & IReqObject,
+    res: Response
+  ) {
     const user = req.user;
 
     const conversations = await prisma.conversations.findMany();
@@ -61,17 +122,77 @@ export default class ConversationController {
       },
     });
 
-    //! filter out conversations that belong to the user created agents
+    const newConversations = [];
+    for (const ag of userSpecificAgents) {
+      const conv = conversations.filter((c) => c.agentId === ag.id);
+      newConversations.push(...conv);
+    }
 
-    //! format the response sent to client
-    // ! should contain last message, date, sender / receiver name, etc
+    const convWithMessages = [];
+    for (const nc of newConversations) {
+      const lastMsg = await prisma.chatMessages.findFirst({
+        where: {
+          convId: nc.id,
+        },
+        orderBy: {
+          created_at: "desc",
+        },
+      });
+
+      const sender =
+        lastMsg?.role === "admin"
+          ? await prisma.users.findFirst({
+              where: {
+                uId: lastMsg.senderId,
+              },
+              select: {
+                id: true,
+                fullname: true,
+                avatar: true,
+                email: true,
+              },
+            })
+          : lastMsg?.role === "customer"
+            ? await prisma.chatWidgetAccount.findFirst({
+                where: {
+                  id: lastMsg.senderId,
+                },
+                select: {
+                  id: true,
+                  name: true,
+                },
+              })
+            : await prisma.agents.findFirst({
+                where: {
+                  id: lastMsg?.agentId,
+                },
+                select: {
+                  id: true,
+                  name: true,
+                },
+              });
+
+      if (lastMsg) {
+        convWithMessages.push({
+          ...nc,
+          lastMsg: {
+            message: lastMsg.content,
+            date: lastMsg.created_at,
+            sender: {
+              ...sender,
+              role: lastMsg.role,
+            },
+          },
+        });
+      }
+    }
 
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Conversations retrieved successfully",
       200,
-      conversations
+      convWithMessages
     );
   }
   // Admin / Owner Specific
@@ -178,6 +299,7 @@ export default class ConversationController {
       return await this.manageCustomerAgentInteraction(req, res, {
         query: payload.query,
         conv_id: conversation_id,
+        userId: user.id,
       });
     }
     if (userAccount && !chatwidgetAccount) {
@@ -185,6 +307,7 @@ export default class ConversationController {
       return await this.manageAdminCustomerInteraction(req, res, {
         response: payload.response,
         conv_id: conversation_id,
+        userId: user.id,
       });
     }
   }
@@ -193,7 +316,7 @@ export default class ConversationController {
   public async manageCustomerAgentInteraction(
     req: Request & IReqObject,
     res: Response,
-    data: { query: string; conv_id: string }
+    data: { query: string; conv_id: string; userId: string }
   ) {
     const conversation = await prisma.conversations.findFirst({
       where: {
@@ -234,6 +357,7 @@ export default class ConversationController {
       role: "customer",
       content: data.query,
       agent_id: agent.id,
+      sender_id: data.userId,
     });
 
     // check if conversation has been escalated to admin
@@ -335,7 +459,7 @@ export default class ConversationController {
   public async manageAdminCustomerInteraction(
     req: Request & IReqObject,
     res: Response,
-    data: { response: string; conv_id: string }
+    data: { response: string; conv_id: string; userId: string }
   ) {
     if (!data.response || data.response.length === 0) {
       throw new HttpException(
@@ -383,6 +507,7 @@ export default class ConversationController {
       role: "admin",
       content: data.response,
       agent_id: agent.id,
+      sender_id: data.userId,
     });
 
     // send response to customer
@@ -476,8 +601,7 @@ export default class ConversationController {
     conv_id: string;
     role: "agent" | "admin" | "customer";
     content: string;
-    from?: string | null;
-    to?: string | null;
+    sender_id?: string | null;
     agent_id?: string | null;
   }) {
     const message = await prisma.chatMessages.create({
@@ -485,8 +609,7 @@ export default class ConversationController {
         convId: props.conv_id,
         role: props.role,
         content: props.content ?? "",
-        fromId: props.from ?? null,
-        toId: props.to ?? null,
+        senderId: props.sender_id ?? null,
         agentId: props.agent_id,
       },
     });

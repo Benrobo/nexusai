@@ -22,7 +22,7 @@ export default class ConversationRoute {
       `${this.path}s/admin`,
       useCatchErrors(
         isAuthenticated(
-          this.conversationController.getAllConversations.bind(
+          this.conversationController.getAllConversationsAdmin.bind(
             this.conversationController
           )
         )
