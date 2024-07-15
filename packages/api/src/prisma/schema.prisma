@@ -347,14 +347,15 @@ model ChatWidgetAccount {
 }
 
 model ChatMessages {
-    id         String       @id @default(cuid())
-    convId     String
-    role       ChatMsgRoles
-    senderId   String?
-    content    String
-    created_at DateTime     @default(now())
-    agentId    String?
-    is_read    Boolean?     @default(false)
+    id               String       @id @default(cuid())
+    convId           String
+    role             ChatMsgRoles
+    senderId         String?
+    content          String
+    created_at       DateTime     @default(now())
+    agentId          String?
+    is_read_customer Boolean?     @default(false)
+    is_read_admin    Boolean?     @default(false)
 
     conversations Conversations @relation(fields: [convId], references: [id])
 

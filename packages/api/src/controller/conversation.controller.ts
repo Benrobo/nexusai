@@ -22,6 +22,54 @@ export default class ConversationController {
   private geminiService = new GeminiService();
   constructor() {}
 
+  private async getLastMessage(convId: string) {
+    return prisma.chatMessages.findFirst({
+      where: { convId },
+      orderBy: { created_at: "desc" },
+    });
+  }
+
+  private async getSender(lastMsg: {
+    role: "admin" | "customer" | "agent";
+    senderId: string;
+    agentId: string;
+  }) {
+    const senderQueries = {
+      admin: () =>
+        prisma.users.findFirst({
+          where: { uId: lastMsg.senderId },
+          select: { id: true, fullname: true, avatar: true, email: true },
+        }),
+      customer: () =>
+        prisma.chatWidgetAccount.findFirst({
+          where: { id: lastMsg.senderId },
+          select: { id: true, name: true },
+        }),
+      agent: () =>
+        prisma.agents.findFirst({
+          where: { id: lastMsg.agentId },
+          select: { id: true, name: true },
+        }),
+    };
+
+    return senderQueries[lastMsg.role]?.() || senderQueries.agent();
+  }
+
+  private async getChatbotConfig(agentId) {
+    return prisma.chatbotConfig.findFirst({
+      where: { agentId },
+      select: { brand_color: true, text_color: true },
+    });
+  }
+
+  private async getUnreadCount(convId, role: "admin" | "customer") {
+    const isReadClause =
+      role === "admin" ? { is_read_admin: false } : { is_read_customer: false };
+    return prisma.chatMessages.count({
+      where: { convId, ...isReadClause },
+    });
+  }
+
   public getConversationById(req: Request & IReqObject, res: Response) {
     // get conversation by id
   }
@@ -37,74 +85,51 @@ export default class ConversationController {
       },
     });
 
-    console.log(user);
-
     const convWithMessages = [];
-    for (const nc of conversations) {
-      const lastMsg = await prisma.chatMessages.findFirst({
-        where: {
-          convId: nc.id,
-          // senderId: user.id,
-        },
-        orderBy: {
-          created_at: "desc",
-        },
-      });
+    const unreadMessages = new Map();
+    const chatbotConfig = [];
 
-      const sender =
-        lastMsg?.role === "admin"
-          ? await prisma.users.findFirst({
-              where: {
-                uId: lastMsg.senderId,
-              },
-              select: {
-                id: true,
-                fullname: true,
-                avatar: true,
-                email: true,
-              },
-            })
-          : lastMsg?.role === "customer"
-            ? await prisma.chatWidgetAccount.findFirst({
-                where: {
-                  id: lastMsg.senderId,
-                },
-                select: {
-                  id: true,
-                  name: true,
-                },
-              })
-            : await prisma.agents.findFirst({
-                where: {
-                  id: lastMsg?.agentId,
-                },
-                select: {
-                  id: true,
-                  name: true,
-                },
-              });
+    await Promise.all(
+      conversations.map(async (nc) => {
+        const lastMsg = await this.getLastMessage(nc.id);
 
-      if (lastMsg) {
-        convWithMessages.push({
-          ...nc,
-          lastMsg: {
-            message: lastMsg.content,
-            date: lastMsg.created_at,
-            sender: {
-              ...sender,
-              role: lastMsg.role,
+        if (lastMsg) {
+          const sender = await this.getSender(lastMsg);
+          convWithMessages.push({
+            ...nc,
+            lastMsg: {
+              message: lastMsg.content,
+              date: lastMsg.created_at,
+              sender: { ...sender, role: lastMsg.role },
             },
-          },
+          });
+        }
+
+        const chatbot = await this.getChatbotConfig(nc.agentId);
+        chatbotConfig.push({
+          agent_id: nc.agentId,
+          brand_color: chatbot?.brand_color,
+          text_color: chatbot?.text_color,
         });
-      }
-    }
+
+        const unread = await this.getUnreadCount(nc.id, "customer");
+        unreadMessages.set(nc.id, (unreadMessages.get(nc.id) || 0) + unread);
+      })
+    );
 
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Conversations retrieved successfully",
       200,
-      convWithMessages
+      {
+        unread_messages: Array.from(unreadMessages, ([conv_id, unread]) => ({
+          conv_id,
+          unread,
+        })),
+        chatbot_config: chatbotConfig,
+        conversations: convWithMessages,
+      }
     );
   }
 
@@ -129,70 +154,52 @@ export default class ConversationController {
     }
 
     const convWithMessages = [];
-    for (const nc of newConversations) {
-      const lastMsg = await prisma.chatMessages.findFirst({
-        where: {
-          convId: nc.id,
-        },
-        orderBy: {
-          created_at: "desc",
-        },
-      });
+    const unreadMessages = new Map();
+    const chatbotConfig = [];
 
-      const sender =
-        lastMsg?.role === "admin"
-          ? await prisma.users.findFirst({
-              where: {
-                uId: lastMsg.senderId,
-              },
-              select: {
-                id: true,
-                fullname: true,
-                avatar: true,
-                email: true,
-              },
-            })
-          : lastMsg?.role === "customer"
-            ? await prisma.chatWidgetAccount.findFirst({
-                where: {
-                  id: lastMsg.senderId,
-                },
-                select: {
-                  id: true,
-                  name: true,
-                },
-              })
-            : await prisma.agents.findFirst({
-                where: {
-                  id: lastMsg?.agentId,
-                },
-                select: {
-                  id: true,
-                  name: true,
-                },
-              });
+    await Promise.all(
+      newConversations.map(async (nc) => {
+        const lastMsg = await this.getLastMessage(nc.id);
 
-      if (lastMsg) {
-        convWithMessages.push({
-          ...nc,
-          lastMsg: {
-            message: lastMsg.content,
-            date: lastMsg.created_at,
-            sender: {
-              ...sender,
-              role: lastMsg.role,
+        if (lastMsg) {
+          const sender = await this.getSender(lastMsg);
+          convWithMessages.push({
+            ...nc,
+            lastMsg: {
+              message: lastMsg.content,
+              date: lastMsg.created_at,
+              sender: { ...sender, role: lastMsg.role },
             },
-          },
+          });
+        }
+
+        const chatbot = await this.getChatbotConfig(nc.agentId);
+        chatbotConfig.push({
+          agent_id: nc.agentId,
+          brand_color: chatbot?.brand_color,
+          text_color: chatbot?.text_color,
         });
-      }
-    }
+
+        const unread = await this.getUnreadCount(nc.id, "admin");
+        unreadMessages.set(nc.id, (unreadMessages.get(nc.id) || 0) + unread);
+      })
+    );
+
+    // Array.from(unreadMessages, ([conv_id, unread]) => ({ conv_id, unread }));
 
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Conversations retrieved successfully",
       200,
-      convWithMessages
+      {
+        unread_messages: Array.from(unreadMessages, ([conv_id, unread]) => ({
+          conv_id,
+          unread,
+        })),
+        chatbot_config: chatbotConfig,
+        conversations: convWithMessages,
+      }
     );
   }
 
@@ -302,12 +309,29 @@ export default class ConversationController {
       })
     );
 
+    const customerId = allMessages.find((m) => m.role === "customer")?.senderId;
+    const customerInfo = await prisma.chatWidgetAccount.findFirst({
+      where: {
+        id: customerId,
+      },
+      select: {
+        email: true,
+        name: true,
+        city: true,
+        state: true,
+        country_code: true,
+      },
+    });
+
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Messages retrieved successfully",
       200,
-      messages
+      {
+        messages,
+        customer_info: customerInfo,
+      }
     );
   }
 
@@ -467,15 +491,6 @@ export default class ConversationController {
       throw new HttpException(RESPONSE_CODE.BAD_REQUEST, "Query is empty", 400);
     }
 
-    // store user query
-    await this.storeChatMessage({
-      conv_id: data.conv_id,
-      role: "customer",
-      content: data.query,
-      agent_id: agent.id,
-      sender_id: data.userId,
-    });
-
     // check if conversation has been escalated to admin
     const lastEscalation = await prisma.conversationEscalationPeriod.findFirst({
       where: {
@@ -485,6 +500,23 @@ export default class ConversationController {
         start_date: "desc",
       },
     });
+
+    // store user query
+    const msgData = {
+      conv_id: data.conv_id,
+      role: "customer",
+      content: data.query,
+      agent_id: agent.id,
+      sender_id: data.userId,
+      is_customer_read: true,
+    };
+
+    if (lastEscalation && lastEscalation?.is_escalated) {
+      // set admin read to false if conversation is escalated to admin
+      msgData["is_admin_read"] = false;
+    }
+
+    await this.storeChatMessage(msgData as any);
 
     if (lastEscalation && lastEscalation?.is_escalated) {
       logger.info(
@@ -560,6 +592,8 @@ export default class ConversationController {
       role: "agent",
       content: aiMsg,
       agent_id: agent.id,
+      is_admin_read: false,
+      is_customer_read: true,
     });
 
     return sendResponse.success(
@@ -627,6 +661,8 @@ export default class ConversationController {
       content: data.response,
       agent_id: agent.id,
       sender_id: data.userId,
+      is_customer_read: false,
+      is_admin_read: true,
     });
 
     // send response to customer
@@ -677,11 +713,13 @@ export default class ConversationController {
 
     const last_msg_index = allMsg.map((d) => d.id).length - 1;
 
-    if (
-      last_msg_index === lastEscalation?.last_msg_index &&
-      lastEscalation?.is_escalated
-    ) {
-      logger.info("[Conversation]: Conversation de-escalated");
+    let respMessage = "";
+
+    if (last_msg_index === lastEscalation.last_msg_index) {
+      logger.info(
+        `[Conversation]: Conversation ${lastEscalation?.is_escalated ? "de-escalated" : "escalated"}`
+      );
+      respMessage = `Conversation ${lastEscalation?.is_escalated ? "de-escalated" : "escalated"}`;
       // update
       await prisma.conversationEscalationPeriod.update({
         where: {
@@ -689,11 +727,15 @@ export default class ConversationController {
         },
         data: {
           is_escalated: !lastEscalation.is_escalated,
-          last_msg_index,
         },
       });
-    } else {
+    } else if (
+      allMsg.length > 0 &&
+      !lastEscalation?.is_escalated
+      // last_msg_index !== lastEscalation.last_msg_index
+    ) {
       logger.info("[Conversation]: Escalating conversation");
+      respMessage = "Conversation escalated";
       // create
       await prisma.conversationEscalationPeriod.create({
         data: {
@@ -709,14 +751,15 @@ export default class ConversationController {
           },
         },
       });
+    } else {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Can't escalate an empty conversation",
+        400
+      );
     }
 
-    return sendResponse.success(
-      res,
-      RESPONSE_CODE.SUCCESS,
-      "Conversation escalated",
-      200
-    );
+    return sendResponse.success(res, RESPONSE_CODE.SUCCESS, respMessage, 200);
   }
 
   private async storeChatMessage(props: {
@@ -725,6 +768,8 @@ export default class ConversationController {
     content: string;
     sender_id?: string | null;
     agent_id?: string | null;
+    is_admin_read?: boolean;
+    is_customer_read?: boolean;
   }) {
     const message = await prisma.chatMessages.create({
       data: {
@@ -733,6 +778,8 @@ export default class ConversationController {
         content: props.content ?? "",
         senderId: props.sender_id ?? null,
         agentId: props.agent_id,
+        is_read_admin: props.is_admin_read ?? false,
+        is_read_customer: props.is_customer_read ?? false,
       },
     });
 

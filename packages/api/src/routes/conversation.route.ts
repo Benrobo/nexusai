@@ -17,7 +17,7 @@ export default class ConversationRoute {
   }
 
   initializeRoutes() {
-    // get all conversations created by admin / owner of the account
+    // get all conversations linked to admin / owner of the account
     this.router.get(
       `${this.path}s/admin`,
       useCatchErrors(
