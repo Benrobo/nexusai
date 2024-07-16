@@ -270,7 +270,10 @@ export default function InboxPage() {
                   conv.lastMsg.sender.role === "admin"
                     ? conv.lastMsg.sender.fullname!
                     : conv?.lastMsg?.sender?.name!,
-                avatar: conv.lastMsg?.sender?.avatar,
+                avatar:
+                  conv.lastMsg.sender.role === "agent"
+                    ? "/assets/logo/nexus-dark.svg"
+                    : conv.lastMsg?.sender?.avatar,
               }}
               onSelect={(id) => {
                 if (selectedConversationId === id) return;
