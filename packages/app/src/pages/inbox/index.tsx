@@ -46,18 +46,21 @@ import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Remarkable } from "remarkable";
 import countryJson from "@/data/country.json";
+import { Link, useParams } from "react-router-dom";
 
 const markdown = new Remarkable();
 
 dayjs.extend(relativeTime);
 
 export default function InboxPage() {
+  // extract conv_id from url
+  const { conversation_id } = useParams();
   const [conversations, setConversations] = useState<IConversations | null>(
     null
   );
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
-  >(null);
+  >(conversation_id ?? null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [selectedConversation, setSelectedConversation] =
@@ -166,11 +169,18 @@ export default function InboxPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedConversationId) {
-      getConversationMessagesMut.mutate(selectedConversationId);
+    if (selectedConversationId || conversation_id) {
+      getConversationMessagesMut.mutate(
+        conversation_id! || selectedConversationId!
+      );
       scrollToBottom();
     }
-  }, [selectedConversationId]);
+  }, [selectedConversationId, conversation_id]);
+
+  useEffect(() => {
+    if (!conversation_id) setSelectedConversationId(null);
+    conversation_id && setSelectedConversationId(conversation_id);
+  }, [conversation_id]);
 
   useEffect(() => {
     scrollToBottom();
@@ -411,7 +421,19 @@ export default function InboxPage() {
                 </FlexRowCenter>
               </FlexRowStartCenter>
             </>
-          ) : null
+          ) : (
+            <FlexColCenter className="w-full h-full gap-0">
+              <div className="w-[80px] h-[80px] p-2 rounded-full bg-red-305/50 flex-center scale-[.80]">
+                <Inbox size={35} className={"stroke-white-100"} />
+              </div>
+              <h1 className="text-sm font-ppM text-dark-100 mt-3">
+                Conversation NotFound
+              </h1>
+              <p className="text-xs font-ppReg text-white-400">
+                Click on a conversation to view messages
+              </p>
+            </FlexColCenter>
+          )
         ) : (
           <FlexColCenter className="w-full h-full gap-0">
             <div className="w-[80px] h-[80px] p-2 rounded-full bg-brown-100/20 flex-center scale-[.80]">
@@ -730,15 +752,11 @@ function MessageItem({
   time,
   user,
   unread,
-  onSelect,
   conv_id,
   selectedConversation,
 }: IMessageItemProps) {
   return (
-    <button
-      className="w-full outline-none border-none"
-      onClick={() => onSelect && onSelect(conv_id)}
-    >
+    <Link to={`/inbox/${conv_id}`} className="w-full">
       <FlexRowStartBtw
         className={cn(
           "w-full border-t-[.5px] border-b-[.5px] border-t-white-400/30 border-b-white-400/30 bg-none px-3 py-5",
@@ -787,6 +805,6 @@ function MessageItem({
           )}
         </FlexColEnd>
       </FlexRowStartBtw>
-    </button>
+    </Link>
   );
 }

@@ -33,6 +33,7 @@ function App() {
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/inbox" element={<Inbox />} />
+              <Route path="/inbox/:conversation_id" element={<Inbox />} />
               <Route path="/call-logs" element={<CallLogsPage />} />
               <Route path="/agents" element={<Agents />} />
               <Route path="/agents/:id" element={<SelectedAgent />} />
