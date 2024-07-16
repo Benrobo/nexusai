@@ -40,6 +40,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Remarkable } from "remarkable";
+import countryJson from "@/data/country.json";
 
 const markdown = new Remarkable();
 
@@ -137,6 +138,19 @@ export default function InboxPage() {
     );
   }
 
+  const getLocation = () => {
+    if (!selectedConversation) return;
+    const { city, country_code, state } = selectedConversation?.customer_info;
+    let locationStr: null | string = null;
+    if (city) locationStr = city;
+    if (state) locationStr += `, ${state}`;
+    if (country_code) {
+      const country = countryJson.find((c) => c.code === country_code);
+      locationStr += `, ${country?.title} ${country?.emoji}`;
+    }
+    return locationStr;
+  };
+
   return (
     <FlexRowStart className="w-full h-screen relative gap-0">
       {/* conversation lists */}
@@ -191,7 +205,7 @@ export default function InboxPage() {
 
       {/* selected conversation */}
       <FlexColStart className="w-full h-screen bg-white-100 relative gap-0">
-        {selectedConversation ? (
+        {selectedConversationId ? (
           getConversationMessagesMut.isPending ? (
             <FullPageLoader blur={false} showText={false} />
           ) : selectedConversation && !getConversationMessagesMut.isPending ? (
@@ -307,12 +321,14 @@ export default function InboxPage() {
               <img
                 width={100}
                 className="rounded-full "
-                src={`https://api.dicebear.com/9.x/initials/svg?seed=ben`}
+                src={`https://api.dicebear.com/9.x/initials/svg?seed=${selectedConversation?.customer_info?.name}`}
                 alt="user"
               />
-              <p className="text-lg font-ppB text-dark-100">John Doe</p>
+              <p className="text-lg font-ppB text-dark-100">
+                {selectedConversation?.customer_info?.name}
+              </p>
               <p className="text-sm font-ppReg text-white-400">
-                Sent a week ago
+                Sent {dayjs(selectedConversation?.messages[0].date).fromNow()}
               </p>
             </FlexColCenter>
 
@@ -322,12 +338,12 @@ export default function InboxPage() {
               <DetailsCard
                 type="email"
                 title="Email"
-                value="johndoe@mail.com"
+                value={selectedConversation?.customer_info?.email ?? "N/A"}
               />
               <DetailsCard
                 type="location"
                 title="Location"
-                value="United States, Alabama"
+                value={getLocation() ?? "N/A"}
               />
             </FlexColStart>
           </>
@@ -545,7 +561,7 @@ type DetailsCardType = "email" | "location";
 interface DetailsCardProps {
   type: DetailsCardType;
   title: string;
-  value: string;
+  value: string | null;
 }
 
 function DetailsCard({ type, title, value }: DetailsCardProps) {
