@@ -35,6 +35,7 @@ import {
   getConversations,
   markConversationRead,
   replyToConversation,
+  deleteConversation,
 } from "@/http/requests";
 import { cn } from "@/lib/utils";
 import type { ResponseData } from "@/types";
@@ -46,7 +47,7 @@ import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Remarkable } from "remarkable";
 import countryJson from "@/data/country.json";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Spinner } from "@/components/Spinner";
 
 const markdown = new Remarkable();
@@ -55,6 +56,7 @@ dayjs.extend(relativeTime);
 
 export default function InboxPage() {
   const { conversation_id } = useParams();
+  const router = useNavigate();
   const [conversations, setConversations] = useState<IConversations | null>(
     null
   );
@@ -148,6 +150,20 @@ export default function InboxPage() {
       console.error(err);
     },
   });
+  const deleteConversationMut = useMutation({
+    mutationFn: async (id: string) => await deleteConversation(id),
+    onSuccess: () => {
+      router({
+        pathname: "/inbox",
+      });
+      getConversationsQuery.mutate();
+      setSelectedConversationId(null);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err?.message ?? "An error occurred");
+    },
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -162,14 +178,19 @@ export default function InboxPage() {
     if (conversation_id) {
       setLoading((prev) => ({ ...prev, messages: true }));
       getConversationMessagesMut.mutate(conversation_id!);
+      markConversationReadMut.mutate(conversation_id!);
       scrollToBottom();
     }
   }, [conversation_id]);
 
   useEffect(() => {
     if (!conversation_id) setSelectedConversationId(null);
-    conversation_id && setSelectedConversationId(conversation_id);
-    scrollToBottom();
+    if (conversation_id) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 1000);
+      setSelectedConversationId(conversation_id);
+    }
   }, [conversation_id]);
 
   useEffect(() => {
@@ -185,7 +206,7 @@ export default function InboxPage() {
         getConversationsQuery.mutate();
         setLoading((prev) => ({ ...prev, newConversations: true }));
       }
-    }, 5000);
+    }, 3000);
 
     return () => {
       clearInterval(msgInterval);
@@ -367,7 +388,21 @@ export default function InboxPage() {
                           className="stroke-red-305"
                         />
                       </button>
-                      <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
+                      <button
+                        className={cn(
+                          "w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center disabled:opacity-[.5] disabled:cursor-not-allowed",
+                          deleteConversationMut.isPending && "animate-pulse"
+                        )}
+                        onClick={() => {
+                          const confirm = window.confirm(
+                            "Are you sure you want to delete this conversation?"
+                          );
+                          if (!confirm) return;
+
+                          deleteConversationMut.mutate(selectedConversationId);
+                        }}
+                        disabled={deleteConversationMut.isPending}
+                      >
                         <Trash
                           size={16}
                           strokeWidth={2}
@@ -422,7 +457,7 @@ export default function InboxPage() {
               </FlexRowStartCenter>
 
               {/* messages */}
-              <FlexColStart className="w-full h-screen overflow-y-auto hideScrollBar mt-0 px-4 gap-5 pb-[10rem]">
+              <FlexColStart className="w-full h-screen overflow-y-auto hideScrollBar mt-0 px-4 gap-5 pb-[15rem]">
                 <MessageList
                   selectedConversation={selectedConversation}
                   conversations={conversations}
@@ -450,6 +485,8 @@ export default function InboxPage() {
                           id: selectedConversationId,
                           response: query,
                         });
+                        scrollToBottom();
+                        scrollToBottom();
                       }
                     }}
                   />

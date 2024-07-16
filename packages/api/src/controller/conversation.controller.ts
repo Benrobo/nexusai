@@ -363,6 +363,74 @@ export default class ConversationController {
     );
   }
 
+  public async deleteConversation(req: Request & IReqObject, res: Response) {
+    const user = req.user;
+    const conversation_id = req.params.conversation_id;
+
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: conversation_id,
+      },
+    });
+
+    if (!conversation) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Conversation not found",
+        404
+      );
+    }
+
+    const adminSpecificAgents = await prisma.agents.findMany({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    if (!adminSpecificAgents.map((a) => a.id).includes(conversation.agentId)) {
+      logger.error(
+        `[Conversation]: ${conversation_id} not found or unauthorized to delete.`
+      );
+      throw new HttpException(
+        RESPONSE_CODE.FORBIDDEN,
+        "Unauthorized to delete this conversation.",
+        403
+      );
+    }
+
+    // delete messages first
+    const messagesDeletaed = prisma.chatMessages.deleteMany({
+      where: {
+        convId: conversation_id,
+      },
+    });
+
+    const escalationDeleted = prisma.conversationEscalationPeriod.deleteMany({
+      where: {
+        conv_id: conversation_id,
+      },
+    });
+
+    const conversationDeleted = prisma.conversations.delete({
+      where: {
+        id: conversation_id,
+      },
+    });
+
+    await prisma.$transaction([
+      escalationDeleted,
+      messagesDeletaed,
+      conversationDeleted,
+    ]);
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Conversation deleted successfully",
+      200
+    );
+  }
+
   // Admin / Owner Specific
   public async getConversationsByAgent(
     req: Request & IReqObject,

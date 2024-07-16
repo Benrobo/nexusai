@@ -230,3 +230,10 @@ export const markConversationRead = async (id: string) => {
   );
   return req.data;
 };
+
+export const deleteConversation = async (id: string) => {
+  const req = await $axios.delete(`/conversation/${id}`, {
+    headers: { "x-nexus-admin-account": true },
+  });
+  return req.data;
+};

@@ -65,6 +65,17 @@ export default class ConversationRoute {
       )
     );
 
+    this.router.delete(
+      `${this.path}/:conversation_id`,
+      useCatchErrors(
+        dualUserAuthenticator(
+          this.conversationController.deleteConversation.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
     // get conversation messages
     this.router.get(
       `${this.path}/messages/admin/:conversation_id`,
