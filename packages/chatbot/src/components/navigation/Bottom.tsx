@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { FlexRowCenter, FlexRowCenterBtw } from "../Flex";
+import { FlexColCenter, FlexRowCenter, FlexRowCenterBtw } from "../Flex";
 import { Home, MessagesSquare, User } from "../icons";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
@@ -34,48 +34,63 @@ export default function BottomNavigation() {
   }, [pathname]);
 
   return (
-    <FlexRowCenter className="w-full h-auto px-4 py-5 bg-dark-100 fixed bottom-0">
-      {navigations.map((n) => (
-        <Link to={n.path} key={n.name}>
-          <button
-            className={cn(
-              "w-auto px-6 py-4 rounded-full gap-3 flex-center enableBounceEffect overflow-hidden",
-              activePage === n.name
-                ? "bg-brown-100 text-white-100 stroke-white-100 delay-300"
-                : "w-[100px] stroke-white-300"
-            )}
-            onClick={() => {
-              if (activePage === n.name) {
-                setActivePage("");
-              } else setActivePage(n.name);
-            }}
-          >
-            {renderIcon(n.name)}
-            <div
+    <FlexColCenter
+      className="w-full h-auto px-4 py-5 bg-white-100 fixed bottom-0 gap-2"
+      style={{
+        backdropFilter: "blur(10px)",
+        // chatbot-config here
+      }}
+    >
+      <FlexRowCenter className="w-full gap-10">
+        {navigations.map((n) => (
+          <Link to={n.path} key={n.name}>
+            <button
               className={cn(
-                activePage === n.name ? "w-auto" : "w-[0px] overflow-hidden"
+                "w-auto px-6 py-4 rounded-full gap-3 flex-center enableBounceEffect overflow-hidden",
+                activePage === n.name
+                  ? "bg-white-300 text-dark-100"
+                  : "w-[100px]"
               )}
+              onClick={() => {
+                if (activePage === n.name) {
+                  setActivePage("");
+                } else setActivePage(n.name);
+              }}
+              style={
+                {
+                  // chatbot-config here
+                }
+              }
             >
-              <span className="text-[14px] font-ppM">{n.title}</span>
-            </div>
-          </button>
-        </Link>
-      ))}
-    </FlexRowCenter>
+              {renderIcon(n.name, {
+                stroke: activePage === n.name ? "#000" : "#777",
+              })}
+              <div
+                className={cn(
+                  activePage === n.name ? "w-auto" : "w-[0px] overflow-hidden"
+                )}
+              >
+                <span className="text-[14px] font-ppM">{n.title}</span>
+              </div>
+            </button>
+          </Link>
+        ))}
+      </FlexRowCenter>
+    </FlexColCenter>
   );
 }
 
-function renderIcon(name: string) {
+function renderIcon(name: string, customStyle?: React.CSSProperties) {
   let icon = null;
   switch (name) {
     case "home":
-      icon = <Home size={25} />;
+      icon = <Home size={20} style={customStyle} />;
       break;
     case "conversations":
-      icon = <MessagesSquare size={25} />;
+      icon = <MessagesSquare size={20} style={customStyle} />;
       break;
     case "account":
-      icon = <User size={25} />;
+      icon = <User size={20} style={customStyle} />;
       break;
     default:
       break;
