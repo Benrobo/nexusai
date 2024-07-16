@@ -17,8 +17,10 @@ import {
   PersonStanding,
   Send,
   Trash,
+  User,
   X,
 } from "@/components/icons";
+import { FullPageLoader } from "@/components/Loader";
 import TooltipComp from "@/components/TooltipComp";
 import {
   Select,
@@ -27,17 +29,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { tmpMessages } from "@/data/tmpConversations";
 import useSession from "@/hooks/useSession";
-import { getConversations } from "@/http/requests";
+import { getConversationMessages, getConversations } from "@/http/requests";
 import { cn } from "@/lib/utils";
 import type { ResponseData } from "@/types";
-import type { IConversations } from "@/types/inbox.type";
+import type { IConversationMessages, IConversations } from "@/types/inbox.type";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { Remarkable } from "remarkable";
+
+const markdown = new Remarkable();
 
 dayjs.extend(relativeTime);
 
@@ -46,9 +50,11 @@ export default function InboxPage() {
   const [conversations, setCopversations] = useState<IConversations | null>(
     null
   );
-  const [selectedConversation, setSelectedConversation] = useState<
+  const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null);
+  const [selectedConversation, setSelectedConversation] =
+    useState<IConversationMessages | null>(null);
   const [more, setMore] = useState(false);
   const getConversationsQuery = useMutation({
     mutationFn: async () => await getConversations(),
@@ -61,17 +67,58 @@ export default function InboxPage() {
       toast.error(err.message);
     },
   });
+  const getConversationMessagesMut = useMutation({
+    mutationFn: async (id: string) => await getConversationMessages(id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
 
+      // filter out object that doesn't have a message property
+      const escalatedMsg = (resp.data as IConversationMessages).messages.filter(
+        (msg) => msg.message === undefined
+      ) as {
+        last_message_index?: number;
+        is_escalated?: boolean;
+        start_date?: string;
+      }[];
+
+      const modifiedMessages = (
+        resp.data as IConversationMessages
+      ).messages.filter((msg) => msg.message !== undefined);
+
+      escalatedMsg.forEach((msg) => {
+        modifiedMessages.splice(msg.last_message_index!, 0, msg as any);
+      });
+
+      setSelectedConversation({
+        ...resp.data,
+        messages: modifiedMessages,
+      });
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
   const refetchConversations = () => getConversationsQuery.mutate();
 
   useEffect(() => {
     getConversationsQuery.mutate();
   }, []);
 
+  useEffect(() => {
+    if (selectedConversationId) {
+      getConversationMessagesMut.mutate(selectedConversationId);
+    }
+  }, [selectedConversationId]);
+
   const agentConfig = {
     brand_color: "#000",
     text_color: "#fff",
   };
+
+  if (getConversationsQuery.isPending) {
+    return <FullPageLoader blur={true} showText={false} />;
+  }
 
   if (
     (!getConversationsQuery.isPending && !conversations) ||
@@ -121,6 +168,7 @@ export default function InboxPage() {
           {conversations?.conversations.map((conv) => (
             <MessageItem
               key={conv.id}
+              conv_id={conv.id}
               message={conv?.lastMsg?.message}
               time={conv.lastMsg.date}
               unread={
@@ -135,6 +183,7 @@ export default function InboxPage() {
                     : conv?.lastMsg?.sender?.name!,
                 avatar: conv.lastMsg?.sender?.avatar,
               }}
+              onSelect={(id) => setSelectedConversationId(id)}
             />
           ))}
         </FlexColStart>
@@ -143,138 +192,98 @@ export default function InboxPage() {
       {/* selected conversation */}
       <FlexColStart className="w-full h-screen bg-white-100 relative gap-0">
         {selectedConversation ? (
-          <>
-            <FlexRowStartCenter className="w-full h-[96px] px-5 py-4 border-b-white-400/30 border-b-[.5px]">
-              <FlexColStart className="w-full gap-1">
-                <h1 className="font-ppB text-xl text-dark-100">John Doe</h1>
-                <p className="font-ppReg text-sm text-white-400/50">
-                  Sent{" "}
-                  <span className="font-ppM text-white-400">
-                    a few seconds ago
-                  </span>
-                </p>
-              </FlexColStart>
+          getConversationMessagesMut.isPending ? (
+            <FullPageLoader blur={false} showText={false} />
+          ) : selectedConversation && !getConversationMessagesMut.isPending ? (
+            <>
+              <FlexRowStartCenter className="w-full h-[96px] px-5 py-4 border-b-white-400/30 border-b-[.5px]">
+                <FlexColStart className="w-full gap-1">
+                  <h1 className="font-ppB text-xl text-dark-100">
+                    {selectedConversation?.customer_info?.name}
+                  </h1>
+                  <p className="font-ppReg text-sm text-white-400/50">
+                    Sent{" "}
+                    <span className="font-ppM text-white-400">
+                      {dayjs(selectedConversation?.messages[0].date).fromNow()}
+                    </span>
+                  </p>
+                </FlexColStart>
 
-              <FlexRowEnd className="w-full">
-                <FlexRowEnd className="w-full relative">
-                  <div
-                    className={cn(
-                      "overflow-hidden h-full flex-center gap-2 transition-all duration-100 ease-in-out absolute right-4",
-                      !more ? "w-0" : "w-[100px]"
-                    )}
-                  >
-                    <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
-                      <X size={20} strokeWidth={3} className="stroke-red-305" />
-                    </button>
-                    <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
-                      <Trash
-                        size={16}
-                        strokeWidth={2}
-                        className="stroke-red-305"
+                <FlexRowEnd className="w-full">
+                  <FlexRowEnd className="w-full relative">
+                    <div
+                      className={cn(
+                        "overflow-hidden h-full flex-center gap-2 transition-all duration-100 ease-in-out absolute right-4",
+                        !more ? "w-0" : "w-[100px]"
+                      )}
+                    >
+                      <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
+                        <X
+                          size={20}
+                          strokeWidth={3}
+                          className="stroke-red-305"
+                        />
+                      </button>
+                      <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
+                        <Trash
+                          size={16}
+                          strokeWidth={2}
+                          className="stroke-red-305"
+                        />
+                      </button>
+                    </div>
+                    <button
+                      className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center"
+                      onClick={() => setMore(!more)}
+                    >
+                      <ElipsisVertical
+                        size={20}
+                        strokeWidth={3}
+                        className="stroke-white-400 rotate-90"
                       />
                     </button>
-                  </div>
-                  <button
-                    className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center"
-                    onClick={() => setMore(!more)}
-                  >
-                    <ElipsisVertical
-                      size={20}
-                      strokeWidth={3}
-                      className="stroke-white-400 rotate-90"
-                    />
-                  </button>
+                  </FlexRowEnd>
+
+                  <TooltipComp text="Escalate Chat?">
+                    <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
+                      <PersonStanding
+                        size={20}
+                        strokeWidth={3}
+                        className="stroke-white-400"
+                      />
+                    </button>
+                  </TooltipComp>
                 </FlexRowEnd>
+              </FlexRowStartCenter>
 
-                <TooltipComp text="Escalate Chat?">
-                  <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
-                    <PersonStanding
-                      size={20}
-                      strokeWidth={3}
-                      className="stroke-white-400"
-                    />
-                  </button>
-                </TooltipComp>
-              </FlexRowEnd>
-            </FlexRowStartCenter>
-
-            {/* messages */}
-            <FlexColStart className="w-full h-screen overflow-y-hidden mt-0 p-0 gap-0">
-              <FlexColStart className="w-full h-screen px-9 gap-5 overflow-y-scroll hideScrollBar pb-[10em]">
-                {tmpMessages.map((msg, i) => {
-                  if (msg?.is_escalated) {
-                    return (
-                      <FlexRowCenterBtw className="w-full mt-5 mb-3">
-                        <div className="w-full border-[.5px] border-white-400/50"></div>
-                        <TooltipComp
-                          text={`Human support requested on ${dayjs(
-                            msg.is_escalated?.date as any
-                          ).format("DD MMM YYYY")}`}
-                        >
-                          <div className="w-[250px] bg-white-300/50 rounded-md px-3 py-1 flex-center gap-2 scale-[.85] border-[.5px] border-white-400/30">
-                            <span className="font-ppM text-sm">
-                              Conversation escalated
-                            </span>
-                            <span className="font-ppReg text-xs">
-                              <PersonStanding
-                                size={20}
-                                className="stroke-dark-400"
-                              />
-                            </span>
-                          </div>
-                        </TooltipComp>
-                        <div className="w-full border-[.5px] border-white-400/50"></div>
-                      </FlexRowCenterBtw>
-                    );
-                  }
-
-                  if (msg.role === "agent" || msg.role === "admin") {
-                    return (
-                      <MessageListItem
-                        key={i}
-                        role={msg.role}
-                        pos={"left"}
-                        message={msg.message}
-                        date={msg.date}
-                        agent_config={agentConfig}
-                      />
-                    );
-                  }
-
-                  return (
-                    <MessageListItem
-                      key={i}
-                      role={msg.role as any}
-                      pos={"right"}
-                      message={msg.message}
-                      date={msg.date!}
-                      admin_name={msg.admin_name}
-                      customer_name={msg.customer_name}
-                    />
-                  );
-                })}
-              </FlexColStart>
-              {/* spacer */}
-            </FlexColStart>
-
-            {/* input control */}
-            <FlexRowStartCenter className="w-full h-[100px] absolute bottom-0 left-0 px-10 z-[10] backdrop-blur-sm">
-              <FlexRowCenter className="w-full h-[70px] shadow-xl border-[.5px] border-white-400/30 rounded-full bg-white-100 overflow-hidden">
-                <input
-                  type="text"
-                  className="w-full h-full bg-transparent outline-none px-8 font-ppReg disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
-                  placeholder="Type a message..."
-                  disabled={true}
+              {/* messages */}
+              <FlexColStart className="w-full h-screen overflow-y-hidden mt-0 p-0 gap-0">
+                <MessageList
+                  selectedConversation={selectedConversation}
+                  conversations={conversations}
                 />
-                <button
-                  className="w-[80px] h-[70px] bg-dark-100 text-white-100 flex-center rounded-full enableBounceEffect scale-[.80] disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
-                  disabled={true}
-                >
-                  <Send size={20} className="stroke-white-100" />
-                </button>
-              </FlexRowCenter>
-            </FlexRowStartCenter>
-          </>
+                {/* spacer */}
+              </FlexColStart>
+
+              {/* input control */}
+              <FlexRowStartCenter className="w-full h-[100px] absolute bottom-0 left-0 px-10 z-[10] backdrop-blur-sm">
+                <FlexRowCenter className="w-full h-[70px] shadow-xl border-[.5px] border-white-400/30 rounded-full bg-white-100 overflow-hidden">
+                  <input
+                    type="text"
+                    className="w-full h-full bg-transparent outline-none px-8 font-ppReg disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
+                    placeholder="Type a message..."
+                    disabled={true}
+                  />
+                  <button
+                    className="w-[80px] h-[70px] bg-dark-100 text-white-100 flex-center rounded-full enableBounceEffect scale-[.80] disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
+                    disabled={true}
+                  >
+                    <Send size={20} className="stroke-white-100" />
+                  </button>
+                </FlexRowCenter>
+              </FlexRowStartCenter>
+            </>
+          ) : null
         ) : (
           <FlexColCenter className="w-full h-full gap-0">
             <div className="w-[80px] h-[80px] p-2 rounded-full bg-brown-100/20 flex-center scale-[.80]">
@@ -292,31 +301,133 @@ export default function InboxPage() {
 
       {/* user info */}
       <FlexColStart className="w-full h-screen max-w-[350px] gap-0 border-l-[.5px] border-l-white-400/30">
-        <FlexColCenter className="w-full h-auto min-h-[20%] gap-1">
-          <img
-            width={100}
-            className="rounded-full "
-            src={`https://api.dicebear.com/9.x/initials/svg?seed=ben`}
-            alt="user"
-          />
-          <p className="text-lg font-ppB text-dark-100">John Doe</p>
-          <p className="text-sm font-ppReg text-white-400">Sent a week ago</p>
-        </FlexColCenter>
+        {selectedConversation ? (
+          <>
+            <FlexColCenter className="w-full h-auto min-h-[20%] gap-1">
+              <img
+                width={100}
+                className="rounded-full "
+                src={`https://api.dicebear.com/9.x/initials/svg?seed=ben`}
+                alt="user"
+              />
+              <p className="text-lg font-ppB text-dark-100">John Doe</p>
+              <p className="text-sm font-ppReg text-white-400">
+                Sent a week ago
+              </p>
+            </FlexColCenter>
 
-        <br />
-        <FlexColStart className="w-full border-t-[.5px] border-t-white-400/30 px-4 py-4 gap-3">
-          <p className="text-dark-400 font-ppB text">User Details</p>
-          <DetailsCard type="email" title="Email" value="johndoe@mail.com" />
-          <DetailsCard
-            type="location"
-            title="Location"
-            value="United States, Alabama"
-          />
-        </FlexColStart>
+            <br />
+            <FlexColStart className="w-full border-t-[.5px] border-t-white-400/30 px-4 py-4 gap-3">
+              <p className="text-dark-400 font-ppB text">User Details</p>
+              <DetailsCard
+                type="email"
+                title="Email"
+                value="johndoe@mail.com"
+              />
+              <DetailsCard
+                type="location"
+                title="Location"
+                value="United States, Alabama"
+              />
+            </FlexColStart>
+          </>
+        ) : (
+          <FlexColCenter className="w-full h-full gap-0">
+            <div className="w-[80px] h-[80px] p-2 rounded-full bg-brown-100/20 flex-center scale-[.80]">
+              <User size={35} className={"stroke-white-400"} />
+            </div>
+            <h1 className="text-sm font-ppM text-dark-100 mt-3">
+              Select a Conversation
+            </h1>
+            <p className="text-xs font-ppReg text-white-400">
+              Click on a conversation to view customer details.
+            </p>
+          </FlexColCenter>
+        )}
       </FlexColStart>
     </FlexRowStart>
   );
 }
+
+interface MessageListProps {
+  selectedConversation: IConversationMessages | null;
+  conversations: IConversations | null;
+}
+
+const MessageList = ({
+  selectedConversation,
+  conversations,
+}: MessageListProps) => {
+  const renderEscalationMessage = () => (
+    <FlexRowCenterBtw className="w-full mt-5 mb-3">
+      <div className="w-full border-[.5px] border-white-400/50"></div>
+      <TooltipComp text="Human support requested">
+        <div className="w-[250px] bg-white-300/50 rounded-md px-3 py-1 flex-center gap-2 scale-[.85] border-[.5px] border-white-400/30">
+          <span className="font-ppM text-sm">Conversation escalated</span>
+          <PersonStanding size={20} className="stroke-dark-400" />
+        </div>
+      </TooltipComp>
+      <div className="w-full border-[.5px] border-white-400/50"></div>
+    </FlexRowCenterBtw>
+  );
+
+  const renderMessage = (arg: {
+    msg: IConversationMessages["messages"][0];
+    i: number;
+    chatbotConfig: IConversations["chatbot_config"][0] | undefined;
+  }) => {
+    const { msg, i, chatbotConfig } = arg;
+    if (!msg.message || msg.message.length === 0) return null;
+
+    const isAgentOrAdmin = ["agent", "admin"].includes(msg.sender?.role);
+    return (
+      <MessageListItem
+        key={i}
+        role={msg.sender?.role}
+        pos={isAgentOrAdmin ? "left" : "right"}
+        message={msg.message}
+        date={msg.date}
+        agent_config={isAgentOrAdmin ? chatbotConfig : undefined}
+        admin_name={!isAgentOrAdmin ? msg.sender?.name : undefined}
+        customer_name={!isAgentOrAdmin ? msg.sender?.name : undefined}
+      />
+    );
+  };
+
+  const renderNoMessages = () => (
+    <FlexColCenter className="w-full h-full gap-0">
+      <div className="w-[80px] h-[80px] p-2 rounded-full bg-brown-100/20 flex-center scale-[.80]">
+        <Inbox size={35} className="stroke-white-400" />
+      </div>
+      <h1 className="text-sm font-ppM text-dark-100 mt-3">No Messages</h1>
+      <p className="text-xs font-ppReg text-white-400">
+        Start a conversation with the customer.
+      </p>
+    </FlexColCenter>
+  );
+
+  return (
+    <FlexColStart className="w-full h-screen px-9 gap-5 overflow-y-scroll hideScrollBar pb-[10em]">
+      {selectedConversation && selectedConversation?.messages.length > 0
+        ? selectedConversation.messages.map((msg, i) => {
+            if (msg?.is_escalated === true || msg?.is_escalated === false) {
+              return renderEscalationMessage();
+            }
+
+            const chatbotConfig = conversations?.chatbot_config.find(
+              (c) => c.agent_id === msg.agent_id
+            );
+
+            return renderMessage({
+              msg,
+              i,
+              chatbotConfig,
+            });
+          })
+        : renderNoMessages()}
+    </FlexColStart>
+  );
+};
 
 interface MessageListItemProps {
   role: "customer" | "agent" | "admin";
@@ -409,7 +520,7 @@ function MessageListItem({
               }}
             >
               {/* content */}
-              <p
+              <div
                 className="font-ppReg text-sm"
                 style={{
                   color:
@@ -417,9 +528,10 @@ function MessageListItem({
                       ? agent_config?.text_color ?? "#fff"
                       : "#000",
                 }}
-              >
-                {message}
-              </p>
+                dangerouslySetInnerHTML={{
+                  __html: markdown.render(message),
+                }}
+              />
             </FlexColStart>
           </FlexColEnd>
           {chatAvatar}
@@ -464,6 +576,7 @@ function DetailsCard({ type, title, value }: DetailsCardProps) {
 }
 
 interface IMessageItemProps {
+  conv_id: string;
   message: string;
   time: string;
   unread: number;
@@ -471,11 +584,22 @@ interface IMessageItemProps {
     name: string;
     avatar?: string;
   };
+  onSelect?: (id: string) => void;
 }
 
-function MessageItem({ message, time, user, unread }: IMessageItemProps) {
+function MessageItem({
+  message,
+  time,
+  user,
+  unread,
+  onSelect,
+  conv_id,
+}: IMessageItemProps) {
   return (
-    <button className="w-full outline-none border-none">
+    <button
+      className="w-full outline-none border-none"
+      onClick={() => onSelect && onSelect(conv_id)}
+    >
       <FlexRowStartBtw
         className={cn(
           "w-full border-t-[.5px] border-b-[.5px] border-t-white-400/30 border-b-white-400/30 bg-none px-3 py-5",
@@ -498,13 +622,18 @@ function MessageItem({ message, time, user, unread }: IMessageItemProps) {
                 ? user.name?.slice(0, 1).toUpperCase() + user?.name.slice(1)
                 : "N/A"}
             </h1>
-            <p className="text-xs font-ppReg text-dark-200 flex items-center justify-start gap-1">
-              {message
-                ? message?.length > 30
-                  ? message?.slice(0, 30) + "..."
-                  : message
-                : "N/A"}
-            </p>
+            <div
+              className="text-xs font-ppReg text-dark-200 flex items-center justify-start gap-1"
+              dangerouslySetInnerHTML={{
+                __html: markdown.render(
+                  message
+                    ? message?.length > 30
+                      ? message?.slice(0, 30) + "..."
+                      : message
+                    : "N/A"
+                ),
+              }}
+            ></div>
           </FlexColStart>
         </FlexRowStart>
         <FlexColEnd className="w-auto gap-1">

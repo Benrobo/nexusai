@@ -285,6 +285,7 @@ export default class ConversationController {
       messages.push({
         message: msg.content,
         date: msg.created_at,
+        agent_id: msg.agentId,
         sender: {
           ...sender,
           role: msg.role,
@@ -514,6 +515,9 @@ export default class ConversationController {
     if (lastEscalation && lastEscalation?.is_escalated) {
       // set admin read to false if conversation is escalated to admin
       msgData["is_admin_read"] = false;
+    } else {
+      // set admin read to true if conversation is not escalated to admin
+      msgData["is_admin_read"] = true;
     }
 
     await this.storeChatMessage(msgData as any);
@@ -592,7 +596,7 @@ export default class ConversationController {
       role: "agent",
       content: aiMsg,
       agent_id: agent.id,
-      is_admin_read: false,
+      is_admin_read: true,
       is_customer_read: true,
     });
 

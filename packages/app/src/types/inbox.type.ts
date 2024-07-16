@@ -26,11 +26,13 @@ export interface IConversations {
   chatbot_config: {
     brand_color: string;
     text_color: string;
+    agent_id: string;
   }[];
 }
 
 export interface IConversationMessages {
   messages: {
+    agent_id: string;
     message: string;
     date: string;
     sender: {
@@ -38,6 +40,9 @@ export interface IConversationMessages {
       name: string;
       role: AccountRoles;
     };
+    last_message_index?: number;
+    is_escalated?: boolean;
+    start_date?: string;
   }[];
   customer_info: {
     name: string;
