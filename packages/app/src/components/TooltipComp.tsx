@@ -14,7 +14,7 @@ export default function TooltipComp({ text, children }: ITooltipCompProps) {
   return (
     <TooltipProvider delayDuration={20}>
       <Tooltip>
-        <TooltipTrigger className="w-auto">{children}</TooltipTrigger>
+        <TooltipTrigger className="w-full">{children}</TooltipTrigger>
         {text && (
           <TooltipContent>
             <p className="font-ppReg text-xs">{text}</p>

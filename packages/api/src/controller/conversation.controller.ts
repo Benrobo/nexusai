@@ -185,8 +185,6 @@ export default class ConversationController {
       })
     );
 
-    // Array.from(unreadMessages, ([conv_id, unread]) => ({ conv_id, unread }));
-
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
@@ -294,23 +292,6 @@ export default class ConversationController {
       });
     }
 
-    const escalationPeriods =
-      await prisma.conversationEscalationPeriod.findMany({
-        where: {
-          conv_id: conversation.id,
-        },
-      });
-
-    messages.push(
-      ...escalationPeriods.map((e) => {
-        return {
-          last_message_index: e.last_msg_index,
-          is_escalated: e.is_escalated,
-          start_date: e.start_date,
-        };
-      })
-    );
-
     const customerId = allMessages.find((m) => m.role === "customer")?.senderId;
     const customerInfo = await prisma.chatWidgetAccount.findFirst({
       where: {
@@ -325,39 +306,15 @@ export default class ConversationController {
       },
     });
 
-    const nonDuplicateMessages = messages.filter(
-      (msg, index, self) =>
-        index ===
-        self.findIndex(
-          (m) =>
-            m.id === msg.id && m?.last_message_index === msg?.last_message_index
-        )
-    );
-
-    let idx = 0;
-    const modifiedMessages = [];
-    while (idx < nonDuplicateMessages.length) {
-      if (nonDuplicateMessages[idx]?.last_message_index) {
-        const escalatedData = nonDuplicateMessages[idx];
-        modifiedMessages[escalatedData.last_message_index] = {
-          is_escalated: escalatedData.is_escalated,
-          start_date: escalatedData.start_date,
-          last_message_index: escalatedData.last_message_index,
-        };
-      } else {
-        modifiedMessages.push(nonDuplicateMessages[idx]);
-      }
-      idx++;
-    }
-
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Messages retrieved successfully",
       200,
       {
+        admin_in_control: conversation.admin_in_control,
         conv_id: conversation.id,
-        messages: modifiedMessages,
+        messages,
         customer_info: customerInfo,
       }
     );
@@ -405,23 +362,13 @@ export default class ConversationController {
       },
     });
 
-    const escalationDeleted = prisma.conversationEscalationPeriod.deleteMany({
-      where: {
-        conv_id: conversation_id,
-      },
-    });
-
     const conversationDeleted = prisma.conversations.delete({
       where: {
         id: conversation_id,
       },
     });
 
-    await prisma.$transaction([
-      escalationDeleted,
-      messagesDeletaed,
-      conversationDeleted,
-    ]);
+    await prisma.$transaction([messagesDeletaed, conversationDeleted]);
 
     return sendResponse.success(
       res,
@@ -592,17 +539,6 @@ export default class ConversationController {
     if (!data.query || data.query.length === 0) {
       throw new HttpException(RESPONSE_CODE.BAD_REQUEST, "Query is empty", 400);
     }
-
-    // check if conversation has been escalated to admin
-    const lastEscalation = await prisma.conversationEscalationPeriod.findFirst({
-      where: {
-        conv_id: data.conv_id,
-      },
-      orderBy: {
-        start_date: "desc",
-      },
-    });
-
     // store user query
     const msgData = {
       conv_id: data.conv_id,
@@ -611,19 +547,12 @@ export default class ConversationController {
       agent_id: agent.id,
       sender_id: data.userId,
       is_customer_read: true,
+      is_admin_read: !conversation?.admin_in_control,
     };
-
-    if (lastEscalation && lastEscalation?.is_escalated) {
-      // set admin read to false if conversation is escalated to admin
-      msgData["is_admin_read"] = false;
-    } else {
-      // set admin read to true if conversation is not escalated to admin
-      msgData["is_admin_read"] = true;
-    }
 
     const customerMsgStored = await this.storeChatMessage(msgData as any);
 
-    if (lastEscalation && lastEscalation?.is_escalated) {
+    if (conversation?.admin_in_control) {
       logger.info(
         `[Conversation]: ${data.conv_id} has been escalated to admin`
       );
@@ -751,23 +680,6 @@ export default class ConversationController {
       );
     }
 
-    const convEscalated = await prisma.conversationEscalationPeriod.findFirst({
-      where: {
-        conv_id: data.conv_id,
-      },
-    });
-
-    if (!convEscalated || !convEscalated.is_escalated) {
-      logger.error(
-        `[Conversation | Admin]: ${data.conv_id} has not been escalated to admin`
-      );
-      throw new HttpException(
-        RESPONSE_CODE.CONVERSATION_NOT_ESCALATED,
-        "Conversation not escalated to admin",
-        403
-      );
-    }
-
     const conversation = await prisma.conversations.findFirst({
       where: {
         id: data.conv_id,
@@ -780,6 +692,17 @@ export default class ConversationController {
         },
       },
     });
+
+    if (!conversation?.admin_in_control) {
+      logger.error(
+        `[Conversation | Admin]: ${data.conv_id} has not been escalated to admin`
+      );
+      throw new HttpException(
+        RESPONSE_CODE.CONVERSATION_NOT_ESCALATED,
+        "Conversation not escalated to admin",
+        403
+      );
+    }
 
     const agent = conversation.agents;
 
@@ -899,8 +822,7 @@ export default class ConversationController {
     );
   }
 
-  // escalate conversation to admin (from ChatWidgetAccount)
-  public async escalateConversation(req: Request & IReqObject, res: Response) {
+  public async switchControl(req: Request & IReqObject, res: Response) {
     const user = req.user;
     const conversation_id = req.params.conversation_id;
 
@@ -918,142 +840,35 @@ export default class ConversationController {
       );
     }
 
-    // check if conversation has been escalated
-    const lastEscalation = await prisma.conversationEscalationPeriod.findFirst({
-      where: {
-        conv_id: conversation_id,
-      },
-      orderBy: {
-        start_date: "desc",
-      },
-    });
-
-    const allMsg = await prisma.chatMessages.findMany({
-      where: {
-        convId: conversation_id,
-      },
-    });
-
-    const allMessages = allMsg.map((d) => d.id);
-    const last_msg_index = allMessages.findIndex(
-      (d) => d === allMessages[allMessages.length - 1]
-    );
-
-    let respMessage = "";
-
-    if (
-      last_msg_index === lastEscalation.last_msg_index &&
-      lastEscalation?.is_escalated
-    ) {
-      throw new HttpException(
-        RESPONSE_CODE.BAD_REQUEST,
-        "Conversation is already escalated",
-        400
-      );
-    } else if (
-      allMsg.length > 0 &&
-      !lastEscalation?.is_escalated
-      // last_msg_index !== lastEscalation.last_msg_index
-    ) {
-      logger.info("[Conversation]: Escalating conversation");
-      respMessage = "Conversation escalated";
-      // create
-      await prisma.conversationEscalationPeriod.create({
+    let response = "";
+    if (conversation.admin_in_control) {
+      // releas control
+      await prisma.conversations.update({
+        where: {
+          id: conversation_id,
+        },
         data: {
-          id: shortUUID.generate(),
-          last_msg_index,
-          agent_id: conversation.agentId,
-          is_escalated: true,
-          start_date: new Date(),
-          conversations: {
-            connect: {
-              id: conversation_id,
-            },
-          },
+          admin_in_control: false,
         },
       });
+      response = "Agent is now in control of this conversation";
     } else {
-      throw new HttpException(
-        RESPONSE_CODE.BAD_REQUEST,
-        "Can't escalate an empty conversation",
-        400
-      );
+      // take control
+      await prisma.conversations.update({
+        where: {
+          id: conversation_id,
+        },
+        data: {
+          admin_in_control: true,
+        },
+      });
+      response = "You're now in control of this conversation";
     }
 
-    return sendResponse.success(res, RESPONSE_CODE.SUCCESS, respMessage, 200);
+    return sendResponse.success(res, RESPONSE_CODE.SUCCESS, response, 200);
   }
 
-  // de-escalate conversation to agent (from AdminAccount)
-  public async deEscalateConversation(
-    req: Request & IReqObject,
-    res: Response
-  ) {
-    const user = req.user;
-    const conversation_id = req.params.conversation_id;
-
-    const conversation = await prisma.conversations.findFirst({
-      where: {
-        id: conversation_id,
-      },
-    });
-
-    if (!conversation) {
-      throw new HttpException(
-        RESPONSE_CODE.NOT_FOUND,
-        "Conversation not found",
-        404
-      );
-    }
-
-    // check if conversation has been escalated
-    const lastEscalation = await prisma.conversationEscalationPeriod.findFirst({
-      where: {
-        conv_id: conversation_id,
-      },
-      orderBy: {
-        start_date: "desc",
-      },
-    });
-
-    const allMsg = await prisma.chatMessages.findMany({
-      where: {
-        convId: conversation_id,
-      },
-    });
-
-    if (!lastEscalation?.is_escalated) {
-      throw new HttpException(
-        RESPONSE_CODE.BAD_REQUEST,
-        "Conversation is not escalated",
-        400
-      );
-    }
-
-    if (allMsg.length === 0) {
-      throw new HttpException(
-        RESPONSE_CODE.BAD_REQUEST,
-        "Can't de-escalate an empty conversation",
-        400
-      );
-    }
-
-    //  update
-    await prisma.conversationEscalationPeriod.update({
-      where: {
-        id: lastEscalation.id,
-      },
-      data: {
-        is_escalated: false,
-      },
-    });
-
-    return sendResponse.success(
-      res,
-      RESPONSE_CODE.SUCCESS,
-      "Conversation de-esclated",
-      200
-    );
-  }
+  public async requestHumanSupport(req: Request & IReqObject, res: Response) {}
 
   private async storeChatMessage(props: {
     conv_id: string;

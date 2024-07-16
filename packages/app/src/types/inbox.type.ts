@@ -6,6 +6,7 @@ export interface IConversations {
     agentId: string;
     created_at: string;
     conversationAccountId: string;
+    admin_in_control: boolean;
     lastMsg: {
       message: string;
       date: string;
@@ -32,6 +33,7 @@ export interface IConversations {
 
 export interface IConversationMessages {
   conv_id: string;
+  admin_in_control: boolean;
   messages: {
     agent_id: string;
     message: string;
@@ -42,9 +44,6 @@ export interface IConversationMessages {
       avatar: string;
       role: AccountRoles;
     };
-    last_message_index?: number;
-    is_escalated?: boolean;
-    start_date?: string;
   }[];
   customer_info: {
     name: string;

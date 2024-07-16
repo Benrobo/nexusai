@@ -203,8 +203,8 @@ export const getConversationMessages = async (id: string) => {
   return req.data;
 };
 
-export const descalateConversation = async (id: string) => {
-  const req = await $axios.patch(`/conversation/de-escalate/${id}`);
+export const switchConversationControl = async (id: string) => {
+  const req = await $axios.patch(`/conversation/switchControl/${id}`);
   return req.data;
 };
 

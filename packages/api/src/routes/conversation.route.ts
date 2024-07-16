@@ -90,21 +90,21 @@ export default class ConversationRoute {
 
     // escalate and de-escalate conversation
     this.router.patch(
-      `${this.path}/escalate/:conversation_id`,
+      `${this.path}/switchControl/:conversation_id`,
       useCatchErrors(
-        isWidgetAccountAuthenticated(
-          this.conversationController.escalateConversation.bind(
+        isAuthenticated(
+          this.conversationController.switchControl.bind(
             this.conversationController
           )
         )
       )
     );
 
-    this.router.patch(
-      `${this.path}/de-escalate/:conversation_id`,
+    this.router.post(
+      `${this.path}/human-support/:conversation_id`,
       useCatchErrors(
         isAuthenticated(
-          this.conversationController.deEscalateConversation.bind(
+          this.conversationController.requestHumanSupport.bind(
             this.conversationController
           )
         )

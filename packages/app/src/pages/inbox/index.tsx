@@ -3,13 +3,13 @@ import {
   FlexColEnd,
   FlexColStart,
   FlexRowCenter,
-  FlexRowCenterBtw,
   FlexRowEnd,
   FlexRowStart,
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "@/components/Flex";
 import {
+  Bot,
   ElipsisVertical,
   Inbox,
   Mail,
@@ -30,12 +30,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  descalateConversation,
   getConversationMessages,
   getConversations,
   markConversationRead,
   replyToConversation,
   deleteConversation,
+  switchConversationControl,
 } from "@/http/requests";
 import { cn } from "@/lib/utils";
 import type { ResponseData } from "@/types";
@@ -139,10 +139,11 @@ export default function InboxPage() {
       console.error(err);
     },
   });
-  const descalateConversationMut = useMutation({
-    mutationFn: async (id: string) => await descalateConversation(id),
-    onSuccess: () => {
-      toast.success("Conversation escalated to agent.");
+  const switchConvControlMut = useMutation({
+    mutationFn: async (id: string) => await switchConversationControl(id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      toast.success(resp?.message);
       getConversationMessagesMut.mutate(selectedConversationId!);
     },
     onError: (error) => {
@@ -198,7 +199,7 @@ export default function InboxPage() {
       if (conversation_id) {
         getConversationMessagesMut.mutate(conversation_id!);
       }
-    }, 1000);
+    }, 10000);
 
     const convInterval = setInterval(() => {
       if (!conversations) return;
@@ -206,7 +207,7 @@ export default function InboxPage() {
         getConversationsQuery.mutate();
         setLoading((prev) => ({ ...prev, newConversations: true }));
       }
-    }, 3000);
+    }, 10000);
 
     return () => {
       clearInterval(msgInterval);
@@ -278,11 +279,7 @@ export default function InboxPage() {
     return locationStr;
   };
 
-  const lastEscalation = selectedConversation
-    ? selectedConversation?.messages
-        .filter((msg) => msg.message === undefined)
-        .slice(-1)
-    : [];
+  console.log(selectedConversation);
 
   return (
     <FlexRowStart className="w-full h-screen relative gap-0">
@@ -381,7 +378,19 @@ export default function InboxPage() {
                         !more ? "w-0" : "w-[100px]"
                       )}
                     >
-                      <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
+                      <button
+                        className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center"
+                        onClick={() => {
+                          setMore(false);
+                          setTimeout(() => {
+                            setSelectedConversationId(null);
+                            setSelectedConversation(null);
+                            router({
+                              pathname: "/inbox",
+                            });
+                          }, 200);
+                        }}
+                      >
                         <X
                           size={20}
                           strokeWidth={3}
@@ -424,33 +433,41 @@ export default function InboxPage() {
 
                   <TooltipComp
                     text={
-                      lastEscalation[0]?.is_escalated === true
+                      selectedConversation?.admin_in_control
                         ? "Return control to bot"
-                        : "No human support requested"
+                        : "Take control of conversation"
                     }
                   >
                     <button
                       className={cn(
-                        "w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center disabled:opacity-[.5] disabled:cursor-not-allowed",
-                        lastEscalation[0]?.is_escalated === true && "bg-red-305"
+                        "w-auto h-auto px-3 py-1 rounded-md bg-white-300/80 enableBounceEffect flex items-center justify-center disabled:opacity-[.5] disabled:cursor-not-allowed gap-1",
+                        selectedConversation?.admin_in_control
+                          ? "bg-blue-101 text-white-100"
+                          : "text-dark-100"
                       )}
-                      disabled={
-                        lastEscalation[0]?.is_escalated === false ||
-                        descalateConversationMut.isPending
-                      }
+                      disabled={switchConvControlMut.isPending}
                       onClick={() => {
-                        descalateConversationMut.mutate(selectedConversationId);
+                        switchConvControlMut.mutate(selectedConversationId);
                       }}
                     >
-                      <PersonStanding
-                        size={20}
-                        strokeWidth={3}
-                        className={cn(
-                          "stroke-white-400",
-                          lastEscalation[0]?.is_escalated === true &&
-                            "stroke-white-100"
-                        )}
-                      />
+                      <span className="text-xs font-ppReg">
+                        {selectedConversation?.admin_in_control
+                          ? "Release control"
+                          : "Take control"}
+                      </span>
+                      {!selectedConversation?.admin_in_control ? (
+                        <PersonStanding
+                          size={20}
+                          strokeWidth={2}
+                          className={cn("stroke-white-400")}
+                        />
+                      ) : (
+                        <Bot
+                          size={20}
+                          strokeWidth={2}
+                          className={cn("stroke-white-100")}
+                        />
+                      )}
                     </button>
                   </TooltipComp>
                 </FlexRowEnd>
@@ -474,7 +491,7 @@ export default function InboxPage() {
                     className="w-full h-full bg-transparent outline-none px-8 font-ppReg disabled disabled:cursor-not-allowed disabled:opacity-[.5] text-sm"
                     placeholder="Type a message..."
                     disabled={
-                      lastEscalation[0]?.is_escalated === false ||
+                      !selectedConversation?.admin_in_control ||
                       replyToConversationMut.isPending
                     }
                     value={query}
@@ -493,7 +510,7 @@ export default function InboxPage() {
                   <button
                     className="w-[80px] h-[70px] bg-dark-100 text-white-100 flex-center rounded-full enableBounceEffect scale-[.80] disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
                     disabled={
-                      lastEscalation[0]?.is_escalated === false ||
+                      !selectedConversation?.admin_in_control ||
                       replyToConversationMut.isPending
                     }
                     onClick={() => {
@@ -599,19 +616,6 @@ const MessageList = ({
   conversations,
   data_name,
 }: MessageListProps) => {
-  const renderEscalationMessage = () => (
-    <FlexRowCenterBtw className="w-full mt-5 mb-3" data-name={data_name}>
-      <div className="w-full border-[.5px] border-white-400/20"></div>
-      <TooltipComp text="Human support requested">
-        <div className="w-[250px] bg-white-300/50 rounded-md px-3 py-1 flex-center gap-2 scale-[.85] border-[.5px] border-white-400/30">
-          <span className="font-ppM text-sm">Conversation escalated</span>
-          <PersonStanding size={20} className="stroke-dark-400" />
-        </div>
-      </TooltipComp>
-      <div className="w-full border-[.5px] border-white-400/20"></div>
-    </FlexRowCenterBtw>
-  );
-
   const renderMessage = (arg: {
     msg: IConversationMessages["messages"][0];
     i: number;
@@ -653,14 +657,9 @@ const MessageList = ({
     <>
       {selectedConversation && selectedConversation?.messages.length > 0
         ? selectedConversation.messages.map((msg, i) => {
-            if (msg?.is_escalated === true || msg?.is_escalated === false) {
-              return renderEscalationMessage();
-            }
-
             const chatbotConfig = conversations?.chatbot_config.find(
               (c) => c.agent_id === msg.agent_id
             );
-
             return renderMessage({
               msg,
               i,
