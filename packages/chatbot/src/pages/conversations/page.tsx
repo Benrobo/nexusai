@@ -1,5 +1,7 @@
-import React from "react";
+import ProtectPage from "@/components/ProtectPage";
 
-export default function Conversations() {
+function Conversations() {
   return <div>Conversations</div>;
 }
+
+export default ProtectPage(Conversations);

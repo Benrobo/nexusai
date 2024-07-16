@@ -1,5 +1,7 @@
-import React from "react";
+import ProtectPage from "@/components/ProtectPage";
 
-export default function Account() {
+function Account() {
   return <div>Account</div>;
 }
+
+export default ProtectPage(Account);

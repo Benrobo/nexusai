@@ -35,15 +35,15 @@ export default function BottomNavigation() {
 
   return (
     <FlexColCenter
-      className="w-full h-auto px-4 py-5 bg-white-100 fixed bottom-0 gap-2"
+      className="w-full h-auto pt-5 pb-5 bg-white-100 fixed bottom-0 gap-0"
       style={{
         backdropFilter: "blur(10px)",
         // chatbot-config here
       }}
     >
-      <FlexRowCenter className="w-full gap-10">
+      <FlexRowCenter className="w-full px-4 gap-10">
         {navigations.map((n) => (
-          <Link to={n.path} key={n.name}>
+          <Link to={`${n.path}?agent_id=dscsdcs`} key={n.name}>
             <button
               className={cn(
                 "w-auto px-6 py-4 rounded-full gap-3 flex-center enableBounceEffect overflow-hidden",
@@ -76,6 +76,14 @@ export default function BottomNavigation() {
           </Link>
         ))}
       </FlexRowCenter>
+      <div className="w-full border-t-[.5px] border-t-white-400/30 flex-center py-2 translate-y-5 gap-2">
+        <p className="text-xs font-ppReg text-white-400/40">Powered by</p>
+        <img
+          width={60}
+          src={"/assets/images/logos/nexus-logo-2.svg"}
+          className="rounded-full opacity-[.5] hover:opacity-100"
+        />
+      </div>
     </FlexColCenter>
   );
 }
