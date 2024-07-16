@@ -77,12 +77,23 @@ export default class ConversationRoute {
       )
     );
 
-    // escalate conversation
+    // escalate and de-escalate conversation
     this.router.patch(
       `${this.path}/escalate/:conversation_id`,
       useCatchErrors(
-        isAuthenticated(
+        isWidgetAccountAuthenticated(
           this.conversationController.escalateConversation.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
+    this.router.patch(
+      `${this.path}/de-escalate/:conversation_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.conversationController.deEscalateConversation.bind(
             this.conversationController
           )
         )
@@ -95,6 +106,18 @@ export default class ConversationRoute {
       useCatchErrors(
         dualUserAuthenticator(
           this.conversationController.processConversation.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
+    // update unread messages
+    this.router.patch(
+      `${this.path}/mark-read/:conversation_id`,
+      useCatchErrors(
+        dualUserAuthenticator(
+          this.conversationController.markConversationRead.bind(
             this.conversationController
           )
         )

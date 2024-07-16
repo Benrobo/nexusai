@@ -202,3 +202,31 @@ export const getConversationMessages = async (id: string) => {
   const req = await $axios.get(`/conversation/messages/admin/${id}`);
   return req.data;
 };
+
+export const descalateConversation = async (id: string) => {
+  const req = await $axios.patch(`/conversation/de-escalate/${id}`);
+  return req.data;
+};
+
+export const replyToConversation = async (data: {
+  id: string;
+  response: string;
+}) => {
+  const req = await $axios.post(
+    `/conversation/process/${data.id}`,
+    { response: data.response },
+    { headers: { "x-nexus-admin-account": true } }
+  );
+  return req.data;
+};
+
+export const markConversationRead = async (id: string) => {
+  const req = await $axios.patch(
+    `/conversation/mark-read/${id}`,
+    {},
+    {
+      headers: { "x-nexus-admin-account": true },
+    }
+  );
+  return req.data;
+};

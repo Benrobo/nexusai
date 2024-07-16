@@ -29,15 +29,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import useSession from "@/hooks/useSession";
-import { getConversationMessages, getConversations } from "@/http/requests";
+import {
+  descalateConversation,
+  getConversationMessages,
+  getConversations,
+  markConversationRead,
+  replyToConversation,
+} from "@/http/requests";
 import { cn } from "@/lib/utils";
 import type { ResponseData } from "@/types";
 import type { IConversationMessages, IConversations } from "@/types/inbox.type";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Remarkable } from "remarkable";
 import countryJson from "@/data/country.json";
@@ -47,13 +52,14 @@ const markdown = new Remarkable();
 dayjs.extend(relativeTime);
 
 export default function InboxPage() {
-  const data = useSession();
-  const [conversations, setCopversations] = useState<IConversations | null>(
+  const [conversations, setConversations] = useState<IConversations | null>(
     null
   );
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null);
+  const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const [query, setQuery] = useState("");
   const [selectedConversation, setSelectedConversation] =
     useState<IConversationMessages | null>(null);
   const [more, setMore] = useState(false);
@@ -61,7 +67,7 @@ export default function InboxPage() {
     mutationFn: async () => await getConversations(),
     onSuccess: (data) => {
       const resp = data as ResponseData;
-      setCopversations(resp.data);
+      setConversations(resp.data);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
@@ -100,7 +106,60 @@ export default function InboxPage() {
       toast.error(err.message);
     },
   });
-  const refetchConversations = () => getConversationsQuery.mutate();
+  const replyToConversationMut = useMutation({
+    mutationFn: async (data: { id: string; response: string }) =>
+      replyToConversation(data),
+    onSuccess: (data: any) => {
+      const resp = data as ResponseData;
+      const msgData = resp.data;
+
+      // append to selected messages
+      selectedConversation?.messages.push(msgData);
+      setQuery("");
+      scrollToBottom();
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
+  const markConversationReadMut = useMutation({
+    mutationFn: async (id: string) => await markConversationRead(id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      const readMessages = resp.data["read_messages"];
+      const modifiedConv = {
+        ...conversations,
+        unread_messages: conversations?.unread_messages.map((ur) => {
+          if (ur.conv_id === readMessages.conv_id) {
+            ur.unread = 0;
+          }
+          return ur;
+        }),
+      };
+
+      setConversations(modifiedConv as any);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      console.error(err);
+    },
+  });
+  const descalateConversationMut = useMutation({
+    mutationFn: async (id: string) => await descalateConversation(id),
+    onSuccess: () => {
+      toast.success("Conversation escalated to agent.");
+      getConversationMessagesMut.mutate(selectedConversationId!);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      console.error(err);
+    },
+  });
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     getConversationsQuery.mutate();
@@ -109,13 +168,13 @@ export default function InboxPage() {
   useEffect(() => {
     if (selectedConversationId) {
       getConversationMessagesMut.mutate(selectedConversationId);
+      scrollToBottom();
     }
   }, [selectedConversationId]);
 
-  const agentConfig = {
-    brand_color: "#000",
-    text_color: "#fff",
-  };
+  useEffect(() => {
+    scrollToBottom();
+  });
 
   if (getConversationsQuery.isPending) {
     return <FullPageLoader blur={true} showText={false} />;
@@ -150,6 +209,12 @@ export default function InboxPage() {
     }
     return locationStr;
   };
+
+  const lastEscalation = selectedConversation
+    ? selectedConversation?.messages
+        .filter((msg) => msg.message === undefined)
+        .slice(-1)
+    : [];
 
   return (
     <FlexRowStart className="w-full h-screen relative gap-0">
@@ -197,7 +262,12 @@ export default function InboxPage() {
                     : conv?.lastMsg?.sender?.name!,
                 avatar: conv.lastMsg?.sender?.avatar,
               }}
-              onSelect={(id) => setSelectedConversationId(id)}
+              onSelect={(id) => {
+                if (selectedConversationId === id) return;
+                setSelectedConversationId(id);
+                markConversationReadMut.mutate(id);
+              }}
+              selectedConversation={selectedConversationId}
             />
           ))}
         </FlexColStart>
@@ -258,12 +328,34 @@ export default function InboxPage() {
                     </button>
                   </FlexRowEnd>
 
-                  <TooltipComp text="Escalate Chat?">
-                    <button className="w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center">
+                  <TooltipComp
+                    text={
+                      lastEscalation[0]?.is_escalated === true
+                        ? "Return control to bot"
+                        : "No human support requested"
+                    }
+                  >
+                    <button
+                      className={cn(
+                        "w-[30px] h-[30px] rounded-full bg-white-300/80 enableBounceEffect flex items-center justify-center disabled:opacity-[.5] disabled:cursor-not-allowed",
+                        lastEscalation[0]?.is_escalated === true && "bg-red-305"
+                      )}
+                      disabled={
+                        lastEscalation[0]?.is_escalated === false ||
+                        descalateConversationMut.isPending
+                      }
+                      onClick={() => {
+                        descalateConversationMut.mutate(selectedConversationId);
+                      }}
+                    >
                       <PersonStanding
                         size={20}
                         strokeWidth={3}
-                        className="stroke-white-400"
+                        className={cn(
+                          "stroke-white-400",
+                          lastEscalation[0]?.is_escalated === true &&
+                            "stroke-white-100"
+                        )}
                       />
                     </button>
                   </TooltipComp>
@@ -271,26 +363,48 @@ export default function InboxPage() {
               </FlexRowStartCenter>
 
               {/* messages */}
-              <FlexColStart className="w-full h-screen overflow-y-hidden mt-0 p-0 gap-0">
+              <FlexColStart className="w-full h-screen overflow-y-auto hideScrollBar mt-0 px-4 gap-5 pb-[10rem]">
                 <MessageList
                   selectedConversation={selectedConversation}
                   conversations={conversations}
                 />
-                {/* spacer */}
+                <div ref={messagesEndRef} data-name="scroll-to-bottom" />
               </FlexColStart>
 
               {/* input control */}
-              <FlexRowStartCenter className="w-full h-[100px] absolute bottom-0 left-0 px-10 z-[10] backdrop-blur-sm">
+              <FlexRowStartCenter className="w-full h-[100px] absolute bottom-5 left-0 px-10 z-[10] backdrop-blur-sm">
                 <FlexRowCenter className="w-full h-[70px] shadow-xl border-[.5px] border-white-400/30 rounded-full bg-white-100 overflow-hidden">
                   <input
                     type="text"
-                    className="w-full h-full bg-transparent outline-none px-8 font-ppReg disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
+                    className="w-full h-full bg-transparent outline-none px-8 font-ppReg disabled disabled:cursor-not-allowed disabled:opacity-[.5] text-sm"
                     placeholder="Type a message..."
-                    disabled={true}
+                    disabled={
+                      lastEscalation[0]?.is_escalated === false ||
+                      replyToConversationMut.isPending
+                    }
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyUp={(e) => {
+                      if (e.key === "Enter") {
+                        replyToConversationMut.mutate({
+                          id: selectedConversationId,
+                          response: query,
+                        });
+                      }
+                    }}
                   />
                   <button
                     className="w-[80px] h-[70px] bg-dark-100 text-white-100 flex-center rounded-full enableBounceEffect scale-[.80] disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
-                    disabled={true}
+                    disabled={
+                      lastEscalation[0]?.is_escalated === false ||
+                      replyToConversationMut.isPending
+                    }
+                    onClick={() => {
+                      replyToConversationMut.mutate({
+                        id: selectedConversationId,
+                        response: query,
+                      });
+                    }}
                   >
                     <Send size={20} className="stroke-white-100" />
                   </button>
@@ -376,14 +490,14 @@ const MessageList = ({
 }: MessageListProps) => {
   const renderEscalationMessage = () => (
     <FlexRowCenterBtw className="w-full mt-5 mb-3">
-      <div className="w-full border-[.5px] border-white-400/50"></div>
+      <div className="w-full border-[.5px] border-white-400/20"></div>
       <TooltipComp text="Human support requested">
         <div className="w-[250px] bg-white-300/50 rounded-md px-3 py-1 flex-center gap-2 scale-[.85] border-[.5px] border-white-400/30">
           <span className="font-ppM text-sm">Conversation escalated</span>
           <PersonStanding size={20} className="stroke-dark-400" />
         </div>
       </TooltipComp>
-      <div className="w-full border-[.5px] border-white-400/50"></div>
+      <div className="w-full border-[.5px] border-white-400/20"></div>
     </FlexRowCenterBtw>
   );
 
@@ -404,8 +518,9 @@ const MessageList = ({
         message={msg.message}
         date={msg.date}
         agent_config={isAgentOrAdmin ? chatbotConfig : undefined}
-        admin_name={!isAgentOrAdmin ? msg.sender?.name : undefined}
+        admin_name={isAgentOrAdmin ? msg.sender?.name : undefined}
         customer_name={!isAgentOrAdmin ? msg.sender?.name : undefined}
+        avatar={msg.sender?.avatar}
       />
     );
   };
@@ -423,7 +538,7 @@ const MessageList = ({
   );
 
   return (
-    <FlexColStart className="w-full h-screen px-9 gap-5 overflow-y-scroll hideScrollBar pb-[10em]">
+    <>
       {selectedConversation && selectedConversation?.messages.length > 0
         ? selectedConversation.messages.map((msg, i) => {
             if (msg?.is_escalated === true || msg?.is_escalated === false) {
@@ -441,7 +556,7 @@ const MessageList = ({
             });
           })
         : renderNoMessages()}
-    </FlexColStart>
+    </>
   );
 };
 
@@ -452,6 +567,7 @@ interface MessageListItemProps {
   date: string;
   admin_name?: string | null;
   customer_name?: string | null;
+  avatar?: string | null;
   agent_config?: {
     brand_color: string;
     text_color: string;
@@ -465,6 +581,7 @@ function MessageListItem({
   admin_name,
   customer_name,
   pos,
+  avatar,
   agent_config,
 }: MessageListItemProps) {
   const chatAvatar = (
@@ -474,7 +591,10 @@ function MessageListItem({
       src={
         role === "agent"
           ? "/assets/logo/nexus-dark.svg"
-          : `https://api.dicebear.com/9.x/initials/svg?seed=${role === "admin" ? admin_name : customer_name}`
+          : role === "admin"
+            ? avatar ??
+              `https://api.dicebear.com/9.x/initials/svg?seed=${admin_name}`
+            : `https://api.dicebear.com/9.x/initials/svg?seed=${customer_name}`
       }
     />
   );
@@ -487,11 +607,12 @@ function MessageListItem({
           <FlexColStart className="w-auto gap-0">
             {/* date/time */}
             <span className="text-xs font-ppReg text-white-400/80">
-              {dayjs(date).fromNow()}
+              {/* {dayjs(date).fromNow()} */}
+              {dayjs(date).format("MMM DD, YYYY hh:mm A")}
             </span>
             <FlexColStart
               className={cn(
-                "w-full max-w-[600px] p-2 rounded-tr-md rounded-br-md rounded-bl-md",
+                "w-auto max-w-[600px] p-2 rounded-tr-md rounded-br-md rounded-bl-md",
                 role == "agent" ? "bg-dark-100" : "bg-white-300/20"
               )}
               style={{
@@ -501,43 +622,8 @@ function MessageListItem({
                     : "#ebebebb6",
               }}
             >
-              {/* content */}
-              <p
-                className="font-ppReg text-sm"
-                style={{
-                  color:
-                    role === "agent"
-                      ? agent_config?.text_color ?? "#fff"
-                      : "#000",
-                }}
-              >
-                {message}
-              </p>
-            </FlexColStart>
-          </FlexColStart>
-        </FlexRowStart>
-      ) : (
-        <FlexRowEnd className={cn("w-full h-auto mt-2")}>
-          <FlexColEnd className="w-auto gap-0">
-            {/* date/time */}
-            <span className="text-xs font-ppReg text-white-400/80">
-              {dayjs(date).fromNow()}
-            </span>
-            <FlexColStart
-              className={cn(
-                "w-auto max-w-[600px] p-2 rounded-tl-md rounded-bl-md rounded-br-md",
-                role == "agent" ? "bg-dark-100" : "bg-white-300/20"
-              )}
-              style={{
-                backgroundColor:
-                  role === "agent"
-                    ? agent_config?.brand_color ?? "#000"
-                    : "#ebebebb6",
-              }}
-            >
-              {/* content */}
               <div
-                className="font-ppReg text-sm"
+                className="w-auto font-ppReg text-sm"
                 style={{
                   color:
                     role === "agent"
@@ -549,6 +635,41 @@ function MessageListItem({
                 }}
               />
             </FlexColStart>
+          </FlexColStart>
+        </FlexRowStart>
+      ) : (
+        <FlexRowEnd className={cn("w-full h-auto mt-2")}>
+          <FlexColEnd className="w-auto max-w-[450px] gap-0">
+            {/* date/time */}
+            <span className="text-xs font-ppReg text-white-400/80">
+              {/* {dayjs(date).fromNow()} */}
+              {dayjs(date).format("MMM DD, YYYY hh:mm A")}
+            </span>
+            <FlexColEnd
+              className={cn(
+                "w-auto max-w-[600px] p-2 rounded-tl-md rounded-bl-md rounded-br-md",
+                role == "agent" ? "bg-dark-100" : "bg-white-300/20"
+              )}
+              style={{
+                backgroundColor:
+                  role === "agent"
+                    ? agent_config?.brand_color ?? "#000"
+                    : "#ebebebb6",
+              }}
+            >
+              <div
+                className="w-auto font-ppReg text-sm"
+                style={{
+                  color:
+                    role === "agent"
+                      ? agent_config?.text_color ?? "#fff"
+                      : "#000",
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: markdown.render(message),
+                }}
+              />
+            </FlexColEnd>
           </FlexColEnd>
           {chatAvatar}
         </FlexRowEnd>
@@ -601,6 +722,7 @@ interface IMessageItemProps {
     avatar?: string;
   };
   onSelect?: (id: string) => void;
+  selectedConversation?: string | null;
 }
 
 function MessageItem({
@@ -610,6 +732,7 @@ function MessageItem({
   unread,
   onSelect,
   conv_id,
+  selectedConversation,
 }: IMessageItemProps) {
   return (
     <button
@@ -619,7 +742,8 @@ function MessageItem({
       <FlexRowStartBtw
         className={cn(
           "w-full border-t-[.5px] border-b-[.5px] border-t-white-400/30 border-b-white-400/30 bg-none px-3 py-5",
-          "bg-white-300"
+          unread > 0 && "bg-white-300",
+          selectedConversation === conv_id && "bg-white-100"
         )}
       >
         <FlexRowStart className="w-auto gap-2">
@@ -639,12 +763,12 @@ function MessageItem({
                 : "N/A"}
             </h1>
             <div
-              className="text-xs font-ppReg text-dark-200 flex items-center justify-start gap-1"
+              className="text-xs font-ppReg text-dark-200 flex items-start justify-start gap-1 text-start"
               dangerouslySetInnerHTML={{
                 __html: markdown.render(
                   message
-                    ? message?.length > 30
-                      ? message?.slice(0, 30) + "..."
+                    ? message?.length > 40
+                      ? message?.slice(0, 40) + "..."
                       : message
                     : "N/A"
                 ),
@@ -652,11 +776,11 @@ function MessageItem({
             ></div>
           </FlexColStart>
         </FlexRowStart>
-        <FlexColEnd className="w-auto gap-1">
+        <FlexColEnd className="w-auto min-w-[100px] gap-1">
           <p className="text-xs font-ppM text-white-400">
             {dayjs(time).fromNow()}
           </p>
-          {unread && unread > 0 && (
+          {unread > 0 && (
             <div className="w-5 h-5 text-[10px] font-ppM flex items-center justify-center rounded-full bg-blue-101 text-white-100 scale-[1]">
               {unread}
             </div>

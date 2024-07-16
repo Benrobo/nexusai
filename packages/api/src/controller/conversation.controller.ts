@@ -330,6 +330,7 @@ export default class ConversationController {
       "Messages retrieved successfully",
       200,
       {
+        conv_id: conversation.id,
         messages,
         customer_info: customerInfo,
       }
@@ -459,6 +460,12 @@ export default class ConversationController {
     res: Response,
     data: { query: string; conv_id: string; userId: string }
   ) {
+    const customerAccount = await prisma.chatWidgetAccount.findFirst({
+      where: {
+        id: data.userId,
+      },
+    });
+
     const conversation = await prisma.conversations.findFirst({
       where: {
         id: data.conv_id,
@@ -520,7 +527,7 @@ export default class ConversationController {
       msgData["is_admin_read"] = true;
     }
 
-    await this.storeChatMessage(msgData as any);
+    const customerMsgStored = await this.storeChatMessage(msgData as any);
 
     if (lastEscalation && lastEscalation?.is_escalated) {
       logger.info(
@@ -591,7 +598,7 @@ export default class ConversationController {
     const aiMsg = aiResp.data;
 
     // agent
-    await this.storeChatMessage({
+    const aiMsgStored = await this.storeChatMessage({
       conv_id: data.conv_id,
       role: "agent",
       content: aiMsg,
@@ -606,8 +613,26 @@ export default class ConversationController {
       "Conversation processed successfully",
       200,
       {
-        user_query: data.query,
-        response: aiMsg,
+        // user_query: data.query,
+        // response: aiMsg,
+        agent: {
+          message: aiMsgStored.content,
+          date: aiMsgStored.created_at,
+          sender: {
+            id: agent.id,
+            name: agent.name,
+            role: "agent",
+          },
+        },
+        customer: {
+          message: customerMsgStored.content,
+          date: customerMsgStored.created_at,
+          sender: {
+            id: data.userId,
+            name: customerAccount.name,
+            role: "customer",
+          },
+        },
       }
     );
   }
@@ -618,6 +643,12 @@ export default class ConversationController {
     res: Response,
     data: { response: string; conv_id: string; userId: string }
   ) {
+    const userAccount = await prisma.users.findFirst({
+      where: {
+        uId: data.userId,
+      },
+    });
+
     if (!data.response || data.response.length === 0) {
       throw new HttpException(
         RESPONSE_CODE.BAD_REQUEST,
@@ -659,7 +690,7 @@ export default class ConversationController {
     const agent = conversation.agents;
 
     // store admin response
-    await this.storeChatMessage({
+    const messageStored = await this.storeChatMessage({
       conv_id: data.conv_id,
       role: "admin",
       content: data.response,
@@ -676,11 +707,105 @@ export default class ConversationController {
       "Conversation processed successfully",
       200,
       {
-        response: data.response,
+        message: messageStored.content,
+        date: messageStored.created_at,
+        sender: {
+          id: data.userId,
+          name: userAccount.fullname,
+          role: "admin",
+          avatar: userAccount.avatar,
+        },
       }
     );
   }
 
+  public async markConversationRead(req: Request & IReqObject, res: Response) {
+    const user = req.user;
+    const userAccount = await prisma.users.findFirst({
+      where: { uId: user.id },
+    });
+
+    const conversation_id = req.params.conversation_id;
+
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: conversation_id,
+      },
+    });
+
+    if (!conversation) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Conversation not found",
+        404
+      );
+    }
+
+    // check if user id exists in one of the messages
+    const messagesAssociatedToUser = await prisma.chatMessages.findMany({
+      where: {
+        convId: conversation_id,
+        senderId: user.id,
+      },
+    });
+
+    if (messagesAssociatedToUser.length === 0) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "User not found in conversation",
+        400
+      );
+    }
+
+    const unreadWhereClause = userAccount
+      ? { is_read_admin: false }
+      : { is_read_customer: false };
+    const unreadUpdateWhereClause = userAccount
+      ? { is_read_admin: true }
+      : { is_read_customer: true };
+
+    const unreadMessages = await prisma.chatMessages.findMany({
+      where: {
+        convId: conversation_id,
+        ...unreadWhereClause,
+      },
+    });
+
+    if (unreadMessages.length === 0) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "No unread messages",
+        400
+      );
+    }
+
+    const readMsg = await prisma.chatMessages.updateMany({
+      where: {
+        convId: conversation_id,
+        ...unreadWhereClause,
+      },
+      data: {
+        ...unreadUpdateWhereClause,
+      },
+    });
+
+    const read_messages = {
+      conv_id: conversation_id,
+      unread: readMsg.count - unreadMessages.length,
+    };
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Unread messages updated successfully",
+      200,
+      {
+        read_messages,
+      }
+    );
+  }
+
+  // escalate conversation to admin (from ChatWidgetAccount)
   public async escalateConversation(req: Request & IReqObject, res: Response) {
     const user = req.user;
     const conversation_id = req.params.conversation_id;
@@ -720,19 +845,11 @@ export default class ConversationController {
     let respMessage = "";
 
     if (last_msg_index === lastEscalation.last_msg_index) {
-      logger.info(
-        `[Conversation]: Conversation ${lastEscalation?.is_escalated ? "de-escalated" : "escalated"}`
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Conversation is already escalated",
+        400
       );
-      respMessage = `Conversation ${lastEscalation?.is_escalated ? "de-escalated" : "escalated"}`;
-      // update
-      await prisma.conversationEscalationPeriod.update({
-        where: {
-          id: lastEscalation.id,
-        },
-        data: {
-          is_escalated: !lastEscalation.is_escalated,
-        },
-      });
     } else if (
       allMsg.length > 0 &&
       !lastEscalation?.is_escalated
@@ -764,6 +881,78 @@ export default class ConversationController {
     }
 
     return sendResponse.success(res, RESPONSE_CODE.SUCCESS, respMessage, 200);
+  }
+
+  // de-escalate conversation to agent (from AdminAccount)
+  public async deEscalateConversation(
+    req: Request & IReqObject,
+    res: Response
+  ) {
+    const user = req.user;
+    const conversation_id = req.params.conversation_id;
+
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: conversation_id,
+      },
+    });
+
+    if (!conversation) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Conversation not found",
+        404
+      );
+    }
+
+    // check if conversation has been escalated
+    const lastEscalation = await prisma.conversationEscalationPeriod.findFirst({
+      where: {
+        conv_id: conversation_id,
+      },
+      orderBy: {
+        start_date: "desc",
+      },
+    });
+
+    const allMsg = await prisma.chatMessages.findMany({
+      where: {
+        convId: conversation_id,
+      },
+    });
+
+    if (!lastEscalation?.is_escalated) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Conversation is not escalated",
+        400
+      );
+    }
+
+    if (allMsg.length === 0) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Can't de-escalate an empty conversation",
+        400
+      );
+    }
+
+    //  update
+    await prisma.conversationEscalationPeriod.update({
+      where: {
+        id: lastEscalation.id,
+      },
+      data: {
+        is_escalated: false,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Conversation de-esclated",
+      200
+    );
   }
 
   private async storeChatMessage(props: {

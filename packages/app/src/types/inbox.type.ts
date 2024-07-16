@@ -31,6 +31,7 @@ export interface IConversations {
 }
 
 export interface IConversationMessages {
+  conv_id: string;
   messages: {
     agent_id: string;
     message: string;
@@ -38,6 +39,7 @@ export interface IConversationMessages {
     sender: {
       id: string;
       name: string;
+      avatar: string;
       role: AccountRoles;
     };
     last_message_index?: number;
