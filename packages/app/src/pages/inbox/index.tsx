@@ -47,13 +47,13 @@ import toast from "react-hot-toast";
 import { Remarkable } from "remarkable";
 import countryJson from "@/data/country.json";
 import { Link, useParams } from "react-router-dom";
+import { Spinner } from "@/components/Spinner";
 
 const markdown = new Remarkable();
 
 dayjs.extend(relativeTime);
 
 export default function InboxPage() {
-  // extract conv_id from url
   const { conversation_id } = useParams();
   const [conversations, setConversations] = useState<IConversations | null>(
     null
@@ -66,47 +66,36 @@ export default function InboxPage() {
   const [selectedConversation, setSelectedConversation] =
     useState<IConversationMessages | null>(null);
   const [more, setMore] = useState(false);
+  const [loading, setLoading] = useState({
+    messages: false,
+    initiaConversations: false,
+    newConversations: false,
+  });
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
   const getConversationsQuery = useMutation({
     mutationFn: async () => await getConversations(),
     onSuccess: (data) => {
       const resp = data as ResponseData;
       setConversations(resp.data);
+      setLoading((prev) => ({ ...prev, initiaConversations: false }));
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
       toast.error(err.message);
+      setLoading((prev) => ({ ...prev, initiaConversations: false }));
     },
   });
   const getConversationMessagesMut = useMutation({
     mutationFn: async (id: string) => await getConversationMessages(id),
     onSuccess: (data) => {
       const resp = data as ResponseData;
-
-      // filter out object that doesn't have a message property
-      const escalatedMsg = (resp.data as IConversationMessages).messages.filter(
-        (msg) => msg.message === undefined
-      ) as {
-        last_message_index?: number;
-        is_escalated?: boolean;
-        start_date?: string;
-      }[];
-
-      const modifiedMessages = (
-        resp.data as IConversationMessages
-      ).messages.filter((msg) => msg.message !== undefined);
-
-      escalatedMsg.forEach((msg) => {
-        modifiedMessages.splice(msg.last_message_index!, 0, msg as any);
-      });
-
-      setSelectedConversation({
-        ...resp.data,
-        messages: modifiedMessages,
-      });
+      setSelectedConversation(resp.data);
+      setLoading((prev) => ({ ...prev, messages: false }));
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
       toast.error(err.message);
+      setLoading((prev) => ({ ...prev, messages: false }));
     },
   });
   const replyToConversationMut = useMutation({
@@ -166,32 +155,80 @@ export default function InboxPage() {
 
   useEffect(() => {
     getConversationsQuery.mutate();
+    setLoading((prev) => ({ ...prev, initiaConversations: true }));
   }, []);
 
   useEffect(() => {
-    if (selectedConversationId || conversation_id) {
-      getConversationMessagesMut.mutate(
-        conversation_id! || selectedConversationId!
-      );
+    if (conversation_id) {
+      setLoading((prev) => ({ ...prev, messages: true }));
+      getConversationMessagesMut.mutate(conversation_id!);
       scrollToBottom();
     }
-  }, [selectedConversationId, conversation_id]);
+  }, [conversation_id]);
 
   useEffect(() => {
     if (!conversation_id) setSelectedConversationId(null);
     conversation_id && setSelectedConversationId(conversation_id);
+    scrollToBottom();
   }, [conversation_id]);
 
   useEffect(() => {
-    scrollToBottom();
-  });
+    const msgInterval = setInterval(() => {
+      if (conversation_id) {
+        getConversationMessagesMut.mutate(conversation_id!);
+      }
+    }, 1000);
 
-  if (getConversationsQuery.isPending) {
-    return <FullPageLoader blur={true} showText={false} />;
-  }
+    const convInterval = setInterval(() => {
+      if (!conversations) return;
+      if (conversation_id) {
+        getConversationsQuery.mutate();
+        setLoading((prev) => ({ ...prev, newConversations: true }));
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(msgInterval);
+      clearInterval(convInterval);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (shouldScrollToBottom) {
+      scrollToBottom();
+    }
+  }, [shouldScrollToBottom]);
+
+  useEffect(() => {
+    document.addEventListener(
+      "scroll",
+      () => {
+        setShouldScrollToBottom(false);
+      },
+      true
+    );
+
+    let timeout;
+    document.addEventListener(
+      "scrollend",
+      () => {
+        timeout = setTimeout(() => {
+          setShouldScrollToBottom(true);
+          clearTimeout(timeout!);
+        }, 5000);
+      },
+      true
+    );
+
+    return () => {
+      document.removeEventListener("scroll", () => {});
+      document.removeEventListener("scrollend", () => {});
+      clearTimeout(timeout!);
+    };
+  }, []);
 
   if (
-    (!getConversationsQuery.isPending && !conversations) ||
+    (!loading.initiaConversations && !conversations) ||
     conversations?.conversations.length === 0
   ) {
     return (
@@ -253,45 +290,54 @@ export default function InboxPage() {
         </FlexRowStartBtw>
 
         {/* message lists */}
-        <FlexColStart className="w-full border-t-[.5px] gap-0 p-0">
-          {conversations?.conversations.map((conv) => (
-            <MessageItem
-              key={conv.id}
-              conv_id={conv.id}
-              message={conv?.lastMsg?.message}
-              time={conv.lastMsg.date}
-              unread={
-                conversations.unread_messages.find(
-                  (ur) => ur.conv_id === conv.id
-                )?.unread ?? 0
-              }
-              user={{
-                name:
-                  conv.lastMsg.sender.role === "admin"
-                    ? conv.lastMsg.sender.fullname!
-                    : conv?.lastMsg?.sender?.name!,
-                avatar:
-                  conv.lastMsg.sender.role === "agent"
-                    ? "/assets/logo/nexus-dark.svg"
-                    : conv.lastMsg?.sender?.avatar,
-              }}
-              onSelect={(id) => {
-                if (selectedConversationId === id) return;
-                setSelectedConversationId(id);
-                markConversationReadMut.mutate(id);
-              }}
-              selectedConversation={selectedConversationId}
-            />
-          ))}
-        </FlexColStart>
+        {loading.initiaConversations ? (
+          <FlexColCenter className="w-full">
+            <Spinner color="#000" />
+          </FlexColCenter>
+        ) : (
+          <FlexColStart className="w-full border-t-[.5px] gap-0 p-0">
+            {conversations?.conversations.map((conv) => (
+              <MessageItem
+                key={conv.id}
+                conv_id={conv.id}
+                message={conv?.lastMsg?.message}
+                time={conv.lastMsg.date}
+                unread={
+                  conversations.unread_messages.find(
+                    (ur) => ur.conv_id === conv.id
+                  )?.unread ?? 0
+                }
+                user={{
+                  name:
+                    conv.lastMsg.sender.role === "admin"
+                      ? conv.lastMsg.sender.fullname!
+                      : conv?.lastMsg?.sender?.name!,
+                  avatar:
+                    conv.lastMsg.sender.role === "agent"
+                      ? "/assets/logo/nexus-dark.svg"
+                      : conv.lastMsg?.sender?.avatar,
+                }}
+                onSelect={(id) => {
+                  if (selectedConversationId === id) return;
+                  setSelectedConversationId(id);
+                  markConversationReadMut.mutate(id);
+                }}
+                selectedConversation={selectedConversationId}
+              />
+            ))}
+          </FlexColStart>
+        )}
       </FlexColStart>
 
       {/* selected conversation */}
-      <FlexColStart className="w-full h-screen bg-white-100 relative gap-0">
+      <FlexColStart
+        className="w-full h-screen bg-white-100 relative gap-0"
+        data-name="selected-conversation-area"
+      >
         {selectedConversationId ? (
-          getConversationMessagesMut.isPending ? (
+          loading.messages ? (
             <FullPageLoader blur={false} showText={false} />
-          ) : selectedConversation && !getConversationMessagesMut.isPending ? (
+          ) : selectedConversation && !loading.messages ? (
             <>
               <FlexRowStartCenter className="w-full h-[96px] px-5 py-4 border-b-white-400/30 border-b-[.5px]">
                 <FlexColStart className="w-full gap-1">
@@ -380,6 +426,7 @@ export default function InboxPage() {
                 <MessageList
                   selectedConversation={selectedConversation}
                   conversations={conversations}
+                  data-name="selected-conversation-messages"
                 />
                 <div ref={messagesEndRef} data-name="scroll-to-bottom" />
               </FlexColStart>
@@ -454,7 +501,7 @@ export default function InboxPage() {
 
       {/* user info */}
       <FlexColStart className="w-full h-screen max-w-[350px] gap-0 border-l-[.5px] border-l-white-400/30">
-        {selectedConversation ? (
+        {selectedConversation && !loading.messages ? (
           <>
             <FlexColCenter className="w-full h-auto min-h-[20%] gap-1">
               <img
@@ -507,14 +554,16 @@ export default function InboxPage() {
 interface MessageListProps {
   selectedConversation: IConversationMessages | null;
   conversations: IConversations | null;
+  data_name?: string;
 }
 
 const MessageList = ({
   selectedConversation,
   conversations,
+  data_name,
 }: MessageListProps) => {
   const renderEscalationMessage = () => (
-    <FlexRowCenterBtw className="w-full mt-5 mb-3">
+    <FlexRowCenterBtw className="w-full mt-5 mb-3" data-name={data_name}>
       <div className="w-full border-[.5px] border-white-400/20"></div>
       <TooltipComp text="Human support requested">
         <div className="w-[250px] bg-white-300/50 rounded-md px-3 py-1 flex-center gap-2 scale-[.85] border-[.5px] border-white-400/30">
@@ -546,6 +595,7 @@ const MessageList = ({
         admin_name={isAgentOrAdmin ? msg.sender?.name : undefined}
         customer_name={!isAgentOrAdmin ? msg.sender?.name : undefined}
         avatar={msg.sender?.avatar}
+        data_name={data_name}
       />
     );
   };
@@ -597,6 +647,7 @@ interface MessageListItemProps {
     brand_color: string;
     text_color: string;
   };
+  data_name?: string;
 }
 
 function MessageListItem({
@@ -608,6 +659,7 @@ function MessageListItem({
   pos,
   avatar,
   agent_config,
+  data_name,
 }: MessageListItemProps) {
   const chatAvatar = (
     <img
@@ -646,6 +698,7 @@ function MessageListItem({
                     ? agent_config?.brand_color ?? "#000"
                     : "#ebebebb6",
               }}
+              data-name={data_name}
             >
               <div
                 className="w-auto font-ppReg text-sm"
@@ -658,6 +711,7 @@ function MessageListItem({
                 dangerouslySetInnerHTML={{
                   __html: markdown.render(message),
                 }}
+                data-name={data_name}
               />
             </FlexColStart>
           </FlexColStart>
@@ -681,6 +735,7 @@ function MessageListItem({
                     ? agent_config?.brand_color ?? "#000"
                     : "#ebebebb6",
               }}
+              data-name={data_name}
             >
               <div
                 className="w-auto font-ppReg text-sm"
@@ -693,6 +748,7 @@ function MessageListItem({
                 dangerouslySetInnerHTML={{
                   __html: markdown.render(message),
                 }}
+                data-name={data_name}
               />
             </FlexColEnd>
           </FlexColEnd>

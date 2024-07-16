@@ -283,6 +283,7 @@ export default class ConversationController {
                 },
               });
       messages.push({
+        id: msg.id,
         message: msg.content,
         date: msg.created_at,
         agent_id: msg.agentId,
@@ -324,6 +325,31 @@ export default class ConversationController {
       },
     });
 
+    const nonDuplicateMessages = messages.filter(
+      (msg, index, self) =>
+        index ===
+        self.findIndex(
+          (m) =>
+            m.id === msg.id && m?.last_message_index === msg?.last_message_index
+        )
+    );
+
+    let idx = 0;
+    const modifiedMessages = [];
+    while (idx < nonDuplicateMessages.length) {
+      if (nonDuplicateMessages[idx]?.last_message_index) {
+        const escalatedData = nonDuplicateMessages[idx];
+        modifiedMessages[escalatedData.last_message_index] = {
+          is_escalated: escalatedData.is_escalated,
+          start_date: escalatedData.start_date,
+          last_message_index: escalatedData.last_message_index,
+        };
+      } else {
+        modifiedMessages.push(nonDuplicateMessages[idx]);
+      }
+      idx++;
+    }
+
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
@@ -331,7 +357,7 @@ export default class ConversationController {
       200,
       {
         conv_id: conversation.id,
-        messages,
+        messages: modifiedMessages,
         customer_info: customerInfo,
       }
     );
@@ -840,11 +866,17 @@ export default class ConversationController {
       },
     });
 
-    const last_msg_index = allMsg.map((d) => d.id).length - 1;
+    const allMessages = allMsg.map((d) => d.id);
+    const last_msg_index = allMessages.findIndex(
+      (d) => d === allMessages[allMessages.length - 1]
+    );
 
     let respMessage = "";
 
-    if (last_msg_index === lastEscalation.last_msg_index) {
+    if (
+      last_msg_index === lastEscalation.last_msg_index &&
+      lastEscalation?.is_escalated
+    ) {
       throw new HttpException(
         RESPONSE_CODE.BAD_REQUEST,
         "Conversation is already escalated",

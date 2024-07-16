@@ -80,7 +80,10 @@ export default function DashboardSidebar() {
   });
 
   useEffect(() => {
-    setActivePage(pathname.path.toLowerCase().replace(/^\//g, ""));
+    const splittedPath = pathname.path.split("/");
+    if (splittedPath.length > 1 && splittedPath.includes("inbox")) {
+      setActivePage("inbox");
+    } else setActivePage(pathname.path.toLowerCase().replace(/^\//g, ""));
   }, [pathname]);
 
   return (
