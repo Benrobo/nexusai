@@ -1,0 +1,51 @@
+::selection {
+  background: rgba(86, 86, 255, 0.362);
+}
+
+body {
+  scroll-behavior: smooth;
+}
+
+#loading-spinner {
+  animation: spinner 0.5s linear infinite;
+  border-radius: 30px;
+  /* transition: .2s ease; */
+}
+
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.hideScrollBar::-webkit-scrollbar {
+  /* customize it */
+  width: 3px;
+  background: transparent;
+}
+
+.hideScrollBar::-webkit-scrollbar-thumb {
+  /* customize it */
+  background: #777;
+  border-radius: 30px;
+}
+
+.hideScrollBar::-webkit-scrollbar-track {
+  /* customize it */
+  background: transparent;
+}
+
+.hideScrollBar2::-webkit-scrollbar {
+  /* customize it */
+  width: 1px;
+  background: transparent;
+}
+
+/* hide code highlight scrollbar */
+pre {
+  scrollbar-width: none;
+}
