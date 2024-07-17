@@ -13,16 +13,24 @@ import NexusTradeMark from "@/components/NexusTradeMark";
 import { cn, formatDate } from "@/lib/utils";
 import type { IConversationMessages, IConversations } from "@/types";
 import { ArrowLeft, Inbox, RefreshCw, Send, X } from "@components/icons";
+import { useNavigate } from "react-router-dom";
 import { Remarkable } from "remarkable";
 
 const markdown = new Remarkable();
 
 export default function Messages() {
+  const router = useNavigate();
   return (
     <FlexColStart className="w-full h-screen relative gap-0">
       <FlexRowStartBtw className="w-full h-auto bg-dark-100 px-6 py-5">
         <FlexRowStartCenter className="w-auto gap-3">
-          <ArrowLeft size={20} />
+          <button
+            onClick={() => {
+              router(-1);
+            }}
+          >
+            <ArrowLeft size={20} />
+          </button>
           <h1 className="text-md font-ppM text-white-100">Cassie</h1>
         </FlexRowStartCenter>
         <FlexRowEndCenter className="w-full">

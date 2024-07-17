@@ -10,7 +10,6 @@ import { Cable, Info, Url, X } from "@/components/icons";
 import Modal from "@/components/Modal";
 import { Spinner } from "@/components/Spinner";
 import TooltipComp from "@/components/TooltipComp";
-import { Input } from "@/components/ui/input";
 import supportedIntegrations, {
   type ValidIntegrations,
 } from "@/data/integration";

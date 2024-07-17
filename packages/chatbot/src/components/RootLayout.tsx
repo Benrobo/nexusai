@@ -1,6 +1,7 @@
 import { useDataCtx } from "@/context/DataCtx";
 import { FlexColCenter } from "./Flex";
 import { FullPageLoader } from "./Loader";
+import ChatWidgetAuthPage from "@/pages/auth/page";
 
 export default function RootLayout({
   children,
@@ -26,5 +27,11 @@ export default function RootLayout({
     );
   }
 
-  return children;
+  return (
+    <>
+      {children}
+
+      <ChatWidgetAuthPage />
+    </>
+  );
 }

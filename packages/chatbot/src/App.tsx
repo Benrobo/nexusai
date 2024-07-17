@@ -18,7 +18,6 @@ function App() {
       <RootLayout>
         <div className="h-screen hideScrollBar2 scroll-smooth bg-white-100">
           <QueryClientProvider client={queryClient}>
-            {/* <DataContextProvider> */}
             <Routes>
               <Route element={<PageLayout />}>
                 <Route path="/" element={<Home />} />
@@ -32,7 +31,6 @@ function App() {
               />
             </Routes>
             <Toaster />
-            {/* </DataContextProvider> */}
           </QueryClientProvider>
         </div>
       </RootLayout>
