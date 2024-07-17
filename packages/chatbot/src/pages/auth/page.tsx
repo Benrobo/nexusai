@@ -20,10 +20,10 @@ import {
 } from "@/components/ui/otp-input";
 import { useDataCtx } from "@/context/DataCtx";
 import { useLocation } from "@/hooks/useLocation";
-import { signUpUser, verifyAccount } from "@/http/requests";
+import { signInUser, signUpUser, verifyAccount } from "@/http/requests";
 import type { ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 
 type ActiveTabs = "signin" | "signup";
@@ -211,7 +211,42 @@ function SignUp({ switchTab, closeModal, isOpen }: AuthTab) {
 }
 
 function SignIn({ switchTab, closeModal, isOpen }: AuthTab) {
-  const [otpRequested, setOtpRequested] = React.useState(false);
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [email, setEmail] = useState("");
+  const { location } = useLocation();
+  const signInMut = useMutation({
+    mutationFn: async (data: any) => await signInUser(data),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      toast.success(resp?.message);
+      setOtpRequested(true);
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || "An error occurred";
+      toast.error(msg);
+    },
+  });
+  const verifyEmailMut = useMutation({
+    mutationFn: async (data: any) => await verifyAccount(data),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      toast.success(resp?.message);
+      setOtpRequested(false);
+      window?.location.reload();
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || "An error occurred";
+      toast.error(msg);
+    },
+  });
+
+  const handleSignin = () => {
+    if (!email || email.length === 0) {
+      toast.error("Input must not be empty");
+      return;
+    }
+    signInMut.mutate({ email });
+  };
 
   if (!isOpen) return null;
 
@@ -250,15 +285,28 @@ function SignIn({ switchTab, closeModal, isOpen }: AuthTab) {
                   type="email"
                   placeholder="Email Address"
                   className="w-full px-4 py-3 border-[1px] border-white-400 rounded-md bg-white-300/20 text-xs font-ppReg"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </>
             ) : (
               <VerifyOTP
-                verify={(otp) => {}}
-                // disabled={verifyEmailMut.isPending}
+                verify={(otp) => {
+                  verifyEmailMut.mutate({
+                    email,
+                    otp,
+                  });
+                }}
+                disabled={verifyEmailMut.isPending}
               />
             )}
-            <Button className="w-full px-4 py-3 bg-dark-100 rounded-md text-xs font-ppReg text-white-100 enableBounceEffect hover:bg-brown-100">
+            <Button
+              intent={"dark"}
+              className="w-full px-4 py-3 bg-dark-100 rounded-md text-xs font-ppReg text-white-100 enableBounceEffect hover:bg-brown-100"
+              disabled={signInMut.isPending}
+              isLoading={signInMut.isPending}
+              onClick={handleSignin}
+            >
               Sign In
             </Button>
             <FlexRowCenter className="w-full">
