@@ -9,6 +9,7 @@ const $axios = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
+    "x-nexus-widget-account": true,
   },
   withCredentials: true, // to allow cookies
   timeout: 60000, // 60 seconds

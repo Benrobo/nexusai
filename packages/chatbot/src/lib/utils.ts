@@ -38,18 +38,7 @@ export const capitalizeFirstChar = (str: string) => {
   return final;
 };
 
-export const expireCookie = (name: string) => {
-  document.cookie = `${WIDGET_CONFIG.cookie_name}=;expires=${new Date().toUTCString()};`;
-};
-
 export const sendMessageToParentIframe = (data: any) => {
-  // Get the parent origin dynamically
-  const parentOrigin = document.referrer
-    ? new URL(document.referrer).origin
-    : "*";
-
-  console.log({ d: window.location });
-
   window.parent.postMessage(
     data,
     "*" // Use the dynamically determined parent origin

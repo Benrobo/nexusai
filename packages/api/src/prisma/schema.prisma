@@ -332,6 +332,10 @@ model ChatWidgetAccount {
     name     String
     verified Boolean @default(false)
 
+    // domain_origin String? // domain origin for the chat widget when registering
+
+    // client_id     String? // unique for each domain origin
+
     refresh_token String?
 
     // location metadata

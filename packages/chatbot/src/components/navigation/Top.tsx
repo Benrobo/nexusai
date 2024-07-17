@@ -1,3 +1,4 @@
+import { sendMessageToParentIframe } from "@/lib/utils";
 import { FlexRowStart, FlexRowStartBtw } from "../Flex";
 import { MessagesSquare, X } from "../icons";
 
@@ -8,7 +9,15 @@ export default function TopNavigation() {
         <MessagesSquare />
         <h1 className="text-md font-ppM text-white-100">Cassie</h1>
       </FlexRowStart>
-      <button className=" enableBounceEffect">
+      <button
+        className=" enableBounceEffect"
+        onClick={() => {
+          // send message to iframe parent
+          sendMessageToParentIframe({
+            type: "close-frame",
+          });
+        }}
+      >
         <X size={20} />
       </button>
     </FlexRowStartBtw>

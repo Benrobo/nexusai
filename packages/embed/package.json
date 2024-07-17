@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "nexus.js",
-  "type": "module",
   "scripts": {
     "test": ""
   },

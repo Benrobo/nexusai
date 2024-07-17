@@ -47,7 +47,7 @@ export default function BottomNavigation() {
           <Link to={`${n.path}?agent_id=dscsdcs`} key={n.name}>
             <button
               className={cn(
-                "w-auto px-6 py-4 rounded-full gap-3 flex-center enableBounceEffect overflow-hidden",
+                "w-auto px-6 py-3 rounded-full gap-3 flex-center enableBounceEffect overflow-hidden",
                 activePage === n.name
                   ? "bg-white-300 text-dark-100"
                   : "w-[100px]"
