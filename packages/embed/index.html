@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- <iframe
+      src="http://localhost:3010/account?agent_id=dscsdcs"
+      width="450"
+      height="800"
+      frameborder="0"
+      style="border: 0.5px solid #ccc; border-radius: 10px; overflow: hidden"
+    ></iframe> -->
+
+    <button>Post message</button>
+
+    <script src="./nexus.js"></script>
+    <script>
+      console.log(nexusai.init("welcome back"));
+      // post message to parent window
+      // const iframe = document.querySelector("iframe");
+      // document.querySelector("button").addEventListener("click", () => {
+      //   iframe.contentWindow.postMessage(
+      //     {
+      //       type: "message",
+      //       data: "Hello from iframe",
+      //     },
+      //     "http://localhost:3010"
+      //   );
+      // });
+    </script>
+  </body>
+</html>

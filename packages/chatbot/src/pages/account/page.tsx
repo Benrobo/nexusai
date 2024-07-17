@@ -8,9 +8,10 @@ import { LockOpen, Trash, User } from "@/components/icons";
 import { FullPageLoader } from "@/components/Loader";
 import ProtectPage from "@/components/ProtectPage";
 import Button from "@/components/ui/button";
+import WIDGET_CONFIG from "@/config/widget";
 import useAuth from "@/hooks/useAuth";
 import { logoutAccount } from "@/http/requests";
-import { capitalizeFirstChar } from "@/lib/utils";
+import { capitalizeFirstChar, sendMessageToParentIframe } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -30,12 +31,7 @@ function Account() {
   if (loading) return <FullPageLoader showText={false} />;
 
   return (
-    <FlexColCenter className="w-full h-auto py-10">
-      <h1 className="font-ppM text-md text-dark-100">Account Details</h1>
-
-      <br />
-      <br />
-
+    <FlexColCenter className="w-full h-auto min-h-[70%] py-10">
       <img
         src={`https://api.dicebear.com/9.x/initials/svg?seed=${user?.name}`}
         width={80}
@@ -53,7 +49,13 @@ function Account() {
         <Button
           className="w-full px-10 rounded-xl bg-white-300/30 text-xs text-dark-100 border-[.5px] border-white-400/30 hover:bg-white-400/20 enableBounceEffect font-ppM disabled:bg-white-400/40 disabled:opacity-[.8] disabled:cursor-not-allowed"
           onClick={() => {
-            logoutMut.mutate();
+            // logoutMut.mutate();
+            sendMessageToParentIframe({
+              type: "logout",
+              payload: {
+                cookie_name: WIDGET_CONFIG.cookie_name,
+              },
+            });
           }}
           isLoading={logoutMut.isPending}
           disabled={logoutMut.isPending}

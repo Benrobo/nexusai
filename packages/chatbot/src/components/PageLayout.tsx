@@ -6,7 +6,9 @@ export default function PageLayout() {
   return (
     <div className="w-screen h-screen bg-white-300 overflow-hidden">
       <TopNavigation />
-      <Outlet />
+      <div className="w-full h-full overflow-y-scroll hideScrollBar2">
+        <Outlet />
+      </div>
       {/* bottom nanvigation */}
       <BottomNavigation />
     </div>

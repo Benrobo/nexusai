@@ -1,0 +1,13 @@
+{
+  "name": "embed",
+  "version": "1.0.0",
+  "description": "",
+  "main": "nexus.js",
+  "type": "module",
+  "scripts": {
+    "test": ""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

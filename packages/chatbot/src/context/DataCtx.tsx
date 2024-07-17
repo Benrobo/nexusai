@@ -35,6 +35,15 @@ export default function DataCtxProvider({
     }
   }, [agent_id_query]);
 
+  useEffect(() => {
+    // window.addEventListener("message", (ev) => {
+    //   console.log({ ev });
+    // });
+    // return () => {
+    //   window.removeEventListener("message", () => {});
+    // };
+  }, []);
+
   const ctxValues = {
     agent_id,
     chatbotConfig,

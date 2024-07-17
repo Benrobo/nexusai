@@ -21,6 +21,6 @@ export const getAccountInfo = async () => {
 };
 
 export const logoutAccount = async () => {
-  const resp = await $axios.get("/user/chat-widget-account/logout");
+  const resp = await $axios.post("/user/chat-widget-account/logout");
   return resp.data;
 };
