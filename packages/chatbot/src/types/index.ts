@@ -1,3 +1,25 @@
+export type ResponseData = {
+  errorStatus: boolean;
+  message: string;
+  code: string;
+  statusCode: number;
+  data?: any;
+  error?: {
+    message: string;
+    error: any;
+  };
+};
+
+export type AccountInfo = {
+  id: string;
+  name: string;
+  email: string;
+  country_code: string | null;
+  city: string | null;
+  state: string | null;
+  verified: boolean;
+};
+
 export type AgentType = "ANTI_THEFT" | "SALES_ASSISTANT" | "CHATBOT";
 
 export type ChatBotAgentConfig = {

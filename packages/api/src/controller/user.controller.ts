@@ -3,9 +3,9 @@ import BaseController from "./base.controller.js";
 import { RESPONSE_CODE, IReqObject } from "../types/index.js";
 import {
   createConversationSchema,
-  otpConvAccountSignInSchema,
-  signUpConvAccountSchema,
-  verifyConvAccountSchema,
+  otpChatWidgetAccountSignInSchema,
+  signUpChatWidgetAccountSchema,
+  verifyChatWidgetAccountSchema,
 } from "../lib/schema_validation.js";
 import ConversationService from "../services/conversation.service.js";
 import redis from "../config/redis.js";
@@ -55,7 +55,7 @@ export class ChatWidgetUserController {
   public async signUp(req: Request & IReqObject, res: Response) {
     const payload: ChatWidgetAccountSignupPayload = req.body;
 
-    await ZodValidation(signUpConvAccountSchema, payload, req.serverUrl);
+    await ZodValidation(signUpChatWidgetAccountSchema, payload, req.serverUrl);
 
     // create conversation account
     const acctCreated = await this.createChatWidgetAccount(payload);
@@ -90,7 +90,7 @@ export class ChatWidgetUserController {
     } = req.body;
 
     // validate payload
-    await ZodValidation(verifyConvAccountSchema, payload, req.serverUrl);
+    await ZodValidation(verifyChatWidgetAccountSchema, payload, req.serverUrl);
 
     // check if email exists
     const acctData = await this.getAcctByEmail(payload.email);
@@ -118,7 +118,7 @@ export class ChatWidgetUserController {
       );
     }
 
-    const convAcct = await prisma.chatWidgetAccount.findFirst({
+    const chatWidgetAccount = await prisma.chatWidgetAccount.findFirst({
       where: {
         email: payload.email,
       },
@@ -126,20 +126,23 @@ export class ChatWidgetUserController {
 
     await redis.del(key);
 
-    const refToken = await JWT.generateToken({ uId: convAcct.id }, "refresh");
+    const refToken = await JWT.generateToken(
+      { uId: chatWidgetAccount.id },
+      "refresh"
+    );
     const access_token = await JWT.generateToken(
-      { uId: convAcct.id },
+      { uId: chatWidgetAccount.id },
       "access"
     );
 
     // update account
-    await this.updateAccount(convAcct.id, {
+    await this.updateAccount(chatWidgetAccount.id, {
       verified: true,
       refresh_token: refToken,
     });
 
     // set cookies
-    this.setCookie("conv_token", access_token, res);
+    this.setCookie("widget_account_token", access_token, res);
 
     return sendResponse.success(
       res,
@@ -159,7 +162,11 @@ export class ChatWidgetUserController {
     } = req.body;
 
     // validate payload
-    await ZodValidation(otpConvAccountSignInSchema, payload, req.serverUrl);
+    await ZodValidation(
+      otpChatWidgetAccountSignInSchema,
+      payload,
+      req.serverUrl
+    );
 
     if (payload.email && !payload.otp) {
       // check if email exists
@@ -181,7 +188,7 @@ export class ChatWidgetUserController {
 
       return sendResponse.success(
         res,
-        RESPONSE_CODE.SUCCESS,
+        RESPONSE_CODE.OTP_CODE_REQUESTED,
         "OTP code requested. Please check your email",
         200
       );
@@ -294,6 +301,16 @@ export class ChatWidgetUserController {
     }
 
     return acct;
+  }
+
+  public async logoutWidgetAccount(req: Request & IReqObject, res: Response) {
+    res.clearCookie("widget_account_token");
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Logout successful",
+      200
+    );
   }
 
   private setCookie(name: string, value: string, res: Response) {

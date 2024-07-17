@@ -267,7 +267,7 @@ export const updateChatBotConfigSchema = zod.object({
 });
 
 // CONVERSATIONS STUFF
-export const signUpConvAccountSchema = zod.object({
+export const signUpChatWidgetAccountSchema = zod.object({
   email: zod
     .string({
       required_error: "Email is required",
@@ -286,7 +286,7 @@ export const signUpConvAccountSchema = zod.object({
   city: zod.string().optional(),
 });
 
-export const verifyConvAccountSchema = zod.object({
+export const verifyChatWidgetAccountSchema = zod.object({
   email: zod
     .string({
       required_error: "Email is required",
@@ -303,7 +303,7 @@ export const verifyConvAccountSchema = zod.object({
     }),
 });
 
-export const otpConvAccountSignInSchema = zod.object({
+export const otpChatWidgetAccountSignInSchema = zod.object({
   email: zod
     .string({
       required_error: "Email is required",

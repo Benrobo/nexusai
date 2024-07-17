@@ -27,3 +27,12 @@ export const formatDate = (date: string) => {
 
   return formattedDate;
 };
+
+export const capitalizeFirstChar = (str: string) => {
+  if (!str) return "";
+  let final = "";
+  str.split(" ").forEach((c) => {
+    final += c.charAt(0).toUpperCase() + c.slice(1) + " ";
+  });
+  return final;
+};

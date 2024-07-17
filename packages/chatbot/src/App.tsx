@@ -14,10 +14,10 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <DataCtxProvider>
-      <RootLayout>
-        <div className="h-screen hideScrollBar2 scroll-smooth bg-white-100">
-          <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <DataCtxProvider>
+        <RootLayout>
+          <div className="h-screen hideScrollBar2 scroll-smooth bg-white-100">
             <Routes>
               <Route element={<PageLayout />}>
                 <Route path="/" element={<Home />} />
@@ -31,10 +31,10 @@ function App() {
               />
             </Routes>
             <Toaster />
-          </QueryClientProvider>
-        </div>
-      </RootLayout>
-    </DataCtxProvider>
+          </div>
+        </RootLayout>
+      </DataCtxProvider>
+    </QueryClientProvider>
   );
 }
 

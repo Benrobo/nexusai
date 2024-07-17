@@ -1,18 +1,53 @@
 import {
+  FlexColCenter,
   FlexColEnd,
   FlexColStart,
   FlexRowStart,
   FlexRowStartBtw,
 } from "@/components/Flex";
-import { ListFilter, Undo } from "@/components/icons";
+import {
+  ListFilter,
+  MessagesSquare,
+  SendHorizontal,
+  Undo,
+} from "@/components/icons";
 import ProtectPage from "@/components/ProtectPage";
+import { useDataCtx } from "@/context/DataCtx";
 import { cn, formatDate } from "@/lib/utils";
+import type { IConversations } from "@/types";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Remarkable } from "remarkable";
 
 const markdown = new Remarkable();
 
 function Conversations() {
+  const { setAuthVisible } = useDataCtx();
+  const [conversations, setConversations] = useState<IConversations | null>(
+    null
+  );
+
+  if (!conversations) {
+    return (
+      <FlexColCenter className="w-full h-auto min-h-[70%]">
+        <MessagesSquare size={60} className="stroke-dark-100" />
+        <FlexColCenter className="gap-4 text-center px-6 mt-2">
+          <h1 className="font-ppB text-lg text-dark-100">Conversations</h1>
+          <h1 className="font-ppReg text-sm text-white-400">
+            No conversations found.
+          </h1>
+          <button
+            className="w-[200px] px-5 py-3 rounded-full flex-center gap-3 font-ppReg text-xs text-white-100 bg-dark-100 enableBounceEffect"
+            onClick={() => {}}
+          >
+            <span>Start a conversation</span>
+            <SendHorizontal size={20} className="stroke-white-100" />
+          </button>
+        </FlexColCenter>
+      </FlexColCenter>
+    );
+  }
+
   return (
     <FlexColStart className="w-full h-full">
       {/* header */}

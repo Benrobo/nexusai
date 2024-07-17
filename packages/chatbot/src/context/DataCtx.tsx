@@ -10,6 +10,8 @@ interface DataCtxValueType {
   setChatbotConfig: (config: ChatBotAgentConfig) => void;
   pageLoading: boolean;
   setPageLoading: (loading: boolean) => void;
+  authVisible: boolean;
+  setAuthVisible: (visible: boolean) => void;
 }
 
 export default function DataCtxProvider({
@@ -25,6 +27,7 @@ export default function DataCtxProvider({
   const [chatbotConfig, setChatbotConfig] = useState<ChatBotAgentConfig | null>(
     null
   );
+  const [authVisible, setAuthVisible] = useState<boolean>(false);
 
   useEffect(() => {
     if (agent_id_query) {
@@ -38,6 +41,8 @@ export default function DataCtxProvider({
     setChatbotConfig,
     pageLoading,
     setPageLoading,
+    authVisible,
+    setAuthVisible,
   } satisfies DataCtxValueType;
 
   return <DataCtx.Provider value={ctxValues}>{children}</DataCtx.Provider>;

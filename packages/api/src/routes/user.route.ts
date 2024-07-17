@@ -45,10 +45,28 @@ export default class UserRoute {
       )
     );
 
+    this.router.patch(
+      `${this.path}/chat-widget-account/verify`,
+      useCatchErrors(
+        this.widgetUserController.verifyAccount.bind(this.widgetUserController)
+      )
+    );
+
     this.router.post(
       `${this.path}/chat-widget-account/signin`,
       useCatchErrors(
         this.widgetUserController.otpSignIn.bind(this.widgetUserController)
+      )
+    );
+
+    this.router.get(
+      `${this.path}/chat-widget-account/logout`,
+      useCatchErrors(
+        isWidgetAccountAuthenticated(
+          this.widgetUserController.logoutWidgetAccount.bind(
+            this.widgetUserController
+          )
+        )
       )
     );
   }

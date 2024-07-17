@@ -114,7 +114,7 @@ export function isAuthenticated(fn: Function) {
 // conversation account middleware
 export function isWidgetAccountAuthenticated(fn: Function) {
   return async (req: Request & IReqObject, res: Response) => {
-    const token = req.cookies["conv_token"]; // access_token
+    const token = req.cookies["widget_account_token"]; // access_token
 
     if (!token) {
       throw new HttpException(RESPONSE_CODE.UNAUTHORIZED, "Unauthorized", 401);
