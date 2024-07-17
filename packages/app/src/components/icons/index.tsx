@@ -519,3 +519,11 @@ export const Bot = (props: SvgIconProps) => (
     <path d="M9 13v2" />
   </IconMarkup>
 );
+
+export const ListFilter = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M3 6h18" />
+    <path d="M7 12h10" />
+    <path d="M10 18h4" />
+  </IconMarkup>
+);

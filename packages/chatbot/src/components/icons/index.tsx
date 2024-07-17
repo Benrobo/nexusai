@@ -526,3 +526,27 @@ export const MessagesSquare = (props: SvgIconProps) => (
     <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
   </IconMarkup>
 );
+
+export const ListFilter = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M3 6h18" />
+    <path d="M7 12h10" />
+    <path d="M10 18h4" />
+  </IconMarkup>
+);
+
+export const Undo = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M3 7v6h6" />
+    <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+  </IconMarkup>
+);
+
+export const RefreshCw = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+    <path d="M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+    <path d="M8 16H3v5" />
+  </IconMarkup>
+);

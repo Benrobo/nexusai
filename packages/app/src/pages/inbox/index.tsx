@@ -37,7 +37,7 @@ import {
   deleteConversation,
   switchConversationControl,
 } from "@/http/requests";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import type { ResponseData } from "@/types";
 import type { IConversationMessages, IConversations } from "@/types/inbox.type";
 import { useMutation } from "@tanstack/react-query";
@@ -365,7 +365,7 @@ export default function InboxPage() {
                   <p className="font-ppReg text-sm text-white-400/50">
                     Sent{" "}
                     <span className="font-ppM text-white-400">
-                      {dayjs(selectedConversation?.messages[0].date).fromNow()}
+                      {formatDate(selectedConversation?.messages[0].date)}
                     </span>
                   </p>
                 </FlexColStart>
@@ -720,8 +720,7 @@ function MessageListItem({
           <FlexColStart className="w-auto gap-0">
             {/* date/time */}
             <span className="text-xs font-ppReg text-white-400/80">
-              {/* {dayjs(date).fromNow()} */}
-              {dayjs(date).format("MMM DD, YYYY hh:mm A")}
+              {formatDate(date)}
             </span>
             <FlexColStart
               className={cn(
@@ -757,8 +756,7 @@ function MessageListItem({
           <FlexColEnd className="w-auto max-w-[450px] gap-0">
             {/* date/time */}
             <span className="text-xs font-ppReg text-white-400/80">
-              {/* {dayjs(date).fromNow()} */}
-              {dayjs(date).format("MMM DD, YYYY hh:mm A")}
+              {formatDate(date)}
             </span>
             <FlexColEnd
               className={cn(
@@ -890,9 +888,7 @@ function MessageItem({
           </FlexColStart>
         </FlexRowStart>
         <FlexColEnd className="w-auto min-w-[100px] gap-1">
-          <p className="text-xs font-ppM text-white-400">
-            {dayjs(time).fromNow()}
-          </p>
+          <p className="text-xs font-ppM text-white-400">{formatDate(time)}</p>
           {unread > 0 && (
             <div className="w-5 h-5 text-[10px] font-ppM flex items-center justify-center rounded-full bg-blue-101 text-white-100 scale-[1]">
               {unread}
