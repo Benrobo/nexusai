@@ -121,7 +121,6 @@ class NexusWidget {
   toggleIframe() {
     const wrapper = document.getElementById(NEXUS_WRAPPER_ID);
     const chatBubble = document.getElementById(NEXUS_CHATBUBBLE_ID);
-    console.log(wrapper.classList.contains(visible), this.iframeOpen);
 
     if (this.iframeOpen || wrapper.classList.contains(visible)) {
       wrapper.classList.remove(visible);
