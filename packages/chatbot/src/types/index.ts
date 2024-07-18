@@ -18,6 +18,11 @@ export type AccountInfo = {
   city: string | null;
   state: string | null;
   verified: boolean;
+  chatbotConfig: {
+    brand_color: string;
+    text_color: string;
+    agent_id: string;
+  } | null;
 };
 
 export type AgentType = "ANTI_THEFT" | "SALES_ASSISTANT" | "CHATBOT";

@@ -29,7 +29,7 @@ export default class UserRoute {
 
     // Widget Account Section
     this.router.get(
-      `${this.path}/chat-widget-account`,
+      `${this.path}/chat-widget-account/:agent_id`,
       useCatchErrors(
         isWidgetAccountAuthenticated(
           this.widgetUserController.getAccount.bind(this.widgetUserController)

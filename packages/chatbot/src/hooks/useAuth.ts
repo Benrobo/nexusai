@@ -1,3 +1,4 @@
+import { useDataCtx } from "@/context/DataCtx";
 import { getAccountInfo } from "@/http/requests";
 import type { AccountInfo } from "@/types";
 import { useMutation } from "@tanstack/react-query";
@@ -6,11 +7,21 @@ import { useEffect, useState } from "react";
 type Status = "authenticated" | "unauthorised";
 
 export default function useAuth() {
+  const { agent_id, account, setAccount } = useDataCtx();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<Status | null>(null);
   const [user, setUser] = useState<AccountInfo | null>(null);
   const userMutation = useMutation({
-    mutationFn: async () => await getAccountInfo(),
+    mutationFn: async (id: string) => await getAccountInfo(id),
+    onSuccess: (data) => {
+      const reqData = data?.data as AccountInfo;
+      if (reqData) {
+        setUser(reqData);
+        setAccount && setAccount(reqData);
+      }
+      setLoading(false);
+      setStatus("authenticated");
+    },
     onError: (err) => {
       setLoading(false);
       setStatus("unauthorised");
@@ -18,13 +29,13 @@ export default function useAuth() {
       console.error(err);
       throw new Error("Unauthorised");
     },
-    onSuccess: (data) => {
-      const reqData = data?.data as AccountInfo;
-      if (reqData) setUser(reqData);
-      setLoading(false);
-      setStatus("authenticated");
-    },
   });
+
+  useEffect(() => {
+    if (agent_id && !account) {
+      userMutation.mutate(agent_id);
+    }
+  }, [agent_id, account]);
 
   useEffect(() => {
     if (status === "authenticated" || user) return;
@@ -36,7 +47,7 @@ export default function useAuth() {
 
   const fetcher = async () => {
     setLoading(true);
-    userMutation.mutate();
+    agent_id && userMutation.mutate(agent_id);
   };
 
   return {

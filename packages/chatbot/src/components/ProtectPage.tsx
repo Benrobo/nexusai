@@ -1,6 +1,6 @@
 import usePathname from "@/hooks/usePathname";
 import React from "react";
-import { MessagesSquare, SendHorizontal, User } from "./icons";
+import { MessagesSquare, User } from "./icons";
 import { FlexColCenter, FlexColStart } from "./Flex";
 import { useDataCtx } from "@/context/DataCtx";
 import useAuth from "@/hooks/useAuth";
@@ -42,13 +42,31 @@ const pageConfig: Record<
 
 export default function ProtectPage<P>(Component: React.ComponentType<P>) {
   return function ComponentModified(props: P & any) {
-    const { loading, status } = useAuth();
-    const { setAuthVisible } = useDataCtx();
+    const { loading, status, user } = useAuth();
+    const { setAuthVisible, agent_id } = useDataCtx();
     const { pathname } = usePathname();
     const page = pathname.toLowerCase() as PageType;
 
     if (loading && status === "unauthorised") {
       return <FullPageLoader showText={false} />;
+    }
+
+    if (!agent_id || !user?.chatbotConfig) {
+      return (
+        <FlexColCenter className="w-full h-screen gap-1">
+          <h1 className="text-lg font-ppM text-dark-100">
+            Invalid Chatbot Widget Configuration
+          </h1>
+          <p className="text-md font-ppReg text-white-400">
+            Something went wrong with the chatbot widget configuration.
+          </p>
+          {!user?.chatbotConfig && (
+            <p className="text-sm font-ppReg text-dark-100">
+              INVALID_AGENT_ID: {agent_id}
+            </p>
+          )}
+        </FlexColCenter>
+      );
     }
 
     if (status === "unauthorised" && !loading) {

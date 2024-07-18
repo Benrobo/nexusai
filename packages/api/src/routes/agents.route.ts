@@ -36,9 +36,7 @@ export default class AgentRoute {
     this.router.get(
       `${this.path}/chatbot-config/:id`,
       useCatchErrors(
-        isAuthenticated(
-          this.agentController.getChatbotConfig.bind(this.agentController)
-        )
+        this.agentController.getChatbotConfig.bind(this.agentController)
       )
     );
 

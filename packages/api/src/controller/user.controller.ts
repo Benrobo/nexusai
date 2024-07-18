@@ -200,6 +200,7 @@ export class ChatWidgetUserController {
 
   public async getAccount(req: Request & IReqObject, res: Response) {
     const user = req.user;
+    const agent_id = req.params["agent_id"];
 
     const account = await prisma.chatWidgetAccount.findFirst({
       where: {
@@ -207,12 +208,37 @@ export class ChatWidgetUserController {
       },
     });
 
+    let chatbotConfig = null;
+
+    if (agent_id) {
+      const config = await prisma.chatbotConfig.findFirst({
+        where: {
+          agentId: agent_id,
+        },
+        select: {
+          agentId: true,
+          brand_color: true,
+          text_color: true,
+        },
+      });
+      if (config) {
+        chatbotConfig = {
+          agentId: config?.agentId,
+          brand_color: config?.brand_color,
+          text_color: config?.text_color,
+        };
+      }
+    }
+
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Account retrieved successfully",
       200,
-      account
+      {
+        ...account,
+        chatbotConfig,
+      }
     );
   }
 

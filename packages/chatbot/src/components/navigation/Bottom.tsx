@@ -8,17 +8,17 @@ import NexusTradeMark from "../NexusTradeMark";
 
 const navigations = [
   {
-    path: "/",
+    path: "",
     name: "home",
     title: "Home",
   },
   {
-    path: "/conversations",
+    path: "conversations",
     name: "conversations",
     title: "Conversations",
   },
   {
-    path: "/account",
+    path: "account",
     name: "account",
     title: "Account",
   },
@@ -44,7 +44,7 @@ export default function BottomNavigation() {
     >
       <FlexRowCenter className="w-full px-4 gap-10">
         {navigations.map((n) => (
-          <Link to={`${n.path}?agent_id=dscsdcs`} key={n.name}>
+          <Link to={n.path} key={n.name}>
             <button
               className={cn(
                 "w-auto px-6 py-3 rounded-full gap-3 flex-center enableBounceEffect overflow-hidden",
@@ -53,9 +53,7 @@ export default function BottomNavigation() {
                   : "w-[100px]"
               )}
               onClick={() => {
-                if (activePage === n.name) {
-                  setActivePage("");
-                } else setActivePage(n.name);
+                setActivePage(n.name);
               }}
               style={
                 {

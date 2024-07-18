@@ -1,22 +1,16 @@
-import {
-  FlexColCenter,
-  FlexColStart,
-  FlexRowCenter,
-  FlexRowCenterBtw,
-} from "@/components/Flex";
-import { LockOpen, Trash, User } from "@/components/icons";
-import { FullPageLoader } from "@/components/Loader";
+import { FlexColCenter, FlexColStart, FlexRowCenter } from "@/components/Flex";
+import { LockOpen, Trash } from "@/components/icons";
 import ProtectPage from "@/components/ProtectPage";
 import Button from "@/components/ui/button";
 import WIDGET_CONFIG from "@/config/widget";
-import useAuth from "@/hooks/useAuth";
+import { useDataCtx } from "@/context/DataCtx";
 import { logoutAccount } from "@/http/requests";
 import { capitalizeFirstChar, sendMessageToParentIframe } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 function Account() {
-  const { loading, user } = useAuth();
+  const { account } = useDataCtx();
   const logoutMut = useMutation({
     mutationFn: async () => await logoutAccount(),
     onSuccess: () => {
@@ -28,21 +22,19 @@ function Account() {
     },
   });
 
-  if (loading) return <FullPageLoader showText={false} />;
-
   return (
     <FlexColCenter className="w-full h-auto min-h-[70%] py-10">
       <img
-        src={`https://api.dicebear.com/9.x/initials/svg?seed=${user?.name}`}
+        src={`https://api.dicebear.com/9.x/initials/svg?seed=${account?.name}`}
         width={80}
         className="rounded-full"
       />
       {/* chatwidget user account details */}
       <FlexColCenter className="gap-1 text-center px-6 ">
         <h1 className="font-ppB text-md text-dark-100">
-          {capitalizeFirstChar(user?.name!)}
+          {capitalizeFirstChar(account?.name!)}
         </h1>
-        <p className="font-ppReg text-sm text-white-400">{user?.email}</p>
+        <p className="font-ppReg text-sm text-white-400">{account?.email}</p>
       </FlexColCenter>
 
       <FlexRowCenter className="w-full px-[2em] mt-10">

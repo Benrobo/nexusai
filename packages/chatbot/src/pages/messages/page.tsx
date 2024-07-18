@@ -13,13 +13,29 @@ import NexusTradeMark from "@/components/NexusTradeMark";
 import { cn, formatDate } from "@/lib/utils";
 import type { IConversationMessages, IConversations } from "@/types";
 import { ArrowLeft, Inbox, RefreshCw, Send, X } from "@components/icons";
-import { useNavigate } from "react-router-dom";
+import { useMatch, useNavigate } from "react-router-dom";
 import { Remarkable } from "remarkable";
 
 const markdown = new Remarkable();
 
 export default function Messages() {
   const router = useNavigate();
+  const match = useMatch("/:agent_id/conversation/:conversation_id");
+  const params = match?.params;
+
+  if (!params?.agent_id || !params?.conversation_id) {
+    return (
+      <FlexColCenter className="w-full h-screen gap-1">
+        <h1 className="text-sm font-ppM text-dark-100">
+          Invalid Chatbot Widget Configuration
+        </h1>
+        <p className="text-xs font-ppReg text-white-400">
+          Something went wrong with the chatbot widget configuration.
+        </p>
+      </FlexColCenter>
+    );
+  }
+
   return (
     <FlexColStart className="w-full h-screen relative gap-0">
       <FlexRowStartBtw className="w-full h-auto bg-dark-100 px-6 py-5">
