@@ -66,7 +66,7 @@ class NexusWidget {
     }
     this.iframe = document.createElement("iframe");
     this.iframe.id = IFRAME_ID;
-    this.iframe.src = `${CLIENT_URL}?agent_id=${this.agentId}`;
+    this.iframe.src = `${CLIENT_URL}/${this.agentId}`;
     this.iframe.style = `border: none; width: 100%; height: 100%; z-index: ${Number.MAX_SAFE_INTEGER};`;
   }
 

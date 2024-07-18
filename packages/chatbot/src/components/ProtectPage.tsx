@@ -47,17 +47,18 @@ export default function ProtectPage<P>(Component: React.ComponentType<P>) {
     const { pathname } = usePathname();
     const page = pathname.toLowerCase() as PageType;
 
-    if (loading && status === "unauthorised") {
+    if (loading) {
       return <FullPageLoader showText={false} />;
     }
 
-    if (!agent_id || !user?.chatbotConfig) {
+    if (!agent_id || user?.chatbotConfig === null) {
+      console.error("Invalid Chatbot Configuration");
       return (
         <FlexColCenter className="w-full h-screen gap-1">
           <h1 className="text-lg font-ppM text-dark-100">
             Invalid Chatbot Widget Configuration
           </h1>
-          <p className="text-md font-ppReg text-white-400">
+          <p className="text-sm font-ppReg text-white-400">
             Something went wrong with the chatbot widget configuration.
           </p>
           {!user?.chatbotConfig && (
