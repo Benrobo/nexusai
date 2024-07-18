@@ -5,6 +5,10 @@ const IFRAME_ID = "nexus-embed-iframe";
 const NEXUS_WRAPPER_ID = "nexus-embed-wrapper";
 const NEXUS_CHATBUBBLE_ID = "nexus-chatbubble-button";
 
+const visible = `${NEXUS_WRAPPER_ID}-visible`;
+const hidden = `${NEXUS_WRAPPER_ID}-hidden`;
+const mobileViewport = `${NEXUS_WRAPPER_ID}-mobile`;
+
 const ChevronDown = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
 `;
@@ -32,11 +36,19 @@ class NexusWidget {
     this.mountIframe();
     this.handleBootstrap();
     this.injectBubbleButton();
+
+    window.addEventListener("resize", this.handleResponsiveness, false);
+    window.addEventListener(
+      "DOMContentLoaded",
+      this.handleResponsiveness.bind(self),
+      false
+    );
   }
 
   mountIframe() {
     if (!document.getElementById(IFRAME_ID)) {
       window.addEventListener("message", this.receiveMessage.bind(self), false);
+
       const wrapper = document.createElement("div");
       wrapper.id = NEXUS_WRAPPER_ID;
       wrapper.setAttribute(
@@ -74,12 +86,34 @@ class NexusWidget {
       }
     }
   }
+  handleResponsiveness() {
+    const wrapper = document.getElementById(NEXUS_WRAPPER_ID);
+    const innerWidth = window.innerWidth;
+
+    if (wrapper.classList.contains(`${NEXUS_WRAPPER_ID}-visible`)) {
+      if (innerWidth <= 700) {
+        wrapper.classList.add(mobileViewport);
+      } else {
+        wrapper.classList.remove(mobileViewport);
+      }
+    } else {
+      if (
+        innerWidth <= 700 &&
+        !wrapper.classList.contains(`${NEXUS_WRAPPER_ID}-visible`)
+      ) {
+        wrapper.classList.remove(mobileViewport);
+      } else {
+        wrapper.classList.remove(mobileViewport);
+        wrapper.classList.remove(hidden);
+      }
+    }
+  }
 
   injectBubbleButton() {
     const button = document.createElement("button");
     button.setAttribute("id", NEXUS_CHATBUBBLE_ID);
     button.innerHTML = MessagesSquare;
-    button.style = `position: fixed; bottom: 20px; right: 20px; z-index: ${Number.MAX_SAFE_INTEGER}; width:60px; height:60px; background-color: ${this.widgetConfig?.brand_color ?? "#000"}; color: ${this.widgetConfig?.text_color ?? "#fff"}; border-radius: 50%; border: none; cursor: pointer;`;
+    button.style = `position: fixed; bottom: 20px; right: 20px; z-index: 1000; width:60px; height:60px; background-color: ${this.widgetConfig?.brand_color ?? "#000"}; color: ${this.widgetConfig?.text_color ?? "#fff"}; border-radius: 50%; border: none; cursor: pointer;`;
     button.onclick = this.toggleIframe.bind(this);
     document.body.appendChild(button);
   }
@@ -87,19 +121,21 @@ class NexusWidget {
   toggleIframe() {
     const wrapper = document.getElementById(NEXUS_WRAPPER_ID);
     const chatBubble = document.getElementById(NEXUS_CHATBUBBLE_ID);
-    const visible = `${NEXUS_WRAPPER_ID}-visible`;
-    const hidden = `${NEXUS_WRAPPER_ID}-hidden`;
+    console.log(wrapper.classList.contains(visible), this.iframeOpen);
 
-    if (this.iframeOpen) {
-      wrapper.classList.add(hidden);
+    if (this.iframeOpen || wrapper.classList.contains(visible)) {
       wrapper.classList.remove(visible);
+      wrapper.classList.remove(mobileViewport);
+      wrapper.classList.add(hidden);
       chatBubble.innerHTML = MessagesSquare;
       this.iframeOpen = false;
+      this.handleResponsiveness();
     } else {
       wrapper.classList.remove(hidden);
       wrapper.classList.add(visible);
       chatBubble.innerHTML = ChevronDown;
       this.iframeOpen = true;
+      this.handleResponsiveness();
     }
   }
 
@@ -156,6 +192,13 @@ class NexusWidget {
         .${NEXUS_WRAPPER_ID}-visible {
             width: 450px;
             height: 700px;
+        }
+
+        .${NEXUS_WRAPPER_ID}-mobile {
+            width: 100%;
+            height: 100%;
+            bottom: 0;
+            right: 0;
         }
 
         #nexus-chatbubble-button {
