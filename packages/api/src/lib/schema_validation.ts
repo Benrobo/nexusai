@@ -340,3 +340,12 @@ export const processConversationSchema = zod.object({
     })
     .optional(),
 });
+
+export const requestHumanSupportSchema = zod.object({
+  agent_id: zod.string({
+    required_error: "Agent ID is required",
+  }),
+  conversation_id: zod.string({
+    required_error: "Conversation ID is required",
+  }),
+});
