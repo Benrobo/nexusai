@@ -66,3 +66,13 @@ export const processLastUserQuery = async (conversation_id: string) => {
   );
   return req.data;
 };
+
+export const requestHumanSupport = async (data: {
+  conversation_id: string;
+  agent_id: string;
+}) => {
+  const req = await $axios.post(
+    `/conversation/human-support/${data.agent_id}/${data.conversation_id}?tid=${Math.random() * 100000}`
+  );
+  return req.data;
+};
