@@ -73,12 +73,22 @@ export default function InboxPage() {
     initiaConversations: false,
     newConversations: false,
   });
-  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
   const getConversationsQuery = useMutation({
     mutationFn: async () => await getConversations(),
     onSuccess: (data) => {
       const resp = data as ResponseData;
-      setConversations(resp.data);
+      const sortedConversations = (
+        resp.data as IConversations
+      ).conversations.sort(
+        (a: any, b: any) =>
+          new Date(b?.lastMsg.date).getTime() -
+          new Date(a.lastMsg.date).getTime()
+      );
+
+      setConversations({
+        ...resp.data,
+        conversations: sortedConversations,
+      });
       setLoading((prev) => ({ ...prev, initiaConversations: false }));
     },
     onError: (error) => {
@@ -180,7 +190,6 @@ export default function InboxPage() {
       setLoading((prev) => ({ ...prev, messages: true }));
       getConversationMessagesMut.mutate(conversation_id!);
       markConversationReadMut.mutate(conversation_id!);
-      scrollToBottom();
     }
   }, [conversation_id]);
 
@@ -191,63 +200,14 @@ export default function InboxPage() {
         scrollToBottom();
       }, 1000);
       setSelectedConversationId(conversation_id);
+
+      const interval = setInterval(() => {
+        getConversationMessagesMut.mutate(conversation_id!);
+      }, 5000);
+
+      return () => clearInterval(interval);
     }
   }, [conversation_id]);
-
-  useEffect(() => {
-    const msgInterval = setInterval(() => {
-      if (conversation_id) {
-        getConversationMessagesMut.mutate(conversation_id!);
-      }
-    }, 10000);
-
-    const convInterval = setInterval(() => {
-      if (!conversations) return;
-      if (conversation_id) {
-        getConversationsQuery.mutate();
-        setLoading((prev) => ({ ...prev, newConversations: true }));
-      }
-    }, 10000);
-
-    return () => {
-      clearInterval(msgInterval);
-      clearInterval(convInterval);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (shouldScrollToBottom) {
-      scrollToBottom();
-    }
-  }, [shouldScrollToBottom]);
-
-  useEffect(() => {
-    document.addEventListener(
-      "scroll",
-      () => {
-        setShouldScrollToBottom(false);
-      },
-      true
-    );
-
-    let timeout;
-    document.addEventListener(
-      "scrollend",
-      () => {
-        timeout = setTimeout(() => {
-          setShouldScrollToBottom(true);
-          clearTimeout(timeout!);
-        }, 5000);
-      },
-      true
-    );
-
-    return () => {
-      document.removeEventListener("scroll", () => {});
-      document.removeEventListener("scrollend", () => {});
-      clearTimeout(timeout!);
-    };
-  }, []);
 
   if (
     (!loading.initiaConversations && !conversations) ||
@@ -278,8 +238,6 @@ export default function InboxPage() {
     }
     return locationStr;
   };
-
-  console.log(selectedConversation);
 
   return (
     <FlexRowStart className="w-full h-screen relative gap-0">
