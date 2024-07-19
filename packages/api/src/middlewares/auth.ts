@@ -5,10 +5,11 @@ import prisma from "../prisma/prisma.js";
 import GoogleAuth, { googleClient } from "../lib/google.auth.js";
 import type { TokenInfo, Credentials } from "google-auth-library";
 import JWT from "../lib/jwt.js";
-import logger from "../config/logger.js";
+import env from "../config/env.js";
 
 export function isAuthenticated(fn: Function) {
   return async (req: Request & IReqObject, res: Response) => {
+    req["serverUrl"] = `${env.API_URL}${req.url}`;
     const token = req.cookies["token"];
     const userId = req.cookies["_uId"];
 
@@ -114,6 +115,7 @@ export function isAuthenticated(fn: Function) {
 // conversation account middleware
 export function isWidgetAccountAuthenticated(fn: Function) {
   return async (req: Request & IReqObject, res: Response) => {
+    req["serverUrl"] = `${env.API_URL}${req.url}`;
     const token = req.cookies["widget_account_token"]; // access_token
 
     if (!token) {
