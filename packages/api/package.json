@@ -44,6 +44,7 @@
     "multer": "^1.4.5-lts.1",
     "pdfjs-dist": "^4.3.136",
     "puppeteer": "^22.11.2",
+    "resend": "^3.4.0",
     "sharp": "^0.33.3",
     "short-uuid": "^5.2.0",
     "svix": "^1.24.0",

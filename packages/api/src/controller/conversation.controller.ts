@@ -15,8 +15,9 @@ import AIService from "../services/AI.service.js";
 import { chatbotTemplatePrompt } from "../data/agent/prompt.js";
 import GeminiService from "../services/gemini.service.js";
 import logger from "../config/logger.js";
-import shortUUID from "short-uuid";
 import env from "../config/env.js";
+import sendMail from "../helpers/sendMail.js";
+import retry from "../lib/retry.js";
 
 export default class ConversationController {
   private conversationService = new ConversationService();
@@ -736,6 +737,14 @@ export default class ConversationController {
       );
     }
 
+    if (conversation?.admin_in_control) {
+      throw new HttpException(
+        RESPONSE_CODE.CONVERSATION_ESCALATED,
+        "Conversation is already in admin control",
+        400
+      );
+    }
+
     const agent = conversation.agents;
 
     // check if agent is activated
@@ -1134,18 +1143,27 @@ export default class ConversationController {
     });
 
     const requestSupportTemplate = `
-    <h3>Request Support</h3>
-    <p>Customer is requesting human support</p>
-
-    <p><strong>Name:</strong> ${customerInfo.name}</p>
-    <p><strong>Email:</strong> ${customerInfo.email}</p>
-
-    Conversation Link: ${env.CLIENT_URL}/inbox/${conversationId}
+      <h3>Support Request</h3>
+      <p>A customer is requesting human support.</p>
+      
+      <p><strong>Name:</strong> ${customerInfo.name}</p>
+      <p><strong>Email:</strong> ${customerInfo.email}</p>
+      
+      <p>Conversation Link: <a href="${env.CLIENT_URL}/inbox/${conversationId}">${env.CLIENT_URL}/inbox/${conversationId}</a></p>
     `;
 
-    console.log(requestSupportTemplate);
-
-    // ! send email to admin email
+    await retry({
+      fn: sendMail,
+      args: [
+        {
+          to: adminInfo.email,
+          subject: "🚨 Human Support Requested",
+          html: requestSupportTemplate,
+        },
+      ],
+      functionName: "sendMail",
+      retries: 3,
+    });
 
     await prisma.conversations.update({
       where: {

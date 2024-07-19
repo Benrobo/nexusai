@@ -104,6 +104,8 @@ function Messages() {
       const code = err?.code;
       if (code === "QUERY_ALREADY_PROCESSED") {
         console.log("Query already processed");
+      } else if (code === "CONVERSATION_ESCALATED") {
+        console.log("Conversation escalated");
       } else toast.error(err.message);
       setInitProcessingLastQuery(false);
     },
@@ -120,6 +122,8 @@ function Messages() {
       toast.error(err.message);
     },
   });
+
+  // mark a conversation as read
 
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 

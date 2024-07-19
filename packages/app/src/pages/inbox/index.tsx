@@ -3,6 +3,7 @@ import {
   FlexColEnd,
   FlexColStart,
   FlexRowCenter,
+  FlexRowCenterBtw,
   FlexRowEnd,
   FlexRowStart,
   FlexRowStartBtw,
@@ -307,7 +308,7 @@ export default function InboxPage() {
 
       {/* selected conversation */}
       <FlexColStart
-        className="w-full h-screen bg-white-100 relative gap-0"
+        className="w-full max-w-[850px] h-screen bg-white-100 relative gap-0"
         data-name="selected-conversation-area"
       >
         {selectedConversationId ? (
@@ -315,8 +316,8 @@ export default function InboxPage() {
             <FullPageLoader blur={false} showText={false} />
           ) : selectedConversation && !loading.messages ? (
             <>
-              <FlexRowStartCenter className="w-full h-[96px] px-5 py-4 border-b-white-400/30 border-b-[.5px]">
-                <FlexColStart className="w-full gap-1">
+              <FlexRowCenterBtw className="w-full h-[96px] px-5 py-4 border-b-white-400/30 border-b-[.5px]">
+                <FlexColStart className="w-full max-w-[150px] gap-1">
                   <h1 className="font-ppB text-xl text-dark-100">
                     {selectedConversation?.customer_info?.name}
                   </h1>
@@ -328,8 +329,8 @@ export default function InboxPage() {
                   </p>
                 </FlexColStart>
 
-                <FlexRowEnd className="w-full">
-                  <FlexRowEnd className="w-full relative">
+                <FlexRowEnd className="w-auto">
+                  <FlexRowEnd className="w-auto relative">
                     <div
                       className={cn(
                         "overflow-hidden h-full flex-center gap-2 transition-all duration-100 ease-in-out absolute right-4",
@@ -429,7 +430,7 @@ export default function InboxPage() {
                     </button>
                   </TooltipComp>
                 </FlexRowEnd>
-              </FlexRowStartCenter>
+              </FlexRowCenterBtw>
 
               {/* messages */}
               <FlexColStart className="w-full h-screen overflow-y-auto hideScrollBar mt-0 px-4 gap-5 pb-[15rem]">
@@ -512,7 +513,7 @@ export default function InboxPage() {
       </FlexColStart>
 
       {/* user info */}
-      <FlexColStart className="w-full h-screen max-w-[350px] gap-0 border-l-[.5px] border-l-white-400/30">
+      <FlexColStart className="w-full h-screen max-w-[250px] gap-0 border-l-[.5px] border-l-white-400/30">
         {selectedConversation && !loading.messages ? (
           <>
             <FlexColCenter className="w-full h-auto min-h-[20%] gap-1">
