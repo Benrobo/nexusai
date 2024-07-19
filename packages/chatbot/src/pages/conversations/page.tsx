@@ -93,11 +93,16 @@ function Conversations() {
             No conversations found.
           </h1>
           <button
-            className="w-[200px] px-5 py-3 rounded-full flex-center gap-3 font-ppReg text-xs text-white-100 bg-dark-100 enableBounceEffect"
-            onClick={() => {}}
+            className="w-[200px] px-5 py-3 rounded-full flex-center gap-3 font-ppReg text-xs text-white-100 bg-dark-100 enableBounceEffect disabled:opacity-5 disabled:cursor-not-allowed"
+            onClick={() => startNewConversationMut.mutate(agent_id!)}
+            disabled={startNewConversationMut.isPending}
           >
             <span>Start a conversation</span>
-            <SendHorizontal size={20} className="stroke-white-100" />
+            {startNewConversationMut.isPending ? (
+              <Spinner size={15} color="#fff" />
+            ) : (
+              <SendHorizontal size={20} className="stroke-white-100" />
+            )}
           </button>
         </FlexColCenter>
       </FlexColCenter>

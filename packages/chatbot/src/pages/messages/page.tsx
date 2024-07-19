@@ -80,6 +80,8 @@ function Messages() {
       }));
       scrollToBottom();
       setInitProcessingLastQuery(true);
+
+      processlLastUserQueryMut.mutate(params?.conversation_id!);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
@@ -250,7 +252,12 @@ function Messages() {
 
         {/* scroll to bottom */}
         <button
-          className="w-[35px] h-[35px] fixed bottom-[8em] right-5 rounded-full bg-transparent flex-center gap-3 enableBounceEffect border-[.5px] border-white-400/40 backdrop-blur-md"
+          className={cn(
+            "w-[35px] h-[35px] fixed right-5 rounded-full bg-transparent flex-center gap-3 enableBounceEffect border-[.5px] border-white-400/40 backdrop-blur-md",
+            !convMessages?.admin_in_control
+              ? "bottom-[11em] scale-[.80]"
+              : "bottom-[8em]"
+          )}
           onClick={scrollToBottom}
         >
           <ChevronDown size={20} className="stroke-dark-100" />
