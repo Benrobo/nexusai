@@ -145,5 +145,17 @@ export default class ConversationRoute {
         )
       )
     );
+
+    // human support request
+    this.router.post(
+      `${this.path}/human-support/:agent_id/:conversation_id`,
+      useCatchErrors(
+        isWidgetAccountAuthenticated(
+          this.conversationController.requestHumanSupport.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
   }
 }
