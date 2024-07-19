@@ -12,10 +12,12 @@ import {
 import { FullPageLoader } from "@/components/Loader";
 import NexusTradeMark from "@/components/NexusTradeMark";
 import ProtectPage from "@/components/ProtectPage";
+import { Spinner } from "@/components/Spinner";
 import { useDataCtx } from "@/context/DataCtx";
 import {
   getConvMessages,
   processLastUserQuery,
+  requestHumanSupport,
   sendUserQuery,
 } from "@/http/requests";
 import { cn, formatDate } from "@/lib/utils";
@@ -25,7 +27,14 @@ import type {
   IConversations,
   ResponseData,
 } from "@/types";
-import { ArrowLeft, Inbox, RefreshCw, Send, X } from "@components/icons";
+import {
+  ArrowLeft,
+  BellRing,
+  Inbox,
+  RefreshCw,
+  Send,
+  X,
+} from "@components/icons";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -43,13 +52,14 @@ function Messages() {
   const [query, setQuery] = useState<string>("");
   const [initProcessingLastQuery, setInitProcessingLastQuery] =
     useState<boolean>(false);
-  const [messages, setMessages] = useState<IConversationMessages | null>(null);
-  const getConversationMessages = useMutation({
+  const [convMessages, setConvMessages] =
+    useState<IConversationMessages | null>(null);
+  const getConversationMessagesMut = useMutation({
     mutationFn: async (data: { agent_id: string; convId: string }) =>
       await getConvMessages(data),
     onSuccess: (data) => {
       const resp = data as ResponseData;
-      setMessages(resp.data);
+      setConvMessages(resp.data);
       setPageLoading(false);
     },
     onError: (error) => {
@@ -63,19 +73,13 @@ function Messages() {
     onSuccess: (data) => {
       const resp = data as ResponseData;
       const customerResponse = resp.data["customer"];
-      toast.success("heyy");
-      const comb = {
-        ...messages!,
-        messages: [...messages!.messages, ...customerResponse],
-      };
-      console.log({
-        ...messages!,
-        messages: [...messages!.messages, ...customerResponse],
-      });
       setQuery("");
-      setInitProcessingLastQuery(true);
-      setMessages(comb);
+      setConvMessages((prev) => ({
+        ...prev!,
+        messages: [...prev!.messages, customerResponse],
+      }));
       scrollToBottom();
+      setInitProcessingLastQuery(true);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
@@ -88,11 +92,12 @@ function Messages() {
     onSuccess: (data) => {
       const resp = data as ResponseData;
       const aiResponse = resp.data["agent"];
-      setMessages({
-        ...messages!,
-        messages: [...messages!.messages, ...aiResponse],
-      });
+      setConvMessages((prev) => ({
+        ...prev!,
+        messages: [...prev!.messages, aiResponse],
+      }));
       setInitProcessingLastQuery(false);
+      scrollToBottom();
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
@@ -101,6 +106,18 @@ function Messages() {
         console.log("Query already processed");
       } else toast.error(err.message);
       setInitProcessingLastQuery(false);
+    },
+  });
+  const requestHumanSupportMut = useMutation({
+    mutationFn: async (data: { agent_id: string; conversation_id: string }) =>
+      await requestHumanSupport(data),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      toast.success(resp.message);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
     },
   });
 
@@ -112,7 +129,7 @@ function Messages() {
 
   useEffect(() => {
     if (params?.agent_id && params?.conversation_id) {
-      getConversationMessages.mutate({
+      getConversationMessagesMut.mutate({
         agent_id: params.agent_id,
         convId: params.conversation_id,
       });
@@ -159,7 +176,19 @@ function Messages() {
           </h1>
         </FlexRowStartCenter>
         <FlexRowEndCenter className="w-full">
-          <button className=" enableBounceEffect">
+          <button
+            className={cn(
+              " enableBounceEffect",
+              getConversationMessagesMut.isPending ? "animate-spin" : ""
+            )}
+            onClick={() => {
+              getConversationMessagesMut.mutate({
+                agent_id: params?.agent_id!,
+                convId: params?.conversation_id!,
+              });
+            }}
+            disabled={getConversationMessagesMut.isPending}
+          >
             <RefreshCw size={18} />
           </button>
           <button className=" enableBounceEffect">
@@ -171,13 +200,38 @@ function Messages() {
       {/* messages */}
       <br />
       <FlexColStart className="w-full h-screen overflow-y-auto hideScrollBar mt-0 px-4 gap-5 pb-[15rem]">
-        <MessageList
-          messages={{
-            admin_in_control: messages?.admin_in_control!,
-            messages: messages?.messages ?? [],
-          }}
-          data_name="messages"
-        />
+        {convMessages && convMessages?.messages.length > 0 && (
+          <MessageList
+            messages={{
+              admin_in_control: convMessages?.admin_in_control!,
+              messages: convMessages?.messages ?? [],
+            }}
+            data_name="messages"
+          />
+        )}
+
+        {/* request human support */}
+        {!convMessages?.admin_in_control && (
+          <button
+            className="w-auto fixed bottom-[8em] right-5 px-4 py-2 rounded-lg bg-white-300 flex-center gap-3 enableBounceEffect border-[.5px] border-white-400/40 disabled:opacity-[.5] disabled:cursor-not-allowed"
+            onClick={() => {
+              requestHumanSupportMut.mutate({
+                agent_id: params?.agent_id!,
+                conversation_id: params?.conversation_id!,
+              });
+            }}
+            disabled={requestHumanSupportMut.isPending}
+          >
+            {requestHumanSupportMut.isPending ? (
+              <Spinner size={20} color="#000" />
+            ) : (
+              <BellRing size={20} className="stroke-dark-100" />
+            )}
+            <span className="text-xs font-ppM text-dark-100">
+              Request human support
+            </span>
+          </button>
+        )}
 
         <div ref={messagesEndRef} data-name="scroll-to-bottom" />
 
@@ -224,12 +278,13 @@ function Messages() {
               disabled={
                 sendUserQueryMut.isPending || processlLastUserQueryMut.isPending
               }
-              // onClick={() => {
-              //   replyToConversationMut.mutate({
-              //     id: selectedConversationId,
-              //     response: query,
-              //   });
-              // }}
+              onClick={() => {
+                sendUserQueryMut.mutate({
+                  id: params?.conversation_id!,
+                  query,
+                });
+                scrollToBottom();
+              }}
             >
               <Send size={20} className="stroke-white-100" />
             </button>
@@ -352,10 +407,26 @@ function MessageListItem({
     />
   );
 
+  const messageListContainer = document.querySelectorAll(
+    ".message-list-item-container"
+  );
+
+  Array.from(messageListContainer).forEach((elm) => {
+    const allLinks = elm.querySelectorAll("a");
+    if (allLinks.length > 0) {
+      allLinks.forEach((link) => {
+        link.setAttribute("target", "_blank");
+        link.setAttribute("rel", "noopener noreferrer");
+      });
+    }
+  });
+
   return (
     <>
       {pos === "left" ? (
-        <FlexRowStart className={cn("w-full h-auto mt-2")}>
+        <FlexRowStart
+          className={cn("w-full h-auto mt-2 message-list-item-container")}
+        >
           {chatAvatar}
           <FlexColStart className="w-auto gap-0">
             {/* date/time */}
@@ -393,7 +464,9 @@ function MessageListItem({
           </FlexColStart>
         </FlexRowStart>
       ) : (
-        <FlexRowEnd className={cn("w-full h-auto mt-2")}>
+        <FlexRowEnd
+          className={cn("w-full h-auto mt-2 message-list-item-container")}
+        >
           <FlexColEnd className="w-auto max-w-[450px] gap-0">
             <span className="text-xs font-ppReg text-white-400/80">
               {formatDate(date)}
