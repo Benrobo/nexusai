@@ -6,7 +6,7 @@ export const routeNameMap = {
   "/account": "Account",
 } as Record<string, string>;
 
-const dynamicRoutes = ["messages"];
+const dynamicRoutes = ["messages", "conversations"];
 
 const usePathname = () => {
   const [pathname, setPathname] = useState("");
@@ -23,7 +23,7 @@ const usePathname = () => {
       setPathname(name);
       setFormattedPathname(`${name} | NexusAI`);
     } else {
-      const dyPath = pathname.toLowerCase().split("/")[1];
+      const dyPath = pathname.toLowerCase().split("/").slice(-1)[0];
       if (dynamicRoutes.includes(dyPath)) {
         setPathname(dyPath);
         setPath(dyPath);
