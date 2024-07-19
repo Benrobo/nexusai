@@ -12,7 +12,9 @@ export default async function ZodValidation(
     const query = searchParams;
     schema.parse(body ?? query);
   } catch (error: any) {
-    const msg = error?.issues[0]?.message ?? (error?.message as any);
+    const issues = error?.issues;
+    const msg =
+      issues?.length > 0 ? issues[0]?.message : (error?.message as any);
     throw new HttpException(RESPONSE_CODE.VALIDATION_ERROR, msg, 400);
   }
 }
