@@ -46,7 +46,6 @@ export default class App {
         // ( just so rawBody is available during WH validation)
         verify: (req: Request, res: Response, buf) => {
           req["rawBody"] = buf;
-          // set serverUrl (would be used globally in the app)
           req["serverUrl"] = `${env.API_URL}${req.url}`;
           return req;
         },
