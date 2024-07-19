@@ -11,8 +11,8 @@ interface DataCtxValueType {
   setPageLoading: (loading: boolean) => void;
   authVisible: boolean;
   setAuthVisible: (visible: boolean) => void;
-  account?: AccountInfo | null;
-  setAccount?: (account: AccountInfo) => void;
+  account: AccountInfo | null;
+  setAccount: (account: AccountInfo) => void;
 }
 
 export default function DataCtxProvider({

@@ -11,8 +11,13 @@ import {
 } from "@/components/Flex";
 import { FullPageLoader } from "@/components/Loader";
 import NexusTradeMark from "@/components/NexusTradeMark";
+import ProtectPage from "@/components/ProtectPage";
 import { useDataCtx } from "@/context/DataCtx";
-import { getConvMessages } from "@/http/requests";
+import {
+  getConvMessages,
+  processLastUserQuery,
+  sendUserQuery,
+} from "@/http/requests";
 import { cn, formatDate } from "@/lib/utils";
 import type {
   ChatBotConfig,
@@ -22,19 +27,22 @@ import type {
 } from "@/types";
 import { ArrowLeft, Inbox, RefreshCw, Send, X } from "@components/icons";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useMatch, useNavigate } from "react-router-dom";
 import { Remarkable } from "remarkable";
 
 const markdown = new Remarkable();
 
-export default function Messages() {
+function Messages() {
   const { account } = useDataCtx();
   const router = useNavigate();
   const match = useMatch("/:agent_id/conversation/:conversation_id");
   const params = match?.params;
   const [pageloading, setPageLoading] = useState<boolean>(true);
+  const [query, setQuery] = useState<string>("");
+  const [initProcessingLastQuery, setInitProcessingLastQuery] =
+    useState<boolean>(false);
   const [messages, setMessages] = useState<IConversationMessages | null>(null);
   const getConversationMessages = useMutation({
     mutationFn: async (data: { agent_id: string; convId: string }) =>
@@ -49,6 +57,58 @@ export default function Messages() {
       toast.error(err.message);
     },
   });
+  const sendUserQueryMut = useMutation({
+    mutationFn: async (data: { id: string; query: string }) =>
+      await sendUserQuery(data),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      const customerResponse = resp.data["customer"];
+      toast.success("heyy");
+      const comb = {
+        ...messages!,
+        messages: [...messages!.messages, ...customerResponse],
+      };
+      console.log({
+        ...messages!,
+        messages: [...messages!.messages, ...customerResponse],
+      });
+      setQuery("");
+      setInitProcessingLastQuery(true);
+      setMessages(comb);
+      scrollToBottom();
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
+  // AI
+  const processlLastUserQueryMut = useMutation({
+    mutationFn: async (conv_id: string) => await processLastUserQuery(conv_id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      const aiResponse = resp.data["agent"];
+      setMessages({
+        ...messages!,
+        messages: [...messages!.messages, ...aiResponse],
+      });
+      setInitProcessingLastQuery(false);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      const code = err?.code;
+      if (code === "QUERY_ALREADY_PROCESSED") {
+        console.log("Query already processed");
+      } else toast.error(err.message);
+      setInitProcessingLastQuery(false);
+    },
+  });
+
+  const messagesEndRef = useRef<null | HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     if (params?.agent_id && params?.conversation_id) {
@@ -58,6 +118,13 @@ export default function Messages() {
       });
     }
   }, [params?.agent_id, params?.conversation_id]);
+
+  useEffect(() => {
+    if (initProcessingLastQuery) {
+      // call the processlLastUserQueryMut
+      processlLastUserQueryMut.mutate(params?.conversation_id!);
+    }
+  }, [initProcessingLastQuery]);
 
   if (!params?.agent_id || !params?.conversation_id) {
     return (
@@ -87,7 +154,9 @@ export default function Messages() {
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-md font-ppM text-white-100">Cassie</h1>
+          <h1 className="text-md font-ppM text-white-100">
+            {account && account?.chatbotConfig?.brand_name}
+          </h1>
         </FlexRowStartCenter>
         <FlexRowEndCenter className="w-full">
           <button className=" enableBounceEffect">
@@ -105,26 +174,27 @@ export default function Messages() {
         <MessageList
           messages={{
             admin_in_control: messages?.admin_in_control!,
-            messages: [
-              // welcome message
-              {
-                agent_id: params.agent_id,
-                message:
-                  account?.chatbotConfig?.welcome_message ??
-                  `Hello, I'm ${account?.chatbotConfig?.brand_name}. How can I help you?`,
-                date: new Date().toISOString(),
-                sender: {
-                  role: "agent",
-                  name: account?.chatbotConfig?.brand_name!,
-                  avatar: null,
-                  id: params.agent_id,
-                },
-              },
-              ...(messages?.messages ?? []),
-            ],
+            messages: messages?.messages ?? [],
           }}
           data_name="messages"
         />
+
+        <div ref={messagesEndRef} data-name="scroll-to-bottom" />
+
+        {/* ai response loading animation */}
+        <FlexRowStartCenter
+          className={cn(
+            "w-full h-auto mt-2 transition-all",
+            processlLastUserQueryMut.isPending ? "opacity-100" : "opacity-0"
+          )}
+        >
+          <img
+            width={40}
+            className="rounded-full"
+            src={"/assets/images/logos/nexus-dark.svg"}
+          />
+          <div className="dot-pulse ml-5" />
+        </FlexRowStartCenter>
       </FlexColStart>
 
       <FlexColCenter className="w-full h-[100px] absolute bottom-5 left-0 z-[10] backdrop-blur-sm gap-0">
@@ -134,29 +204,26 @@ export default function Messages() {
               type="text"
               className="w-full h-full bg-transparent outline-none px-8 font-ppReg disabled disabled:cursor-not-allowed disabled:opacity-[.5] text-sm"
               placeholder="Type a message..."
-              // disabled={
-              //   !selectedConversation?.admin_in_control ||
-              //   replyToConversationMut.isPending
-              // }
-              // value={query}
-              // onChange={(e) => setQuery(e.target.value)}
-              // onKeyUp={(e) => {
-              //   if (e.key === "Enter") {
-              //     replyToConversationMut.mutate({
-              //       id: selectedConversationId,
-              //       response: query,
-              //     });
-              //     scrollToBottom();
-              //     scrollToBottom();
-              //   }
-              // }}
+              disabled={
+                sendUserQueryMut.isPending || processlLastUserQueryMut.isPending
+              }
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyUp={(e) => {
+                if (e.key === "Enter") {
+                  sendUserQueryMut.mutate({
+                    id: params?.conversation_id!,
+                    query,
+                  });
+                  scrollToBottom();
+                }
+              }}
             />
             <button
               className="w-[80px] h-[60px] bg-dark-100 text-white-100 flex-center rounded-full enableBounceEffect scale-[.80] disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
-              // disabled={
-              //   !selectedConversation?.admin_in_control ||
-              //   replyToConversationMut.isPending
-              // }
+              disabled={
+                sendUserQueryMut.isPending || processlLastUserQueryMut.isPending
+              }
               // onClick={() => {
               //   replyToConversationMut.mutate({
               //     id: selectedConversationId,
@@ -173,6 +240,8 @@ export default function Messages() {
     </FlexColStart>
   );
 }
+
+export default ProtectPage(Messages);
 
 interface MessageListProps {
   messages: IConversationMessages | null;

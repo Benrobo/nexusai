@@ -44,3 +44,25 @@ export const getConvMessages = async (data: {
   );
   return resp.data;
 };
+
+export const startNewConversation = async (agent_id: string) => {
+  const resp = await $axios.post("/conversation", { agent_id });
+  return resp.data;
+};
+
+export const sendUserQuery = async (data: { id: string; query: string }) => {
+  const req = await $axios.post(
+    `/conversation/process/${data.id}`,
+    { query: data.query },
+    { headers: { "x-nexus-widget-account": true } }
+  );
+  return req.data;
+};
+
+export const processLastUserQuery = async (conversation_id: string) => {
+  const req = await $axios.post(
+    `/conversation/process/last-query/${conversation_id}`,
+    { headers: { "x-nexus-widget-account": true } }
+  );
+  return req.data;
+};

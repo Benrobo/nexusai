@@ -95,6 +95,9 @@ export default class ConversationController {
         conversationAccountId: user.id,
         agentId: chatbotId,
       },
+      orderBy: {
+        created_at: "asc",
+      },
     });
 
     const convWithMessages = [];
@@ -118,11 +121,14 @@ export default class ConversationController {
         }
 
         const chatbot = await this.getChatbotConfig(nc.agentId);
-        chatbotConfig.push({
-          agent_id: nc.agentId,
-          brand_color: chatbot?.brand_color,
-          text_color: chatbot?.text_color,
-        });
+
+        if (!chatbotConfig.map((c) => c.agent_id).includes(nc.agentId)) {
+          chatbotConfig.push({
+            agent_id: nc.agentId,
+            brand_color: chatbot?.brand_color,
+            text_color: chatbot?.text_color,
+          });
+        }
 
         const unread = await this.getUnreadCount(nc.id, "customer");
         unreadMessages.set(nc.id, (unreadMessages.get(nc.id) || 0) + unread);
@@ -149,7 +155,6 @@ export default class ConversationController {
     req: Request & IReqObject,
     res: Response
   ) {
-    const user = req.user;
     const conversation_id = req.params.conversation_id;
     const chatbotId = req.params.chatbot_id;
 
@@ -487,12 +492,6 @@ export default class ConversationController {
     );
   }
 
-  // Admin / Owner Specific
-  public async getConversationsByAgent(
-    req: Request & IReqObject,
-    res: Response
-  ) {}
-
   // start a new conversation
   public async createConversation(req: Request & IReqObject, res: Response) {
     const user = req.user;
@@ -520,6 +519,7 @@ export default class ConversationController {
       where: {
         id: payload.agent_id,
       },
+      include: { chatbot_config: true },
     });
 
     if (!agent) {
@@ -538,6 +538,24 @@ export default class ConversationController {
     const conversation = await this.conversationService.createConversation({
       userId: user.id,
       agent_id: payload.agent_id,
+    });
+
+    // create a new chat message with the agent welcome message otherwise create a one
+    const welcomeMsg =
+      agent.chatbot_config.welcome_message.length > 0
+        ? agent.chatbot_config.welcome_message
+        : `Hello I'm ${agent.chatbot_config?.brand_name}, how can I help you today?`;
+
+    await prisma.chatMessages.create({
+      data: {
+        convId: conversation.id,
+        role: "agent",
+        content: welcomeMsg,
+        senderId: agent.id,
+        agentId: agent.id,
+        is_read_admin: true,
+        is_read_customer: true,
+      },
     });
 
     return sendResponse.success(
@@ -604,7 +622,7 @@ export default class ConversationController {
     }
   }
 
-  // CUSTOMER -> AGENT | AGENT -> CUSTOMER
+  // CUSTOMER -> AGENT | AGENT -> CUSTOMER (store customer message first, then create a function to process the message with gemini)
   public async manageCustomerAgentInteraction(
     req: Request & IReqObject,
     res: Response,
@@ -661,14 +679,92 @@ export default class ConversationController {
 
     const customerMsgStored = await this.storeChatMessage(msgData as any);
 
-    if (conversation?.admin_in_control) {
-      logger.info(
-        `[Conversation]: ${data.conv_id} has been escalated to admin`
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Conversation processed successfully",
+      200,
+      {
+        customer: {
+          id: customerMsgStored.id,
+          message: customerMsgStored.content,
+          date: customerMsgStored.created_at,
+          agent_id: agent.id,
+          sender: {
+            id: data.userId,
+            name: customerAccount.name,
+            role: "customer",
+          },
+        },
+      }
+    );
+  }
+
+  // process last message from customer with Gemini
+  public async processCustomerLastQuery(
+    req: Request & IReqObject,
+    res: Response
+  ) {
+    const userId = req.user.id;
+    const conversationId = req.params.conversation_id;
+
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: conversationId,
+        conversationAccountId: userId,
+      },
+      include: {
+        agents: {
+          select: {
+            activated: true,
+            id: true,
+            type: true,
+            userId: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!conversation) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Conversation not found",
+        404
+      );
+    }
+
+    const agent = conversation.agents;
+
+    // check if agent is activated
+    if (!agent.activated) {
+      logger.error(
+        `[ProcessingCustomerLastMessage]: ${agent.name} is not activated.`
       );
       throw new HttpException(
-        RESPONSE_CODE.CONVERSATION_ESCALATED,
-        "Conversation escalated to admin",
+        RESPONSE_CODE.BAD_REQUEST,
+        `${agent.name} is currently unavailable`,
         403
+      );
+    }
+
+    const customerLastMessage = await this.getLastMessage(conversationId);
+
+    //  check if last message exists
+    if (!customerLastMessage) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Failed to process last query. No message found",
+        404
+      );
+    }
+
+    //  check if last message is from ai
+    if (customerLastMessage.role === "agent") {
+      throw new HttpException(
+        RESPONSE_CODE.QUERY_ALREADY_PROCESSED,
+        "Query already processed. No message found",
+        404
       );
     }
 
@@ -696,7 +792,7 @@ export default class ConversationController {
     }
 
     const similarities = await this.aiService.vectorSimilaritySearch({
-      user_input: data.query,
+      user_input: customerLastMessage.content,
       data_source_ids,
       agent_id: agent.id,
     });
@@ -708,7 +804,7 @@ export default class ConversationController {
 
     let chatHistoryTxt = "";
     const history = await this.getChatHistory({
-      conv_id: data.conv_id,
+      conv_id: conversationId,
     });
 
     history.slice(-5).forEach((h) => {
@@ -719,19 +815,19 @@ export default class ConversationController {
       agentName: agent.name,
       context: closestMatch.trim(),
       history: chatHistoryTxt,
-      query: data.query,
+      query: customerLastMessage.content,
     });
 
     const aiResp = await this.geminiService.callAI({
       instruction: systemInstruction,
-      user_prompt: data.query,
+      user_prompt: customerLastMessage.content,
     });
 
     const aiMsg = aiResp.data;
 
     // agent
     const aiMsgStored = await this.storeChatMessage({
-      conv_id: data.conv_id,
+      conv_id: conversationId,
       role: "agent",
       content: aiMsg,
       agent_id: agent.id,
@@ -745,24 +841,15 @@ export default class ConversationController {
       "Conversation processed successfully",
       200,
       {
-        // user_query: data.query,
-        // response: aiMsg,
         agent: {
+          id: aiMsgStored.id,
           message: aiMsgStored.content,
           date: aiMsgStored.created_at,
+          agent_id: agent.id,
           sender: {
             id: agent.id,
             name: agent.name,
             role: "agent",
-          },
-        },
-        customer: {
-          message: customerMsgStored.content,
-          date: customerMsgStored.created_at,
-          sender: {
-            id: data.userId,
-            name: customerAccount.name,
-            role: "customer",
           },
         },
       }

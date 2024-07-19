@@ -17,7 +17,7 @@ export default function useAuth() {
       const reqData = data?.data as AccountInfo;
       if (reqData) {
         setUser(reqData);
-        setAccount && setAccount(reqData);
+        setAccount(reqData);
       }
       setLoading(false);
       setStatus("authenticated");

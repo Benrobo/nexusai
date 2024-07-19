@@ -39,7 +39,7 @@ export type ChatBotAgentConfig = {
   type: AgentType;
 };
 
-type AccountRoles = "admin" | "customer" | "agent";
+export type AccountRoles = "admin" | "customer" | "agent";
 
 export interface IConversations {
   conversations: {

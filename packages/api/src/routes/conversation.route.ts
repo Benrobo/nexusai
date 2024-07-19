@@ -29,18 +29,6 @@ export default class ConversationRoute {
       )
     );
 
-    // get all conversations created by admin / owner of the account filtered by agent
-    this.router.get(
-      `${this.path}s/admin/:agent_id`,
-      useCatchErrors(
-        isAuthenticated(
-          this.conversationController.getConversationsByAgent.bind(
-            this.conversationController
-          )
-        )
-      )
-    );
-
     // get all conversations tied to a widget user account
     this.router.get(
       `${this.path}s/widget-account/:chatbot_id`,
@@ -128,6 +116,18 @@ export default class ConversationRoute {
       useCatchErrors(
         dualUserAuthenticator(
           this.conversationController.processConversation.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
+    // process las customer query
+    this.router.post(
+      `${this.path}/process/last-query/:conversation_id`,
+      useCatchErrors(
+        isWidgetAccountAuthenticated(
+          this.conversationController.processCustomerLastQuery.bind(
             this.conversationController
           )
         )

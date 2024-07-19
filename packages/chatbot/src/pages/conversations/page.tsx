@@ -8,25 +8,28 @@ import {
 import {
   ListFilter,
   MessagesSquare,
+  Plus,
   SendHorizontal,
   Undo,
 } from "@/components/icons";
 import { FullPageLoader } from "@/components/Loader";
 import ProtectPage from "@/components/ProtectPage";
+import { Spinner } from "@/components/Spinner";
 import { useDataCtx } from "@/context/DataCtx";
-import { getConversations } from "@/http/requests";
+import { getConversations, startNewConversation } from "@/http/requests";
 import { cn, formatDate } from "@/lib/utils";
-import type { IConversations, ResponseData } from "@/types";
+import type { AccountRoles, IConversations, ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Remarkable } from "remarkable";
 
 const markdown = new Remarkable();
 
 function Conversations() {
   const { agent_id } = useDataCtx();
+  const navigate = useNavigate();
   const [pageloading, setPageLoading] = useState<boolean>(false);
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
@@ -38,7 +41,17 @@ function Conversations() {
     mutationFn: async (id: string) => getConversations(id),
     onSuccess: (data) => {
       const resp = data as ResponseData;
-      setConversations(resp.data);
+
+      const sortedConversations = (
+        resp.data as IConversations
+      ).conversations.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setConversations({
+        ...resp.data,
+        conversations: sortedConversations,
+      });
       setPageLoading(false);
     },
     onError: (error) => {
@@ -47,19 +60,30 @@ function Conversations() {
       setPageLoading(false);
     },
   });
+  const startNewConversationMut = useMutation({
+    mutationFn: async (id: string) => await startNewConversation(id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      const convId = resp.data?.id;
+      setSelectedConversationId(convId);
+      navigate(`/${agent_id}/conversation/${convId}`);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
 
   useEffect(() => {
+    if (conversations && conversations?.conversations.length > 0) return;
     if (agent_id) getConversationsMut.mutate(agent_id);
   }, [agent_id]);
 
-  if (pageloading) {
+  if (pageloading || getConversationsMut.isPending) {
     return <FullPageLoader showText={false} />;
   }
 
-  if (
-    !pageloading &&
-    (!conversations || conversations?.conversations.length === 0)
-  ) {
+  if (!pageloading && conversations?.conversations.length === 0) {
     return (
       <FlexColCenter className="w-full h-auto min-h-[70%]">
         <MessagesSquare size={60} className="stroke-dark-100" />
@@ -95,6 +119,22 @@ function Conversations() {
         </button>
       </FlexRowStartBtw>
 
+      {/* show start conversation button at the bottom right when there are >= 1 conversations */}
+      {conversations && conversations?.conversations.length > 0 && (
+        <button
+          className="w-[170px] px-3 py-3 rounded-full flex-center gap-1 font-ppReg text-xs text-white-100 bg-dark-100 enableBounceEffect fixed bottom-[13em] right-5 disabled:opacity-5 disabled:cursor-not-allowed"
+          onClick={() => startNewConversationMut.mutate(agent_id!)}
+          disabled={startNewConversationMut.isPending}
+        >
+          <span>New conversation</span>
+          {startNewConversationMut.isPending ? (
+            <Spinner size={15} color="#fff" />
+          ) : (
+            <Plus size={20} className="stroke-white-100" />
+          )}
+        </button>
+      )}
+
       <br />
       <FlexColStart className="w-full h-full px-7">
         {conversations?.conversations.map((conv) => (
@@ -108,11 +148,13 @@ function Conversations() {
                 ?.unread ?? 0
             }
             user={{
-              name: conv.lastMsg.sender.fullname! ?? conv.lastMsg?.sender.name!,
+              name: conv.lastMsg?.sender.name ?? conv.lastMsg.sender.fullname!,
               avatar: conv.lastMsg?.sender?.avatar,
+              role: conv.lastMsg.sender.role,
             }}
             selectedConversationId={selectedConversationId}
             agent_id={conv.agentId}
+            onSelect={(id) => setSelectedConversationId(id)}
           />
         ))}
         {/*  */}
@@ -129,6 +171,7 @@ interface ConversationListProps {
   user: {
     name: string;
     avatar?: string;
+    role: AccountRoles;
   };
   onSelect?: (id: string) => void;
   selectedConversationId?: string | null;
@@ -155,8 +198,11 @@ function ConversationList({
         <img
           width={45}
           src={
-            user?.avatar ??
-            `https://api.dicebear.com/9.x/initials/svg?seed=${user.name}`
+            user?.role === "admin"
+              ? user?.avatar
+              : user.role === "agent"
+                ? "/assets/images/logos/nexus-dark.svg"
+                : `https://api.dicebear.com/9.x/initials/svg?seed=${user.name}`
           }
           className="rounded-xl"
         />
