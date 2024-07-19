@@ -24,12 +24,12 @@ import { cn, formatDate } from "@/lib/utils";
 import type {
   ChatBotConfig,
   IConversationMessages,
-  IConversations,
   ResponseData,
 } from "@/types";
 import {
   ArrowLeft,
   BellRing,
+  ChevronDown,
   Inbox,
   RefreshCw,
   Send,
@@ -142,8 +142,19 @@ function Messages() {
 
   useEffect(() => {
     if (initProcessingLastQuery) {
-      // call the processlLastUserQueryMut
-      processlLastUserQueryMut.mutate(params?.conversation_id!);
+    }
+  }, [params?.agent_id, params?.conversation_id]);
+
+  useEffect(() => {
+    if (params?.agent_id && params?.conversation_id) {
+      const interval = setInterval(() => {
+        getConversationMessagesMut.mutate({
+          agent_id: params.agent_id!,
+          convId: params.conversation_id!,
+        });
+      }, 5000);
+
+      return () => clearInterval(interval);
     }
   }, [initProcessingLastQuery]);
 
@@ -203,7 +214,7 @@ function Messages() {
 
       {/* messages */}
       <br />
-      <FlexColStart className="w-full h-screen overflow-y-auto hideScrollBar mt-0 px-4 gap-5 pb-[15rem]">
+      <FlexColStart className="w-full h-screen overflow-y-auto hideScrollBar mt-0 px-4 gap-5 pb-[10rem]">
         {convMessages && convMessages?.messages.length > 0 && (
           <MessageList
             messages={{
@@ -236,6 +247,14 @@ function Messages() {
             </span>
           </button>
         )}
+
+        {/* scroll to bottom */}
+        <button
+          className="w-[35px] h-[35px] fixed bottom-[8em] right-5 rounded-full bg-transparent flex-center gap-3 enableBounceEffect border-[.5px] border-white-400/40 backdrop-blur-md"
+          onClick={scrollToBottom}
+        >
+          <ChevronDown size={20} className="stroke-dark-100" />
+        </button>
 
         <div ref={messagesEndRef} data-name="scroll-to-bottom" />
 
