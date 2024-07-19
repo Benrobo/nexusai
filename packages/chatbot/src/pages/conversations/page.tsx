@@ -135,8 +135,7 @@ function Conversations() {
         </button>
       )}
 
-      <br />
-      <FlexColStart className="w-full h-full px-7">
+      <FlexColStart className="w-full h-auto overflow-y-auto hideScrollBar px-7 pb-[20em]">
         {conversations?.conversations.map((conv) => (
           <ConversationList
             key={conv.id}
@@ -191,7 +190,7 @@ function ConversationList({
     <Link className="w-full" to={`/${agent_id}/conversation/${conv_id}`}>
       <FlexRowStart
         className={cn(
-          "w-full h-auto px-4 py-5 rounded-[25px] gap-1 hover:bg-white-400/10 transition-all",
+          "w-full h-auto px-4 py-3 rounded-[25px] gap-1 hover:bg-white-400/10 transition-all",
           selectedConversationId === conv_id && "bg-white-400/10"
         )}
       >
