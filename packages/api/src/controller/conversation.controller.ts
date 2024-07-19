@@ -4,6 +4,7 @@ import ZodValidation from "../lib/zodValidation.js";
 import {
   createConversationSchema,
   processConversationSchema,
+  requestHumanSupportSchema,
 } from "../lib/schema_validation.js";
 import type { CreateConversationPayload } from "../types/conversation.type.js";
 import ConversationService from "../services/conversation.service.js";
@@ -15,6 +16,7 @@ import { chatbotTemplatePrompt } from "../data/agent/prompt.js";
 import GeminiService from "../services/gemini.service.js";
 import logger from "../config/logger.js";
 import shortUUID from "short-uuid";
+import env from "../config/env.js";
 
 export default class ConversationController {
   private conversationService = new ConversationService();
@@ -1064,7 +1066,103 @@ export default class ConversationController {
     return sendResponse.success(res, RESPONSE_CODE.SUCCESS, response, 200);
   }
 
-  public async requestHumanSupport(req: Request & IReqObject, res: Response) {}
+  public async requestHumanSupport(req: Request & IReqObject, res: Response) {
+    const userId = req.user.id;
+    const conversationId = req.params.conversation_id;
+    const agent_id = req.params.agent_id;
+
+    await ZodValidation(
+      requestHumanSupportSchema,
+      {
+        agent_id: agent_id ?? null,
+        conversation_id: conversationId ?? null,
+      },
+      req.serverUrl
+    );
+
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: conversationId,
+      },
+      include: { agents: true },
+    });
+
+    if (!conversation) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Conversation not found",
+        404
+      );
+    }
+
+    if (conversation.admin_in_control) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Conversation is already in admin control",
+        400
+      );
+    }
+
+    const agent = conversation.agents;
+
+    if (agent?.id !== agent_id) {
+      throw new HttpException(
+        RESPONSE_CODE.FORBIDDEN,
+        "Unauthorized to request human support",
+        403
+      );
+    }
+
+    const customerInfo = await prisma.chatWidgetAccount.findFirst({
+      where: {
+        id: userId,
+      },
+      select: {
+        email: true,
+        name: true,
+      },
+    });
+
+    const adminInfo = await prisma.users.findFirst({
+      where: {
+        uId: agent.userId,
+      },
+      select: {
+        email: true,
+        fullname: true,
+      },
+    });
+
+    const requestSupportTemplate = `
+    <h3>Request Support</h3>
+    <p>Customer is requesting human support</p>
+
+    <p><strong>Name:</strong> ${customerInfo.name}</p>
+    <p><strong>Email:</strong> ${customerInfo.email}</p>
+
+    Conversation Link: ${env.CLIENT_URL}/inbox/${conversationId}
+    `;
+
+    console.log(requestSupportTemplate);
+
+    // ! send email to admin email
+
+    await prisma.conversations.update({
+      where: {
+        id: conversationId,
+      },
+      data: {
+        admin_in_control: true,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Request sent successfully",
+      200
+    );
+  }
 
   private async storeChatMessage(props: {
     conv_id: string;
