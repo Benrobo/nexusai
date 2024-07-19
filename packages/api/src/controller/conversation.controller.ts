@@ -70,18 +70,30 @@ export default class ConversationController {
     });
   }
 
-  public getConversationById(req: Request & IReqObject, res: Response) {
-    // get conversation by id
-  }
-
-  public async getAllConversationsByWidgetAccount(
+  public async getWidgetAccountConversations(
     req: Request & IReqObject,
     res: Response
   ) {
     const user = req.user;
+    const chatbotId = req.params["chatbot_id"];
+
+    // check if agent exists
+    const agent = await prisma.agents.findFirst({
+      where: { id: chatbotId },
+    });
+
+    if (!agent) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Failed to retrieve conversations. Invalid chatbot id.",
+        404
+      );
+    }
+
     const conversations = await prisma.conversations.findMany({
       where: {
         conversationAccountId: user.id,
+        agentId: chatbotId,
       },
     });
 
@@ -129,6 +141,103 @@ export default class ConversationController {
         })),
         chatbot_config: chatbotConfig,
         conversations: convWithMessages,
+      }
+    );
+  }
+
+  public async getWidgetAccoutConversationMessages(
+    req: Request & IReqObject,
+    res: Response
+  ) {
+    const user = req.user;
+    const conversation_id = req.params.conversation_id;
+    const chatbotId = req.params.chatbot_id;
+
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        id: conversation_id,
+      },
+    });
+
+    if (!conversation) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Conversation not found",
+        404
+      );
+    }
+
+    if (conversation.agentId !== chatbotId) {
+      throw new HttpException(
+        RESPONSE_CODE.FORBIDDEN,
+        "Unauthorized to view this conversation.",
+        403
+      );
+    }
+
+    const messages = [];
+    const allMessages = await prisma.chatMessages.findMany({
+      where: {
+        convId: conversation.id,
+      },
+      orderBy: {
+        created_at: "asc",
+      },
+    });
+
+    for (const msg of allMessages) {
+      const sender =
+        msg?.role === "admin"
+          ? await prisma.users.findFirst({
+              where: {
+                uId: msg.senderId,
+              },
+              select: {
+                id: true,
+                fullname: true,
+                avatar: true,
+                email: true,
+              },
+            })
+          : msg?.role === "customer"
+            ? await prisma.chatWidgetAccount.findFirst({
+                where: {
+                  id: msg.senderId,
+                },
+                select: {
+                  id: true,
+                  name: true,
+                },
+              })
+            : await prisma.agents.findFirst({
+                where: {
+                  id: msg?.agentId,
+                },
+                select: {
+                  id: true,
+                  name: true,
+                },
+              });
+      messages.push({
+        id: msg.id,
+        message: msg.content,
+        date: msg.created_at,
+        agent_id: msg.agentId,
+        sender: {
+          role: msg.role,
+          ...sender,
+        },
+      });
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Messages retrieved successfully",
+      200,
+      {
+        admin_in_control: conversation.admin_in_control,
+        messages,
       }
     );
   }

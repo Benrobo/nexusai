@@ -9,19 +9,55 @@ import {
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "@/components/Flex";
+import { FullPageLoader } from "@/components/Loader";
 import NexusTradeMark from "@/components/NexusTradeMark";
+import { useDataCtx } from "@/context/DataCtx";
+import { getConvMessages } from "@/http/requests";
 import { cn, formatDate } from "@/lib/utils";
-import type { IConversationMessages, IConversations } from "@/types";
+import type {
+  ChatBotConfig,
+  IConversationMessages,
+  IConversations,
+  ResponseData,
+} from "@/types";
 import { ArrowLeft, Inbox, RefreshCw, Send, X } from "@components/icons";
+import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useMatch, useNavigate } from "react-router-dom";
 import { Remarkable } from "remarkable";
 
 const markdown = new Remarkable();
 
 export default function Messages() {
+  const { account } = useDataCtx();
   const router = useNavigate();
   const match = useMatch("/:agent_id/conversation/:conversation_id");
   const params = match?.params;
+  const [pageloading, setPageLoading] = useState<boolean>(true);
+  const [messages, setMessages] = useState<IConversationMessages | null>(null);
+  const getConversationMessages = useMutation({
+    mutationFn: async (data: { agent_id: string; convId: string }) =>
+      await getConvMessages(data),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      setMessages(resp.data);
+      setPageLoading(false);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
+
+  useEffect(() => {
+    if (params?.agent_id && params?.conversation_id) {
+      getConversationMessages.mutate({
+        agent_id: params.agent_id,
+        convId: params.conversation_id,
+      });
+    }
+  }, [params?.agent_id, params?.conversation_id]);
 
   if (!params?.agent_id || !params?.conversation_id) {
     return (
@@ -34,6 +70,10 @@ export default function Messages() {
         </p>
       </FlexColCenter>
     );
+  }
+
+  if (pageloading) {
+    return <FullPageLoader showText={false} />;
   }
 
   return (
@@ -62,55 +102,27 @@ export default function Messages() {
       {/* messages */}
       <br />
       <FlexColStart className="w-full h-screen overflow-y-auto hideScrollBar mt-0 px-4 gap-5 pb-[15rem]">
-        {/* first agent message */}
         <MessageList
-          selectedConversation={{
+          messages={{
+            admin_in_control: messages?.admin_in_control!,
             messages: [
+              // welcome message
               {
-                agent_id: "sdcsdc",
-                date: "2021-09-01T12:00:00Z",
-                message: "Hello, how may I help you?",
+                agent_id: params.agent_id,
+                message:
+                  account?.chatbotConfig?.welcome_message ??
+                  `Hello, I'm ${account?.chatbotConfig?.brand_name}. How can I help you?`,
+                date: new Date().toISOString(),
                 sender: {
-                  name: "Cassie",
                   role: "agent",
-                  id: "sdcsdc",
-                  // avatar: "",
+                  name: account?.chatbotConfig?.brand_name!,
+                  avatar: null,
+                  id: params.agent_id,
                 },
               },
-              {
-                agent_id: "sdcsdc",
-                date: "2021-09-01T12:00:00Z",
-                message: "I need some help concerning your system",
-                sender: {
-                  name: "John Bosko",
-                  role: "customer",
-                  id: "sdcsdc",
-                  // avatar: "",
-                },
-              },
-              {
-                agent_id: "sdcsdc",
-                date: "2021-09-01T12:00:00Z",
-                message: "I need some help concerning your system",
-                sender: {
-                  name: "Benrobo",
-                  role: "admin",
-                  id: "sdcsdc",
-                  // avatar: "",
-                },
-              },
+              ...(messages?.messages ?? []),
             ],
-            admin_in_control: false,
-            conv_id: "sdcsdcdsc",
-            customer_info: {
-              name: "John Doe",
-              email: "brad@mail.com",
-              city: "",
-              state: "",
-              country_code: "",
-            },
           }}
-          conversations={null}
           data_name="messages"
         />
       </FlexColStart>
@@ -163,20 +175,16 @@ export default function Messages() {
 }
 
 interface MessageListProps {
-  selectedConversation: IConversationMessages | null;
-  conversations: IConversations | null;
+  messages: IConversationMessages | null;
   data_name?: string;
 }
 
-const MessageList = ({
-  selectedConversation,
-  conversations,
-  data_name,
-}: MessageListProps) => {
+const MessageList = ({ messages, data_name }: MessageListProps) => {
+  const { account } = useDataCtx();
   const renderMessage = (arg: {
     msg: IConversationMessages["messages"][0];
     i: number;
-    chatbotConfig: IConversations["chatbot_config"][0] | undefined;
+    chatbotConfig: ChatBotConfig | undefined;
   }) => {
     const { msg, i, chatbotConfig } = arg;
     if (!msg.message || msg.message.length === 0) return null;
@@ -186,15 +194,21 @@ const MessageList = ({
       <MessageListItem
         key={i}
         role={msg.sender?.role}
-        pos={isAgentOrAdmin ? "left" : "right"}
+        pos={!isAgentOrAdmin ? "right" : "left"}
         message={msg.message}
-        date={msg.date}
+        date={msg.date!}
         agent_config={isAgentOrAdmin ? chatbotConfig : undefined}
-        admin_name={isAgentOrAdmin ? msg.sender?.name : undefined}
+        admin_name={
+          isAgentOrAdmin
+            ? (msg.sender?.name ?? msg?.sender?.fullname)
+            : undefined
+        }
         customer_name={!isAgentOrAdmin ? msg.sender?.name : undefined}
         avatar={msg.sender?.avatar}
         data_name={data_name}
-        agent_name={msg.sender?.role === "agent" ? msg.sender?.name : undefined}
+        agent_name={
+          msg.sender?.role === "agent" ? msg.sender?.name! : undefined
+        }
       />
     );
   };
@@ -213,15 +227,12 @@ const MessageList = ({
 
   return (
     <>
-      {selectedConversation && selectedConversation?.messages.length > 0
-        ? selectedConversation.messages.map((msg, i) => {
-            const chatbotConfig = conversations?.chatbot_config.find(
-              (c) => c.agent_id === msg.agent_id
-            );
+      {messages && messages?.messages.length > 0
+        ? messages.messages.map((msg, i) => {
             return renderMessage({
               msg,
               i,
-              chatbotConfig,
+              chatbotConfig: account?.chatbotConfig!,
             });
           })
         : renderNoMessages()}
@@ -315,7 +326,6 @@ function MessageListItem({
       ) : (
         <FlexRowEnd className={cn("w-full h-auto mt-2")}>
           <FlexColEnd className="w-auto max-w-[450px] gap-0">
-            {/* date/time */}
             <span className="text-xs font-ppReg text-white-400/80">
               {formatDate(date)}
             </span>

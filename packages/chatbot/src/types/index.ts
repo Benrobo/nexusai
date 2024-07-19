@@ -10,6 +10,15 @@ export type ResponseData = {
   };
 };
 
+export type ChatBotConfig = {
+  brand_color: string;
+  text_color: string;
+  agent_id: string;
+  brand_name: string;
+  welcome_message: string;
+  suggested_questions: string;
+};
+
 export type AccountInfo = {
   id: string;
   name: string;
@@ -18,11 +27,7 @@ export type AccountInfo = {
   city: string | null;
   state: string | null;
   verified: boolean;
-  chatbotConfig: {
-    brand_color: string;
-    text_color: string;
-    agent_id: string;
-  } | null;
+  chatbotConfig: ChatBotConfig | null;
 };
 
 export type AgentType = "ANTI_THEFT" | "SALES_ASSISTANT" | "CHATBOT";
@@ -60,32 +65,20 @@ export interface IConversations {
     conv_id: string;
     unread: number;
   }[];
-  chatbot_config: {
-    brand_color: string;
-    text_color: string;
-    agent_id: string;
-  }[];
 }
 
 export interface IConversationMessages {
-  conv_id: string;
   admin_in_control: boolean;
   messages: {
-    agent_id: string;
-    message: string;
-    date: string;
+    agent_id: string | null;
+    message: string | null;
+    date: string | null;
     sender: {
-      id: string;
-      name: string;
-      avatar: string;
+      id: string | null;
+      name?: string | null;
+      fullname?: string | null;
+      avatar?: string | null;
       role: AccountRoles;
     };
   }[];
-  customer_info: {
-    name: string;
-    email: string;
-    country_code: string | null;
-    city: string | null;
-    state: string | null;
-  };
 }

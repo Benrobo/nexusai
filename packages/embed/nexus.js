@@ -155,7 +155,16 @@ class NexusWidget {
         throw new Error("Failed to logout");
       }
 
-      window.location.reload();
+      // post a message to redirect back to iframe
+      this.iframe.contentWindow.postMessage(
+        {
+          type: "redirect-on-logout",
+          payload: {
+            chatbotId: this.agentId,
+          },
+        },
+        "*"
+      );
     } catch (error) {
       console.error(error);
     }

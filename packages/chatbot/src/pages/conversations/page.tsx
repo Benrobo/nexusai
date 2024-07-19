@@ -11,23 +11,55 @@ import {
   SendHorizontal,
   Undo,
 } from "@/components/icons";
+import { FullPageLoader } from "@/components/Loader";
 import ProtectPage from "@/components/ProtectPage";
 import { useDataCtx } from "@/context/DataCtx";
+import { getConversations } from "@/http/requests";
 import { cn, formatDate } from "@/lib/utils";
-import type { IConversations } from "@/types";
-import { useState } from "react";
+import type { IConversations, ResponseData } from "@/types";
+import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { Remarkable } from "remarkable";
 
 const markdown = new Remarkable();
 
 function Conversations() {
-  const { setAuthVisible } = useDataCtx();
+  const { agent_id } = useDataCtx();
+  const [pageloading, setPageLoading] = useState<boolean>(false);
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
   const [conversations, setConversations] = useState<IConversations | null>(
     null
   );
+  const getConversationsMut = useMutation({
+    mutationFn: async (id: string) => getConversations(id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      setConversations(resp.data);
+      setPageLoading(false);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+      setPageLoading(false);
+    },
+  });
 
-  if (!conversations) {
+  useEffect(() => {
+    if (agent_id) getConversationsMut.mutate(agent_id);
+  }, [agent_id]);
+
+  if (pageloading) {
+    return <FullPageLoader showText={false} />;
+  }
+
+  if (
+    !pageloading &&
+    (!conversations || conversations?.conversations.length === 0)
+  ) {
     return (
       <FlexColCenter className="w-full h-auto min-h-[70%]">
         <MessagesSquare size={60} className="stroke-dark-100" />
@@ -65,9 +97,25 @@ function Conversations() {
 
       <br />
       <FlexColStart className="w-full h-full px-7">
-        {/* <ConversationList 
-
-        /> */}
+        {conversations?.conversations.map((conv) => (
+          <ConversationList
+            key={conv.id}
+            conv_id={conv.id}
+            message={conv.lastMsg.message}
+            time={conv.lastMsg.date}
+            unread={
+              conversations?.unread_messages.find((i) => i.conv_id === conv.id)
+                ?.unread ?? 0
+            }
+            user={{
+              name: conv.lastMsg.sender.fullname! ?? conv.lastMsg?.sender.name!,
+              avatar: conv.lastMsg?.sender?.avatar,
+            }}
+            selectedConversationId={selectedConversationId}
+            agent_id={conv.agentId}
+          />
+        ))}
+        {/*  */}
       </FlexColStart>
     </FlexColStart>
   );
@@ -84,6 +132,7 @@ interface ConversationListProps {
   };
   onSelect?: (id: string) => void;
   selectedConversationId?: string | null;
+  agent_id: string;
 }
 
 function ConversationList({
@@ -93,9 +142,10 @@ function ConversationList({
   unread,
   user,
   selectedConversationId,
+  agent_id,
 }: ConversationListProps) {
   return (
-    <Link className="w-full" to={"/conversation/ascscdc"}>
+    <Link className="w-full" to={`/${agent_id}/conversation/${conv_id}`}>
       <FlexRowStart
         className={cn(
           "w-full h-auto px-4 py-5 rounded-[25px] gap-1 hover:bg-white-400/10 transition-all",

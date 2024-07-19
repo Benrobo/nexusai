@@ -14,7 +14,7 @@ function Account() {
   const logoutMut = useMutation({
     mutationFn: async () => await logoutAccount(),
     onSuccess: () => {
-      window?.location.reload();
+      console.log("Logged out");
     },
     onError: (error: any) => {
       const msg = error?.response?.data?.message || "An error occurred";
@@ -41,7 +41,7 @@ function Account() {
         <Button
           className="w-full px-10 rounded-xl bg-white-300/30 text-xs text-dark-100 border-[.5px] border-white-400/30 hover:bg-white-400/20 enableBounceEffect font-ppM disabled:bg-white-400/40 disabled:opacity-[.8] disabled:cursor-not-allowed"
           onClick={() => {
-            // logoutMut.mutate();
+            logoutMut.mutate();
             sendMessageToParentIframe({
               type: "logout",
               payload: {

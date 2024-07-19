@@ -43,10 +43,21 @@ export default class ConversationRoute {
 
     // get all conversations tied to a widget user account
     this.router.get(
-      `${this.path}s/widget-account`,
+      `${this.path}s/widget-account/:chatbot_id`,
       useCatchErrors(
         isWidgetAccountAuthenticated(
-          this.conversationController.getAllConversationsByWidgetAccount.bind(
+          this.conversationController.getWidgetAccountConversations.bind(
+            this.conversationController
+          )
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}s/widget-account/:chatbot_id/:conversation_id`,
+      useCatchErrors(
+        isWidgetAccountAuthenticated(
+          this.conversationController.getWidgetAccoutConversationMessages.bind(
             this.conversationController
           )
         )

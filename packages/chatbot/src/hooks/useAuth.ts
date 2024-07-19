@@ -32,10 +32,11 @@ export default function useAuth() {
   });
 
   useEffect(() => {
-    if (agent_id && !account) {
+    if (account) return;
+    if (agent_id) {
       userMutation.mutate(agent_id);
     }
-  }, [agent_id, account]);
+  }, [agent_id]);
 
   useEffect(() => {
     if (status === "authenticated" || user) return;

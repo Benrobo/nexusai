@@ -1,3 +1,4 @@
+import MessageEventHandlers from "@/helpers/eventHandlers";
 import type { AccountInfo, ChatBotAgentConfig } from "@/types";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useMatch } from "react-router-dom";
@@ -32,6 +33,19 @@ export default function DataCtxProvider({
       localStorage.setItem("nexus_agent_id", params?.agent_id);
     }
   }, [params?.agent_id]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // @ts-ignore
+      MessageEventHandlers[event.data.type as any](event);
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  });
 
   const ctxValues = {
     agent_id,

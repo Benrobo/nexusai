@@ -219,6 +219,9 @@ export class ChatWidgetUserController {
           agentId: true,
           brand_color: true,
           text_color: true,
+          brand_name: true,
+          welcome_message: true,
+          suggested_questions: true,
         },
       });
       if (config) {
@@ -226,6 +229,9 @@ export class ChatWidgetUserController {
           agentId: config?.agentId,
           brand_color: config?.brand_color,
           text_color: config?.text_color,
+          brand_name: config?.brand_name,
+          welcome_message: config?.welcome_message,
+          suggested_questions: config?.suggested_questions,
         };
       }
     }
@@ -330,7 +336,12 @@ export class ChatWidgetUserController {
   }
 
   public async logoutWidgetAccount(req: Request & IReqObject, res: Response) {
-    res.clearCookie("widget_account_token");
+    res.cookie("widget_account_token", "", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      expires: new Date(0),
+    });
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
