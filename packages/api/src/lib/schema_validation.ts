@@ -231,7 +231,8 @@ export const addIntegrationSchema = zod.object({
     .regex(
       /^(http|https):\/\/[^ "]+$/,
       "URL must start with http:// or https://"
-    ),
+    )
+    .optional(),
 });
 
 export const updateChatBotConfigSchema = zod.object({
