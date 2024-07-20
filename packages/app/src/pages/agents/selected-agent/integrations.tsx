@@ -15,9 +15,12 @@ import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
-import supportedIntegrations from "@/data/integration";
+import supportedIntegrations, {
+  type ValidIntegrations,
+} from "@/data/integration";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/Spinner";
+import IntegrationConfig from "@/components/agents/integration/configuration";
 
 type Integration = {
   type: string;
@@ -31,6 +34,11 @@ export default function Integrations() {
   const agentId = params.id;
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
+  const [selectedIntegration, setSelectedIntegration] = useState<{
+    agent_id: string;
+    int_id: string;
+    type: ValidIntegrations;
+  } | null>(null);
   const getIntegrationQuery = useMutation({
     mutationFn: async (data: string) => await getIntegration(data!),
     onSuccess: (data) => {
@@ -111,8 +119,22 @@ export default function Integrations() {
                       </p>
                     </FlexRowStartCenter>
                     <FlexRowEnd className="w-auto">
+                      {supported?.name === "telegram" && (
+                        <button
+                          className="w-[30px] h-[30px] bg-dark-100 disabled:cursor-not-allowed disabled:opacity-[.5] enableBounceEffect rounded-sm flex-center"
+                          onClick={() => {
+                            setSelectedIntegration({
+                              agent_id: agentId!,
+                              int_id: int.id,
+                              type: supported?.name as ValidIntegrations,
+                            });
+                          }}
+                        >
+                          <Cog size={15} className="stroke-white-100" />
+                        </button>
+                      )}
                       <button
-                        className="disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-[30px] h-[30px] disabled:cursor-not-allowed disabled:opacity-50 bg-red-305 rounded-sm enableBounceEffect flex-center"
                         onClick={() => {
                           const confirm = window.confirm(
                             "Are you sure you want to delete this integration?"
@@ -125,14 +147,11 @@ export default function Integrations() {
                         }}
                         disabled={deleteIntMut.isPending}
                       >
-                        <Trash
-                          size={20}
-                          className="stroke-white-100 bg-red-305 p-1 rounded-sm"
-                        />
+                        <Trash size={20} className="stroke-white-100 " />
                       </button>
                     </FlexRowEnd>
                   </FlexRowStartBtw>
-                  <p className="text-[10px] font-ppReg text-gray-500 text-start">
+                  <p className="text-sm font-ppReg text-gray-500 text-start">
                     {supported?.description}
                   </p>
                 </FlexColStart>
@@ -149,6 +168,15 @@ export default function Integrations() {
             )
           )}
         </FlexRowStart>
+
+        {/* integration configurtions */}
+        {selectedIntegration && (
+          <IntegrationConfig
+            closeModal={() => setSelectedIntegration(null)}
+            isOpen={selectedIntegration ? true : false}
+            selectedIntegration={selectedIntegration}
+          />
+        )}
 
         {/* integration modal */}
         {addIntegration && (

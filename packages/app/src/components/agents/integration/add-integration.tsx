@@ -61,11 +61,16 @@ export default function AddIntegration({
     if (!intUrl && selectedIntegration === "google_calendar")
       return toast.error("Please enter the booking page link");
 
-    addIntegrationMut.mutate({
+    const payload = {
       agent_id,
       type: selectedIntegration,
-      url: intUrl,
-    });
+    } as { [key: string]: string };
+
+    if (selectedIntegration === "google_calendar") {
+      payload["url"] = intUrl;
+    }
+
+    addIntegrationMut.mutate(payload);
   };
 
   return (
@@ -197,7 +202,7 @@ export default function AddIntegration({
                 className="w-auto px-4 py-2 rounded-md bg-dark-100 text-white-100 font-ppReg text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => {
                   if (!selectedIntegration) return;
-                  if (step > 1) {
+                  if (step > 1 || selectedIntegration === "telegram") {
                     addIntegrationHandler();
                     return;
                   }
@@ -209,7 +214,7 @@ export default function AddIntegration({
                   addIntegrationMut.isPending
                 }
               >
-                {step === 1 ? (
+                {step === 1 && selectedIntegration !== "telegram" ? (
                   "Next"
                 ) : addIntegrationMut.isPending ? (
                   <Spinner size={15} color="#fff" />

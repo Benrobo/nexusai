@@ -1,5 +1,6 @@
 import type { NewBotConfigData } from "@/pages/agents/selected-agent/appearance";
 import $axios from "./axios";
+import type { ValidIntegrations } from "@/data/integration";
 
 export const signInUser = async (data: any) => {
   const resp = await $axios.post("/auth/otp-auth", data);
@@ -235,5 +236,16 @@ export const deleteConversation = async (id: string) => {
   const req = await $axios.delete(`/conversation/${id}`, {
     headers: { "x-nexus-admin-account": true },
   });
+  return req.data;
+};
+
+export const getIntegrationConfig = async (
+  int_id: string,
+  agent_id: string,
+  type: ValidIntegrations
+) => {
+  const req = await $axios.get(
+    `/agent/integration/${int_id}/${agent_id}/${type}`
+  );
   return req.data;
 };
