@@ -133,13 +133,32 @@ export default function IntegrationConfig({
           </button>
 
           <FlexRowStart className="w-full px-4 py-5 border-b-[1px] border-dashed border-b-white-400/20 ">
-            <FlexColCenter className="w-auto border-[2px] bg-dark-100 rounded-full p-1 relative">
-              <Cable size={20} className="stroke-white-100 p-1" />
+            <FlexColCenter
+              className={cn(
+                "w-auto rounded-full p-1 relative",
+                selectedIntegration?.type !== "telegram"
+                  ? "border-[2px] bg-dark-100 "
+                  : "border-[.4px] bg-white-300/30"
+              )}
+            >
+              {selectedIntegration?.type === "telegram" ? (
+                <img
+                  src="/assets/logo/telegram.svg"
+                  alt="telegram"
+                  className="object-contain"
+                  width={30}
+                />
+              ) : (
+                <Cable size={20} className="stroke-white-100 p-1" />
+              )}
             </FlexColCenter>
 
             <FlexColStart className="w-full gap-1">
               <h1 className="font-ppM font-bold text-lg">
-                Integration Configuration
+                {selectedIntegration?.type === "telegram"
+                  ? "Telegram Integration"
+                  : "Integration"}{" "}
+                Configuration
               </h1>
               <p className="text-xs font-ppReg font-light text-gray-500">
                 Configure your integration settings.
@@ -201,8 +220,8 @@ export default function IntegrationConfig({
                             "Are you sure you want to rotate the token? Doing this would invalidate the current token as well as delete all the groups connected to the bot."
                           );
 
-                          if(!confirm) return ;
-                          
+                          if (!confirm) return;
+
                           rotateIntConfTokenMut.mutate({
                             int_id: selectedIntegration.int_id,
                             agent_id: selectedIntegration.agent_id,
