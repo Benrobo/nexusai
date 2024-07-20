@@ -10,6 +10,8 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import { inngestServe } from "./inngest/serve.js";
 import env from "./config/env.js";
+// import "./services/telegram.service.js";
+import TelegramBotService from "./services/telegram.service.js";
 
 // init dot env
 dotenv.config();
@@ -23,6 +25,9 @@ export default class App {
     this.app = express();
     this.port = process.env.PORT ?? 4001;
     this.initializeMiddlewares();
+
+    // telegram bot service
+    new TelegramBotService();
   }
 
   initDB() {

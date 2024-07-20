@@ -150,3 +150,8 @@ Note, the main feature isn't based on chatbot but on automated voice calls assis
   - Calendar
   - Whatsapp
 -
+
+## Telegram Intregration
+
+- Update integration schema to include botId used in authorizing bot to nexus agent.
+-

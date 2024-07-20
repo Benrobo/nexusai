@@ -299,7 +299,10 @@ model Integration {
     id       String          @id @default(cuid())
     agent_id String
     type     IntegrationType
-    url      String
+    url      String?
+
+    // telegram config
+    bot_token String? // used for authorizing bot to nexus
 
     created_at DateTime @default(now())
 

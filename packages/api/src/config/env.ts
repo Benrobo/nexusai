@@ -12,6 +12,10 @@ const env = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET!,
   GOOGLE_REDIRECT_URL: process.env.GOOGLE_REDIRECT_URI!,
+  TG: {
+    BOT_TOKEN: process.env.TG_BOT_TOKEN!,
+    WH_URL: process.env.TG_WH_URL!,
+  },
   // GOOGLE GEMINI
   GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
   TWILIO: {
