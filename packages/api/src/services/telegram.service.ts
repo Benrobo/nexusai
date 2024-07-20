@@ -102,16 +102,17 @@ export default class TelegramBotService {
     I'm great, thanks for asking 🥰. Hello Ben, how can i help you today?
     `;
 
-    // ctx.telegram.sendMessage(ctx.chat.id, fakeResp, {
-    //   reply_markup: {
-    //     selective: true,
-    //     force_reply: true,
-    //   },
-    //   reply_parameters: {
-    //     message_id: messageId,
-    //     chat_id: chatId,
-    //   },
-    //   parse_mode: "Markdown",
-    // });
+    ctx.telegram.sendMessage(ctx.chat.id, fakeResp, {
+      reply_markup: {
+        selective: false,
+        // @ts-expect-error
+        force_reply: false,
+      },
+      reply_parameters: {
+        message_id: messageId,
+        chat_id: chatId,
+      },
+      parse_mode: "Markdown",
+    });
   }
 }
