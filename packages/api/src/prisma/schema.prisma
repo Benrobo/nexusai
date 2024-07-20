@@ -18,6 +18,7 @@ enum Role {
 enum IntegrationType {
     google_calendar
     google_meet
+    telegram
 }
 
 enum AgentType {
@@ -302,7 +303,7 @@ model Integration {
     url      String?
 
     // telegram config
-    bot_token String? // used for authorizing bot to nexus
+    tg_config TelegramIntConfig?
 
     created_at DateTime @default(now())
 
@@ -310,6 +311,31 @@ model Integration {
 
     @@index([agent_id])
     @@map(name: "integrations")
+}
+
+model TelegramIntConfig {
+    id         String              @unique
+    intId      String              @id
+    auth_token String?             @unique
+    bot_id     String?
+    groups     TelegramBotGroups[] // groups where the bot was added
+    created_at DateTime            @default(now())
+
+    integrations Integration @relation(fields: [intId], references: [id], onDelete: Cascade)
+
+    @@index([intId])
+}
+
+model TelegramBotGroups {
+    id            String  @id @default(cuid())
+    tgIntConfigId String
+    group_id      String?
+    group_name    String?
+
+    tgIntConfig TelegramIntConfig @relation(fields: [tgIntConfigId], references: [id], onDelete: Cascade)
+
+    @@index([tgIntConfigId])
+    @@map("telegram_bot_groups")
 }
 
 // Conversation can only be initiated from a conversation account via (chat widget)
