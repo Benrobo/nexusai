@@ -188,6 +188,17 @@ export default class AgentRoute {
       )
     );
 
+    this.router.get(
+      `${this.path}/integration/:int_id/:agent_id/:type`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.getIntegrationConfiguration.bind(
+            this.agentController
+          )
+        )
+      )
+    );
+
     this.router.delete(
       `${this.path}/integration/:agent_id/:int_id`,
       useCatchErrors(
