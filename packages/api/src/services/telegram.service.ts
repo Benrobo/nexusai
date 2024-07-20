@@ -49,15 +49,17 @@ const botCommands = [
           return;
         }
 
-        const existingBot = botToken.groups
-          .map((g) => g.group_id)
-          .includes(String(groupId));
+        const existingBot = await prisma.telegramBotGroups.findMany({
+          where: { group_id: String(groupId) },
+        });
 
-        if (existingBot) {
-          console.error("Bot is already authenticated in this group.");
+        if (existingBot.length > 0) {
+          console.log(
+            "❌ One NEXUSAI bot can only be authenticated to one group."
+          );
           await editTgMessage(
             ctx,
-            "❌ *Bot is already authenticated in this group*",
+            "❌ *One NEXUSAI bot can only be authenticated to one group*",
             loadingMessage.message_id,
             ctx.chat.id
           );
