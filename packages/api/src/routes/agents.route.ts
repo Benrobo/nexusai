@@ -189,12 +189,21 @@ export default class AgentRoute {
     );
 
     this.router.get(
-      `${this.path}/integration/:int_id/:agent_id/:type`,
+      `${this.path}/integration/:int_id/:agent_id`,
       useCatchErrors(
         isAuthenticated(
           this.agentController.getIntegrationConfiguration.bind(
             this.agentController
           )
+        )
+      )
+    );
+
+    this.router.patch(
+      `${this.path}/integration/rotate-token/:int_id/:agent_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.rotateIntegrationToken.bind(this.agentController)
         )
       )
     );

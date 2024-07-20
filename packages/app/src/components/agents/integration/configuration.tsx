@@ -11,7 +11,11 @@ import Modal from "@/components/Modal";
 import TooltipComp from "@/components/TooltipComp";
 import { Input } from "@/components/ui/input";
 import type { ValidIntegrations } from "@/data/integration";
-import { getIntegrationConfig } from "@/http/requests";
+import {
+  getIntegrationConfig,
+  rotateIntegrationConfigToken,
+} from "@/http/requests";
+import { cn } from "@/lib/utils";
 import type { ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import React from "react";
@@ -48,14 +52,43 @@ export default function IntegrationConfig({
   const [config, setConfig] = React.useState<Config | null>(null);
   const [isCopied, setIsCopied] = React.useState<string | null>(null);
   const getIntConfigMut = useMutation({
-    mutationFn: async (data: {
-      int_id: string;
-      agent_id: string;
-      type: ValidIntegrations;
-    }) => await getIntegrationConfig(data.int_id, data.agent_id, data.type),
+    mutationFn: async (data: { int_id: string; agent_id: string }) =>
+      await getIntegrationConfig(data.int_id, data.agent_id),
     onSuccess: (data) => {
       const resp = data as ResponseData;
       setConfig(resp.data);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
+  const rotateIntConfTokenMut = useMutation({
+    mutationFn: async (data: { int_id: string; agent_id: string }) =>
+      await rotateIntegrationConfigToken(data.int_id, data.agent_id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      const newToken = resp.data["newToken"];
+
+      // @ts-expect-error
+      setConfig((prev) => {
+        if (prev) {
+          return {
+            ...prev,
+            telegram: {
+              ...prev.telegram,
+              auth_token: newToken,
+            },
+          };
+        }
+        return prev;
+      });
+      toast.success("Token rotated successfully");
+
+      getIntConfigMut.mutate({
+        int_id: selectedIntegration.int_id,
+        agent_id: selectedIntegration.agent_id,
+      });
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
@@ -70,7 +103,6 @@ export default function IntegrationConfig({
       getIntConfigMut.mutate({
         int_id: selectedIntegration.int_id,
         agent_id: selectedIntegration.agent_id,
-        type: selectedIntegration.type,
       });
     }
   }, [selectedIntegration]);
@@ -138,8 +170,8 @@ export default function IntegrationConfig({
                     <Input
                       value={config?.telegram?.auth_token || ""}
                       placeholder={"Token"}
-                      disabled={false}
                       className="font-jb font-bold text-sm w-full"
+                      readOnly={true}
                     />
 
                     {/* rotate and copy token button */}
@@ -162,8 +194,29 @@ export default function IntegrationConfig({
                       </button>
                     </TooltipComp>
                     <TooltipComp text="Rotate token">
-                      <button className="w-[38px] h-[35px] rounded-md bg-dark-100 cursor-pointer flex-center disabled:opacity-[.5] disabled:cursor-not-allowed enableBounceEffect">
-                        <RefreshCcw size={15} className="stroke-white-100" />
+                      <button
+                        className="w-[38px] h-[35px] rounded-md bg-dark-100 cursor-pointer flex-center disabled:opacity-[.5] disabled:cursor-not-allowed enableBounceEffect"
+                        onClick={() => {
+                          const confirm = window.confirm(
+                            "Are you sure you want to rotate the token? Doing this would invalidate the current token as well as delete all the groups connected to the bot."
+                          );
+
+                          if(!confirm) return ;
+                          
+                          rotateIntConfTokenMut.mutate({
+                            int_id: selectedIntegration.int_id,
+                            agent_id: selectedIntegration.agent_id,
+                          });
+                        }}
+                        disabled={rotateIntConfTokenMut.isPending}
+                      >
+                        <RefreshCcw
+                          size={15}
+                          className={cn(
+                            "stroke-white-100",
+                            rotateIntConfTokenMut.isPending && "animate-spin"
+                          )}
+                        />
                       </button>
                     </TooltipComp>
                   </FlexRowCenterBtw>

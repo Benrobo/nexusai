@@ -1011,23 +1011,12 @@ export default class AgentController extends BaseController {
   async getIntegrationConfiguration(req: Request & IReqObject, res: Response) {
     const user = req.user;
     const int_id = req.params["int_id"];
-    const type = req.params["type"];
     const agent_id = req.params["agent_id"];
 
-    if (!int_id || !type || !agent_id) {
+    if (!int_id || !agent_id) {
       throw new HttpException(
         RESPONSE_CODE.BAD_REQUEST,
         "One or more required parameters are missing: int_id, type, agent_id",
-        400
-      );
-    }
-
-    const validIntConfigType = ["telegram"];
-
-    if (!validIntConfigType.includes(type)) {
-      throw new HttpException(
-        RESPONSE_CODE.BAD_REQUEST,
-        "Invalid integration type.",
         400
       );
     }
@@ -1050,7 +1039,7 @@ export default class AgentController extends BaseController {
       );
     }
 
-    if (type === "telegram") {
+    if (integration.type === "telegram") {
       const config = await prisma.telegramIntConfig.findFirst({
         where: {
           intId: int_id,
@@ -1080,6 +1069,92 @@ export default class AgentController extends BaseController {
         {
           telegram: formattedConfig,
         }
+      );
+    }
+  }
+
+  async rotateIntegrationToken(req: Request & IReqObject, res: Response) {
+    const user = req.user;
+    const int_id = req.params["int_id"];
+    const agent_id = req.params["agent_id"];
+
+    if (!int_id || !agent_id) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "One or more required parameters are missing: int_id, type, agent_id",
+        400
+      );
+    }
+
+    const integration = await prisma.integration.findFirst({
+      where: {
+        id: int_id,
+        agent_id,
+        agents: {
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!integration) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Integration not found",
+        404
+      );
+    }
+
+    if (integration.type === "telegram") {
+      const config = await prisma.telegramIntConfig.findFirst({
+        where: {
+          intId: int_id,
+        },
+      });
+
+      if (!config) {
+        throw new HttpException(
+          RESPONSE_CODE.NOT_FOUND,
+          "Integration configuration not found",
+          404
+        );
+      }
+
+      const regularUUID = shortUUID.uuid();
+      const translator = shortUUID();
+      const authToken = translator.fromUUID(regularUUID);
+
+      const updateConfig = prisma.telegramIntConfig.update({
+        where: {
+          id: config.id,
+        },
+        data: {
+          auth_token: authToken,
+        },
+      });
+
+      // delete all groups
+      const deleteBotGroups = prisma.telegramBotGroups.deleteMany({
+        where: {
+          tgIntConfigId: config.id,
+        },
+      });
+
+      await prisma.$transaction([updateConfig, deleteBotGroups]);
+
+      return sendResponse.success(
+        res,
+        RESPONSE_CODE.SUCCESS,
+        "Integration token rotated successfully",
+        200,
+        {
+          newToken: authToken,
+        }
+      );
+    } else {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Invalid integration type",
+        400
       );
     }
   }

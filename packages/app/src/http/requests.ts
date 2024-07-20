@@ -241,11 +241,18 @@ export const deleteConversation = async (id: string) => {
 
 export const getIntegrationConfig = async (
   int_id: string,
-  agent_id: string,
-  type: ValidIntegrations
+  agent_id: string
 ) => {
-  const req = await $axios.get(
-    `/agent/integration/${int_id}/${agent_id}/${type}`
+  const req = await $axios.get(`/agent/integration/${int_id}/${agent_id}`);
+  return req.data;
+};
+
+export const rotateIntegrationConfigToken = async (
+  int_id: string,
+  agent_id: string
+) => {
+  const req = await $axios.patch(
+    `/agent/integration/rotate-token/${int_id}/${agent_id}`
   );
   return req.data;
 };
