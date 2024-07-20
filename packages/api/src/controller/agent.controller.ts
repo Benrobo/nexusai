@@ -936,7 +936,6 @@ export default class AgentController extends BaseController {
       );
     }
 
-    // validate url
     if (payload.type === "google_calendar") {
       const url = new URL(payload.url);
       if (url.hostname !== "calendar.app.google") {
@@ -948,20 +947,41 @@ export default class AgentController extends BaseController {
       }
     }
 
-    // add integration
-    await prisma.integration.create({
-      data: {
-        agent_id: payload.agent_id,
-        type: payload.type as IntegrationType,
-        url: payload.url,
-      },
-    });
+    let telegramIntegration = null;
+    if (payload.type === "telegram") {
+      const regularUUID = shortUUID.uuid();
+      const translator = shortUUID();
+      const authToken = translator.fromUUID(regularUUID);
+      const integrationId = shortUUID.generate();
+      telegramIntegration = await prisma.integration.create({
+        data: {
+          id: integrationId,
+          agent_id: payload.agent_id,
+          type: payload.type as IntegrationType,
+          tg_config: {
+            create: {
+              id: shortUUID.generate(),
+              auth_token: authToken,
+            },
+          },
+        },
+      });
+    } else {
+      await prisma.integration.create({
+        data: {
+          agent_id: payload.agent_id,
+          type: payload.type as IntegrationType,
+          url: payload.url,
+        },
+      });
+    }
 
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Integration added successfully",
-      200
+      200,
+      telegramIntegration
     );
   }
 
@@ -986,6 +1006,82 @@ export default class AgentController extends BaseController {
       200,
       integration
     );
+  }
+
+  async getIntegrationConfiguration(req: Request & IReqObject, res: Response) {
+    const user = req.user;
+    const int_id = req.params["int_id"];
+    const type = req.params["type"];
+    const agent_id = req.params["agent_id"];
+
+    if (!int_id || !type || !agent_id) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "One or more required parameters are missing: int_id, type, agent_id",
+        400
+      );
+    }
+
+    const validIntConfigType = ["telegram"];
+
+    if (!validIntConfigType.includes(type)) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Invalid integration type.",
+        400
+      );
+    }
+
+    const integration = await prisma.integration.findFirst({
+      where: {
+        id: int_id,
+        agent_id,
+        agents: {
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!integration) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Integration not found",
+        404
+      );
+    }
+
+    if (type === "telegram") {
+      const config = await prisma.telegramIntConfig.findFirst({
+        where: {
+          intId: int_id,
+        },
+        include: {
+          groups: true,
+        },
+      });
+
+      const formattedConfig = {
+        id: config?.id,
+        auth_token: config?.auth_token,
+        created_at: config?.created_at,
+        groups: config.groups.map((group) => {
+          return {
+            id: group.group_id,
+            name: group.group_name,
+          };
+        }),
+      };
+
+      return sendResponse.success(
+        res,
+        RESPONSE_CODE.SUCCESS,
+        "Integration configuration retrieved successfully",
+        200,
+        {
+          telegram: formattedConfig,
+        }
+      );
+    }
   }
 
   async removeIntegration(req: Request & IReqObject, res: Response) {
