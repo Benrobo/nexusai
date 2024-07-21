@@ -1,7 +1,4 @@
-import type {
-  DefaultIntents,
-  IFunctionCallResp,
-} from "../types/agent.types.js";
+import type { IFunctionCallResp } from "../types/agent.types.js";
 import {
   DEFAULT_CALL_INTENTS,
   DEFAULT_SA_CALL_INTENTS,
