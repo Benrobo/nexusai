@@ -1,8 +1,20 @@
-import type { Update, Message } from "telegraf/typings/core/types/typegram";
-import { Context } from "telegraf";
+// import type { Update, Message } from "telegraf/typings/core/types/typegram";
+// import { Context } from "telegraf";
+import { Context, NarrowedContext, Telegraf, MiddlewareFn } from "telegraf";
+import { Update, Message } from "telegraf/typings/core/types/typegram";
+
+export type MiddlewareContext = NarrowedContext<Context, Update> & {
+  nexusAgentConfig: {
+    groupId: string;
+    integrationId: string;
+    agentId: string;
+  };
+};
 
 export type MessageContext = Context & {
-  message: Update.New & Update.NonChannel & Message.TextMessage;
+  message: Update.New &
+    Update.NonChannel &
+    Message.TextMessage & { groupId: string };
   // | Message.LeftChatMemberMessage;
 };
 
