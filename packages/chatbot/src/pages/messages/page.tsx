@@ -143,11 +143,6 @@ function Messages() {
   }, [params?.agent_id, params?.conversation_id]);
 
   useEffect(() => {
-    if (initProcessingLastQuery) {
-    }
-  }, [params?.agent_id, params?.conversation_id]);
-
-  useEffect(() => {
     if (params?.agent_id && params?.conversation_id) {
       const interval = setInterval(() => {
         getConversationMessagesMut.mutate({
