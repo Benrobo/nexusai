@@ -290,7 +290,7 @@ export default function IntegrationConfig({
                           authenticate the bot by using this command
                         </p>
 
-                        <span className="px-3 py-1 rounded-md text-xs bg-white-300 border-[.5px] border-white-400/30  text-red-305 font-jb font-bold">
+                        <span className="min-w-[120px] px-3 py-1 rounded-md text-xs bg-white-300 border-[.5px] border-white-400/30  text-red-305 font-jb font-bold">
                           /auth {"<token>"}
                         </span>
 
