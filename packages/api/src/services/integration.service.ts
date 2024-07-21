@@ -1,5 +1,3 @@
-import { RESPONSE_CODE } from "../types/index.js";
-import HttpException from "../lib/exception.js";
 import prisma from "../prisma/prisma.js";
 
 export default class IntegrationService {
