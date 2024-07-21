@@ -208,12 +208,16 @@ export default class TelegramBotService {
       };
     }
   ) {
-    const { agentId, integrationId, groupId } = ctx.nexusAgentConfig;
+    const { agentId, groupId } = ctx.nexusAgentConfig;
     const chatId = ctx.chat.id;
     const messageId = ctx.message.message_id;
-    const userQuery = ctx.message.text.split(" ").slice(1).join(" ");
-
-    // const loadingMessage = await ctx.reply("🔄 Thinking...");
+    const splittedMessage = ctx.message.text.split(" ");
+    const wrdWithMention = splittedMessage.find((wrd) => wrd.includes("@"));
+    const modfiyMessage = [
+      wrdWithMention,
+      ...splittedMessage.filter((wrd) => wrd !== wrdWithMention),
+    ];
+    const userQuery = modfiyMessage.slice(1).join(" ");
     const loadingMessage = ctx.telegram.sendMessage(
       ctx.chat.id,
       "🔄 Thinking...",
