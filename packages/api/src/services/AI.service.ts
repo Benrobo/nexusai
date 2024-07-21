@@ -10,6 +10,7 @@ import GeminiService from "./gemini.service.js";
 import type { AgentType } from "../types/index.js";
 import {
   antiTheftInstructionPrompt,
+  generalCustomerSupportTemplatePrompt,
   salesAssistantInstructionPrompt,
 } from "../data/agent/prompt.js";
 import type { ConvVoiceCallCacheInfo } from "../types/twilio-service.types.js";
@@ -19,6 +20,7 @@ import prisma from "../prisma/prisma.js";
 import redis from "../config/redis.js";
 import { getSentimentVariations } from "../data/agent/sentiment.js";
 import IntegrationService from "./integration.service.js";
+import TelegramHelper from "../helpers/telegram.helper.js";
 
 type IHandleConversationProps = {
   user_input: string;
@@ -1214,5 +1216,101 @@ export default class AIService {
         "I'm sorry, I couldn't find any information on that. Please try again.";
       return resp;
     }
+  }
+
+  // handle telegram customer support request
+  public async handleTelegramCustomerSupportRequest(data: {
+    agentId: string;
+    groupId?: string;
+    userMessage: string;
+  }) {
+    let response = { error: null, success: null, data: null } as {
+      error: null | string;
+      success: string | null;
+      data: {
+        aiResp: string | null;
+      } | null;
+    };
+
+    const { agentId, groupId } = data;
+    const tgHelper = new TelegramHelper();
+    const agent = await prisma.agents.findFirst({
+      where: { id: agentId },
+      select: { name: true, userId: true, id: true },
+    });
+
+    if (!agent) {
+      response.error = "Agent not found";
+      return response;
+    }
+
+    const agentName = agent.name;
+    const agentUserId = agent.userId;
+
+    const knowledgebase = await prisma.knowledgeBase.findMany({
+      where: {
+        userId: agent.userId,
+      },
+      include: {
+        linked_knowledge_base: {
+          select: {
+            kb_id: true,
+            agentId: true,
+          },
+        },
+      },
+    });
+
+    const data_source_ids = [];
+
+    for (const kb of knowledgebase) {
+      const linked_kb = kb.linked_knowledge_base.find(
+        (d) => d.agentId === agent.id
+      );
+      data_source_ids.push(linked_kb.kb_id);
+    }
+
+    await tgHelper.storeTelegramGroupHistory({
+      groupId,
+      content: data.userMessage,
+      role: "user",
+    });
+
+    const similarities = await this.vectorSimilaritySearch({
+      user_input: data.userMessage,
+      data_source_ids,
+      agent_id: data.agentId,
+    });
+
+    const closestMatch = similarities
+      .slice(0, 2)
+      .map((d) => d.content)
+      .join("\n");
+
+    const history = await tgHelper.getTelegramGroupHistoryText(groupId!);
+    const systemInstruction = generalCustomerSupportTemplatePrompt({
+      agentName,
+      context: closestMatch.trim(),
+      query: data.userMessage,
+      history,
+    });
+
+    const aiResp = await this.geminiService.callAI({
+      instruction: systemInstruction,
+      user_prompt: data?.userMessage!,
+    });
+
+    const aiMsg = aiResp.data;
+
+    // save the conversation
+    await tgHelper.storeTelegramGroupHistory({
+      groupId,
+      content: aiMsg,
+      role: "bot",
+    });
+
+    response.success = "Request processed successfully";
+    response.data = { aiResp: aiMsg };
+    return response;
   }
 }
