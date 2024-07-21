@@ -313,6 +313,7 @@ model Integration {
     @@map(name: "integrations")
 }
 
+// <==============  TELEGRAM INTEGRATION SECTION (BEGIN)  ====================>
 model TelegramIntConfig {
     id         String              @unique
     intId      String              @id
@@ -334,11 +335,45 @@ model TelegramBotGroups {
 
     tgIntConfig TelegramIntConfig @relation(fields: [tgIntConfigId], references: [id], onDelete: Cascade)
 
+    chat_history TelegramGroupHistory[]
+
     @@index([tgIntConfigId])
     @@map("telegram_bot_groups")
 }
 
-// Conversation can only be initiated from a conversation account via (chat widget)
+model TelegramGroupHistory {
+    id         String   @id @default(cuid())
+    group_id   String
+    created_at DateTime @default(now())
+
+    group_content TelegramGroupHistoryContent[]
+    group         TelegramBotGroups             @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+    @@index([group_id])
+    @@map("telegram_group_conv_history")
+}
+
+enum TelegramGroupHistoryContentRole {
+    bot
+    user
+}
+
+model TelegramGroupHistoryContent {
+    id             String                          @id @default(cuid())
+    groupHistoryId String
+    content        String
+    role           TelegramGroupHistoryContentRole
+    created_at     DateTime                        @default(now())
+
+    group_history TelegramGroupHistory @relation(fields: [groupHistoryId], references: [id], onDelete: Cascade)
+
+    @@index([groupHistoryId])
+    @@map("telegram_group_conv_history_content")
+}
+
+// <==============  TELEGRAM INTEGRATION SECTION (END)  ====================>
+
+// <==============  CHATBOT INTEGRATION SECTION (BEGIN)  ====================>
 model Conversations {
     id                    String   @id @default(cuid())
     agentId               String
@@ -397,6 +432,8 @@ model ChatMessages {
     @@index([convId])
     @@map(name: "messages")
 }
+
+// <==============  CHATBOT INTEGRATION SECTION (END)  ====================>
 
 // call logs
 model CallLogs {
