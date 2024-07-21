@@ -9,6 +9,7 @@ import type {
   MessageContext,
 } from "../types/telegram.type.js";
 import type { Update } from "telegraf/typings/core/types/typegram.js";
+import AIService from "./AI.service.js";
 
 const botCommands = [
   {
@@ -109,10 +110,12 @@ const botCommands = [
 
 export default class TelegramBotService {
   bot: Telegraf<Context<Update>>;
+  aiService: AIService;
 
   constructor() {
     try {
       this.bot = new Telegraf(env.TG.BOT_TOKEN);
+      this.aiService = new AIService();
       this.init();
       this.bot.launch();
     } catch (e) {
@@ -132,9 +135,9 @@ export default class TelegramBotService {
       );
     });
 
-    this.bot.on("text", isGroupAuthenticated, (ctx) =>
-      this.handleTextMessages(ctx)
-    );
+    this.bot.on("text", (ctx) => {
+      this.handleTextMessages(ctx as any);
+    });
 
     this.bot.on("sticker", (ctx) => {
       const stickerFileId = ctx.message.sticker.file_id;
@@ -174,11 +177,20 @@ export default class TelegramBotService {
     }
   }
 
-  private async handleTextMessages(ctx: MessageContext) {
+  private async handleTextMessages(
+    ctx: MessageContext & {
+      nexusAgentConfig: {
+        groupId: string;
+        integrationId: string;
+        agentId: string;
+      };
+    }
+  ) {
     const messageText = ctx.message.text.toLowerCase();
     const botUsername = this.bot.botInfo?.username;
+
     if (botUsername && messageText.includes(`@${botUsername.toLowerCase()}`)) {
-      await this.handleBotMentions(ctx);
+      isGroupAuthenticated(this.handleBotMentions.bind(this))(ctx);
     }
     if (messageText.startsWith("/")) {
       const command = messageText.split(" ")[0].replace("/", "");
@@ -187,51 +199,69 @@ export default class TelegramBotService {
     }
   }
 
-  private async handleBotMentions(ctx: MessageContext) {
-    console.log(ctx);
+  private async handleBotMentions(
+    ctx: MessageContext & {
+      nexusAgentConfig: {
+        groupId: string;
+        integrationId: string;
+        agentId: string;
+      };
+    }
+  ) {
+    const { agentId, integrationId, groupId } = ctx.nexusAgentConfig;
     const chatId = ctx.chat.id;
     const messageId = ctx.message.message_id;
+    const userQuery = ctx.message.text.split(" ").slice(1).join(" ");
 
     // const loadingMessage = await ctx.reply("🔄 Thinking...");
+    const loadingMessage = ctx.telegram.sendMessage(
+      ctx.chat.id,
+      "🔄 Thinking...",
+      {
+        reply_markup: {
+          selective: false,
+          // @ts-expect-error
+          force_reply: false,
+        },
+        reply_parameters: {
+          message_id: messageId,
+          chat_id: chatId,
+        },
+        parse_mode: "Markdown",
+      }
+    );
 
-    // setTimeout(async () => {
-    // Edit the loading message with the actual response
-    //       await ctx.telegram.editMessageText(
-    //         ctx.chat.id,
-    //         loadingMessage.message_id,
-    //         null,
-    //         `We offer a wide range of services including:
+    try {
+      const aiResponse =
+        await this.aiService.handleTelegramCustomerSupportRequest({
+          agentId,
+          userMessage: userQuery,
+          groupId,
+        });
 
-    // - Software Development
-    // - IT Consulting
-    // - Cloud Computing Solutions
-    // - Cybersecurity Services
-    // - Data Analytics
-    // - AI and Machine Learning
-    // - Web Development
-    // - Mobile App Development
-    // - IT Support and Maintenance
-    // - Network Solutions
-    // `
-    //       );
-    //     }, 3000); // Adjus
+      if (aiResponse?.error !== null) {
+        throw new Error(aiResponse.error);
+      }
 
-    const fakeResp = `
-    I'm great, thanks for asking 🥰. Hello Ben, how can i help you today?
-    `;
-
-    ctx.telegram.sendMessage(ctx.chat.id, fakeResp, {
-      reply_markup: {
-        selective: false,
-        // @ts-expect-error
-        force_reply: false,
-      },
-      reply_parameters: {
-        message_id: messageId,
-        chat_id: chatId,
-      },
-      parse_mode: "Markdown",
-    });
+      await editTgMessage(
+        ctx,
+        aiResponse?.data?.aiResp,
+        (await loadingMessage).message_id,
+        chatId
+      );
+    } catch (e: any) {
+      console.log("");
+      console.error(
+        "[Gemini Bot Mention]: Error handling bot mentions with gemini",
+        e
+      );
+      await editTgMessage(
+        ctx,
+        "⚠️ *Something went wrong,*",
+        (await loadingMessage).message_id,
+        chatId
+      );
+    }
   }
 }
 
