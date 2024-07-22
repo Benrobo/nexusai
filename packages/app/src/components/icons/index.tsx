@@ -527,3 +527,56 @@ export const ListFilter = (props: SvgIconProps) => (
     <path d="M10 18h4" />
   </IconMarkup>
 );
+
+export const MoveUpArrow = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M8 6L12 2L16 6" />
+    <path d="M12 2V22" />
+  </IconMarkup>
+);
+
+export const TrendingDown = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
+    <polyline points="16 17 22 17 22 11" />
+  </IconMarkup>
+);
+
+export const TrendingUp = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+    <polyline points="16 7 22 7 22 13" />
+  </IconMarkup>
+);
+
+export const MessagesSquare = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2z" />
+    <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+  </IconMarkup>
+);
+
+export const UsersRound = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M18 21a8 8 0 0 0-16 0" />
+    <circle cx="10" cy="8" r="5" />
+    <path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3" />
+  </IconMarkup>
+);
+
+export const FileText = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+    <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+    <path d="M10 9H8" />
+    <path d="M16 13H8" />
+    <path d="M16 17H8" />
+  </IconMarkup>
+);
+
+export const Link = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+  </IconMarkup>
+);

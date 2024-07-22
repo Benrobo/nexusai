@@ -19,6 +19,11 @@
 }
 
 @font-face {
+  font-family: "--poppins-semibold";
+  src: url("/assets/fonts/poppins/Poppins-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
   font-family: "--poppins-extrabold";
   src: url("/assets/fonts/poppins/Poppins-ExtraBold.ttf") format("truetype");
 }
@@ -46,6 +51,10 @@
 }
 
 .font-ppB {
+  font-family: "--poppins-bold";
+}
+
+.font-ppSB {
   font-family: "--poppins-bold";
 }
 

@@ -145,6 +145,7 @@ module.exports = {
       fontFamily: {
         pp: ["var(--font-ppReg)"],
         ppB: ["var(--poppins-bold)"],
+        ppSB: ["var(--poppins-semibold)"],
         ppEB: ["var(--poppins-extrabold)"],
         ppReg: ["var(--poppins-regular)"],
         ppL: ["var(--poppins-light)"],
