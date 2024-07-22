@@ -5,15 +5,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Button from "../ui/button";
-import {
-  FlexColStart,
-  FlexRowCenter,
-  FlexRowStart,
-  FlexRowStartCenter,
-} from "../Flex";
+import { FlexColStart, FlexRowStart, FlexRowStartCenter } from "../Flex";
 import {
   CaretSort,
-  ChevronDown,
   CPU,
   Home,
   Inbox,
@@ -21,15 +15,10 @@ import {
   LockOpen,
   Package,
   PhoneIncoming,
-  Plus,
 } from "../icons";
 import { cn, logout } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useDataContext } from "@/context/DataContext";
-import { useMutation } from "@tanstack/react-query";
-import { getAgents } from "@/http/requests";
-import toast from "react-hot-toast";
-import type { ResponseData } from "@/types";
 import usePathname from "@/hooks/usePathname";
 
 const sidebarRoutes = [
@@ -61,23 +50,9 @@ const sidebarRoutes = [
 ];
 
 export default function DashboardSidebar() {
-  const { userInfo, unreadLogs, setAgents } = useDataContext();
+  const { userInfo, unreadLogs } = useDataContext();
   const [activePage, setActivePage] = React.useState("dashboard");
-  const [activeAgentPage, setActiveAgentPage] = React.useState("");
-  const [openNavList, setOpenNavList] = React.useState(false);
   const pathname = usePathname();
-
-  const getAgentsMutation = useMutation({
-    mutationFn: async () => await getAgents(),
-    onSuccess: (data) => {
-      const response = data as ResponseData;
-      setAgents(response.data);
-    },
-    onError: (err) => {
-      console.log(err);
-      toast.error("Failed to fetch agents");
-    },
-  });
 
   useEffect(() => {
     const splittedPath = pathname.path.split("/");
@@ -104,9 +79,12 @@ export default function DashboardSidebar() {
                 referrerPolicy="no-referrer"
                 className="rounded-full w-8 h-8 bg-white-100/50 object-cover"
               />
-              <FlexColStart className="w-auto gap-0">
-                <span className="text-xs font-ppReg text-white-100">
-                  {userInfo?.full_name}
+              <FlexColStart className="w-full gap-0">
+                <span className="text-sm font-ppReg text-white-100">
+                  {userInfo?.full_name &&
+                  userInfo?.full_name.split(" ").length > 1
+                    ? userInfo?.full_name.split(" ")[1]
+                    : userInfo?.full_name}
                 </span>
               </FlexColStart>
             </FlexRowStartCenter>

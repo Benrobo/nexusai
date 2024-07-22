@@ -1,6 +1,7 @@
 import CircularProgressBar from "@/components/CircularProgressBar";
 import {
   FlexColCenter,
+  FlexColEnd,
   FlexColStart,
   FlexColStartBtw,
   FlexRowCenterBtw,
@@ -36,6 +37,8 @@ import {
 } from "@/http/requests";
 import toast from "react-hot-toast";
 import type { AgentType, KBType, ResponseData } from "@/types";
+import TooltipComp from "@/components/TooltipComp";
+import { agentTypes } from "@/data/agent";
 
 dayjs.extend(relativeTime);
 
@@ -194,6 +197,15 @@ export default function Dashboard() {
                 type="agent"
                 title="Total Agents"
                 figure={metrics.total_agents.length}
+                agents={{
+                  total:
+                    metrics.total_agents.length > 0
+                      ? metrics.total_agents
+                          .map((a) => a.total)
+                          .reduce((a, b) => a + b)
+                      : 0,
+                  data: metrics.total_agents,
+                }}
                 description="Total agents created."
                 loading={getTotalAgentsMut.isPending}
               />
@@ -246,6 +258,13 @@ interface MetricsCardProps {
   description?: string;
   figure?: number;
   loading?: boolean;
+  agents?: {
+    total: number;
+    data: {
+      type: AgentType;
+      total: number;
+    }[];
+  };
   growth?: {
     total: number;
     rate: {
@@ -273,6 +292,7 @@ function MetricCards({
   messages,
   kb,
   loading,
+  agents,
 }: MetricsCardProps) {
   const renderIcon = () => {
     switch (type) {
@@ -322,7 +342,7 @@ function MetricCards({
   }
 
   return (
-    <FlexColStart className="w-full max-w-[350px] min-w-[300px] h-auto bg-white-100 rounded-2xl p-5">
+    <FlexColStart className="w-full max-w-[350px] min-w-[300px] h-auto bg-white-100 rounded-2xl p-5 relative">
       <FlexRowStartBtw className="w-full h-full">
         <FlexColStartBtw className="w-full h-full">
           <FlexRowStartCenter className="w-auto">
@@ -376,6 +396,24 @@ function MetricCards({
                 </span>
               </FlexRowStartCenter>
             </FlexRowStartBtw>
+          )}
+
+          {agents && (
+            <FlexColCenter className="w-auto h-full absolute top-0 right-4">
+              {agentTypes.map((t, idx) => (
+                <FlexRowStartCenter key={idx} className="w-auto">
+                  <TooltipComp
+                    text={`${agents.data.find((a) => a.type === t.type)?.total ?? 0} ${t.title} agent.`}
+                  >
+                    <img
+                      src={t.img}
+                      width={25}
+                      className="border-[.5px] border-white-400/30 rounded-full grayscale-[100%] hover:grayscale-0"
+                    />
+                  </TooltipComp>
+                </FlexRowStartCenter>
+              ))}
+            </FlexColCenter>
           )}
 
           {/* knowledgebase section */}
