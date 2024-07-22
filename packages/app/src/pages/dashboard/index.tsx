@@ -22,15 +22,42 @@ import { Spinner } from "@/components/Spinner";
 import useSession from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 
 export default function Dashboard() {
-  const data = useSession();
+  const { user, loading } = useSession();
+  const getTimeOfDay = () => {
+    const now = dayjs();
+    const hour = now.hour();
+    if (hour >= 5 && hour < 12) {
+      return "Morning";
+    } else if (hour >= 12 && hour < 17) {
+      return "Afternoon";
+    } else {
+      return "Evening";
+    }
+  };
+
   return (
     <FlexColStart className="w-full h-screen relative bg-white-300">
       <FlexColStart className="w-full h-screen md:w-full xl:max-w-[90%] mx-auto">
         {/* header */}
         <FlexColStart className="w-full h-auto px-8 py-7">
-          <h1 className="text-xl font-ppM text-dark-100">Overview</h1>
+          <FlexColStart className="w-full gap-0 mb-4 mt-3">
+            {/* <p className="text-md font-ppM text-white-400">Overview</p> */}
+            <h1 className="text-[25px] font-ppSB text-dark-100">
+              Good {getTimeOfDay()},{" "}
+              <span className="text-brown-100">
+                {!loading && user?.full_name}
+              </span>
+            </h1>
+            <p className="text-xs font-ppReg text-white-400">
+              An overview of your account.
+            </p>
+          </FlexColStart>
 
           {/* dashboard cards */}
           <div className="w-full grid grid-cols-3 gap-4">
@@ -45,7 +72,7 @@ export default function Dashboard() {
                   rate: { type: "decrease", percentage: 10 },
                 }}
                 description="From last weeks"
-                loading={true}
+                loading={false}
               />
 
               <MetricCards
@@ -53,7 +80,7 @@ export default function Dashboard() {
                 title="Total Agents"
                 figure={500}
                 description="Total agents created."
-                loading={true}
+                loading={false}
               />
 
               <MetricCards
@@ -65,7 +92,7 @@ export default function Dashboard() {
                   ai_call_logs_messages: 200,
                 }}
                 description="Total messages sent by agents."
-                loading={true}
+                loading={false}
               />
 
               <MetricCards
@@ -77,7 +104,7 @@ export default function Dashboard() {
                   pdf: 300,
                   web_pages: 200,
                 }}
-                loading={true}
+                loading={false}
               />
             </div>
             <div className="w-full h-auto">
