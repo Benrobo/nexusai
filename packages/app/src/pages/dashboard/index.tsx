@@ -54,7 +54,7 @@ export default function Dashboard() {
                 {!loading && user?.full_name}
               </span>
             </h1>
-            <p className="text-xs font-ppReg text-white-400">
+            <p className="text-sm font-ppReg text-white-400">
               An overview of your account.
             </p>
           </FlexColStart>
