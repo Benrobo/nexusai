@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import BaseController from "./base.controller.js";
-import { RESPONSE_CODE, IReqObject } from "../types/index.js";
+import { RESPONSE_CODE, IReqObject, type AgentType } from "../types/index.js";
 import {
   createConversationSchema,
   otpChatWidgetAccountSignInSchema,
@@ -16,6 +16,12 @@ import JWT from "../lib/jwt.js";
 import HttpException from "../lib/exception.js";
 import ZodValidation from "../lib/zodValidation.js";
 import shortUUID from "short-uuid";
+import { SentimentAnalysisService } from "../services/sentiment.service.js";
+import type { KnowledgeBaseType } from "@prisma/client";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime.js";
+
+dayjs.extend(relativeTime);
 
 type ChatWidgetAccountSignupPayload = {
   email?: string;
@@ -26,6 +32,7 @@ type ChatWidgetAccountSignupPayload = {
 };
 
 export default class UserController extends BaseController {
+  sentimentAnalysisService = new SentimentAnalysisService();
   constructor() {
     super();
   }
@@ -45,6 +52,328 @@ export default class UserController extends BaseController {
       full_name: userData?.fullname ?? "",
       avatar: userData?.avatar,
       role: userData?.role,
+    });
+  }
+
+  private calculatePercentages(sentiment: {
+    positive: number;
+    negative: number;
+    neutral: number;
+  }) {
+    const total = sentiment.positive + sentiment.negative + sentiment.neutral;
+
+    const percentages = {
+      positive: (sentiment.positive / total) * 100,
+      negative: (sentiment.negative / total) * 100,
+      neutral: (sentiment.neutral / total) * 100,
+    };
+
+    return percentages;
+  }
+
+  private async analyzeSentiments(messages: { content: string }[]) {
+    const sentiment = {
+      positive: 0,
+      negative: 0,
+      neutral: 0,
+    };
+
+    for (const message of messages) {
+      const { score } = await this.sentimentAnalysisService.analyzeSentiment(
+        message.content
+      );
+      if (score > 0) sentiment.positive++;
+      else if (score < 0) sentiment.negative++;
+      else sentiment.neutral++;
+    }
+
+    return sentiment;
+  }
+
+  private async getAgentIds(userId: string) {
+    const agents = await prisma.agents.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+    return agents.map((agent) => agent.id);
+  }
+
+  async retrieveSentimentAnalysisOfUsersConversations(
+    req: Request & IReqObject,
+    res: Response
+  ) {
+    const agentIds = await this.getAgentIds(req.user.id);
+
+    const conversations = await prisma.conversations.findMany({
+      where: { agentId: { in: agentIds } },
+      select: { chat_messages: true },
+    });
+
+    const allMessages = conversations.flatMap((conv) => conv.chat_messages);
+    const sentiment = await this.analyzeSentiments(allMessages);
+    const percentages = this.calculatePercentages(sentiment);
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Success",
+      200,
+      percentages
+    );
+  }
+
+  async retrieveSentimentAnalysisOfConversationMessages(
+    req: Request & IReqObject,
+    res: Response
+  ) {
+    const agentIds = await this.getAgentIds(req.user.id);
+    const conversation_id = req.params["conversation_id"];
+
+    const conversation = await prisma.conversations.findFirst({
+      where: {
+        agentId: { in: agentIds },
+        id: conversation_id,
+      },
+      select: { chat_messages: true },
+    });
+
+    if (!conversation) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Conversation not found",
+        404
+      );
+    }
+
+    const sentiment = await this.analyzeSentiments(conversation.chat_messages);
+    const percentages = this.calculatePercentages(sentiment);
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Success",
+      200,
+      percentages
+    );
+  }
+
+  async retrieveSentimentAnalysisOfCallLogs(
+    req: Request & IReqObject,
+    res: Response
+  ) {
+    const agentIds = await this.getAgentIds(req.user.id);
+
+    const callLogs = await prisma.callLogs.findMany({
+      where: { agentId: { in: agentIds } },
+      select: { messages: true },
+    });
+
+    const allMessages = callLogs.flatMap((log) => log.messages);
+    const sentiment = await this.analyzeSentiments(allMessages);
+    const percentages = this.calculatePercentages(sentiment);
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Success",
+      200,
+      percentages
+    );
+  }
+
+  async getTotalConversations(req: Request & IReqObject, res: Response) {
+    const agentIds = await this.getAgentIds(req.user.id);
+
+    const totalConversations = await prisma.conversations.count({
+      where: { agentId: { in: agentIds } },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Success",
+      200,
+      totalConversations
+    );
+  }
+
+  async getTotalKnowledgeBase(req: Request & IReqObject, res: Response) {
+    const knowledegebase = await prisma.knowledgeBase.findMany({
+      where: { userId: req.user.id },
+      include: { kb_data: true },
+    });
+
+    const totalKb: {
+      type: KnowledgeBaseType;
+      total: number;
+    }[] = [
+      {
+        type: "PDF",
+        total: 0,
+      },
+      {
+        type: "WEB_PAGES",
+        total: 0,
+      },
+    ];
+
+    if (knowledegebase.length > 0) {
+      for (const kb of knowledegebase) {
+        const kbData = kb.kb_data[0];
+        const exists = totalKb?.find((kb) => kb.type === kbData.type);
+
+        if (exists) {
+          totalKb.map((kb) => {
+            if (kb.type === kbData.type) {
+              kb.total = kb.total + 1;
+            }
+            return kb;
+          });
+        }
+      }
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Success",
+      200,
+      totalKb
+    );
+  }
+
+  async getTotalAgents(req: Request & IReqObject, res: Response) {
+    const agents = await prisma.agents.findMany({
+      where: { userId: req.user.id },
+      select: { type: true },
+    });
+
+    const totalAgents: {
+      type: AgentType;
+      total: number;
+    }[] = [];
+
+    if (agents.length > 0) {
+      for (const agent of agents) {
+        const exists = totalAgents?.find((ag) => ag.type === agent.type);
+
+        if (exists) {
+          totalAgents.map((ag) => {
+            if (ag.type === agent.type) {
+              ag.total = ag.total + 1;
+            }
+            return ag;
+          });
+        } else {
+          totalAgents.push({
+            type: agent.type,
+            total: 1,
+          });
+        }
+      }
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Success",
+      200,
+      totalAgents
+    );
+  }
+
+  async getTotalAIMessages(req: Request & IReqObject, res: Response) {
+    const agentIds = await this.getAgentIds(req.user.id);
+
+    const [convMessagesWithAI, callLogAIMessages] = await Promise.all([
+      prisma.chatMessages.count({
+        where: {
+          role: "agent",
+          agentId: { in: agentIds },
+        },
+      }),
+      prisma.callLogsMessages.count({
+        where: {
+          entity_type: "agent",
+          call_logs: {
+            agentId: { in: agentIds },
+            userId: req.user.id,
+          },
+        },
+      }),
+    ]);
+
+    const totalAIMessages = convMessagesWithAI + callLogAIMessages;
+
+    return sendResponse.success(res, RESPONSE_CODE.SUCCESS, "Success", 200, {
+      totalMessagesCombMessages: totalAIMessages,
+      totalAIConversationsMessages: convMessagesWithAI,
+      totalAICallLogsMessages: callLogAIMessages,
+    });
+  }
+
+  async getCustomerGrowthStats(req: Request & IReqObject, res: Response) {
+    const agentIds = await this.getAgentIds(req.user.id);
+
+    const conversations = await prisma.conversations.findMany({
+      where: {
+        agentId: { in: agentIds },
+      },
+      distinct: ["conversationAccountId"],
+      include: { widget_user_account: true },
+    });
+
+    const now = dayjs();
+    const startOfThisWeek = now.startOf("week");
+    const startOfLastWeek = startOfThisWeek.subtract(1, "week");
+
+    const customers = {
+      lastWeek: 0,
+      thisWeek: 0,
+    };
+
+    for (const conv of conversations) {
+      const customer = conv.widget_user_account;
+      if (!customer) continue;
+
+      const accountCreatedDate = await prisma.chatWidgetAccount.findUnique({
+        where: { id: conv.conversationAccountId },
+        select: { created_at: true },
+      });
+
+      if (!accountCreatedDate) continue;
+
+      const createdAt = dayjs(accountCreatedDate.created_at);
+
+      if (createdAt.isAfter(startOfThisWeek) && createdAt.isBefore(now)) {
+        customers.thisWeek++;
+      } else if (
+        createdAt.isAfter(startOfLastWeek) &&
+        createdAt.isBefore(startOfThisWeek)
+      ) {
+        customers.lastWeek++;
+      }
+    }
+
+    let rateType: "increase" | "decrease" | "no-change" = "no-change";
+    let percentage = 0;
+
+    if (customers.lastWeek > customers.thisWeek) {
+      rateType = "decrease";
+      percentage =
+        ((customers.lastWeek - customers.thisWeek) / customers.lastWeek) * 100;
+    } else if (customers.lastWeek < customers.thisWeek) {
+      rateType = "increase";
+      percentage =
+        (customers.thisWeek - customers.lastWeek) / customers.lastWeek;
+    }
+
+    return sendResponse.success(res, RESPONSE_CODE.SUCCESS, "Success", 200, {
+      total: customers.thisWeek,
+      rate: {
+        type: rateType,
+        percentage: Number(percentage.toFixed(2)),
+      },
     });
   }
 }
