@@ -256,3 +256,43 @@ export const rotateIntegrationConfigToken = async (
   );
   return req.data;
 };
+
+export const getCustomerGrowthStats = async () => {
+  const req = await $axios.get(`/user/metrics/customer-growth`);
+  return req.data;
+};
+
+export const getTotalConversations = async () => {
+  const req = await $axios.get(`/user/metrics/conversations`);
+  return req.data;
+};
+
+export const getTotalKnowledgeBase = async () => {
+  const req = await $axios.get(`/user/metrics/knowledgebase`);
+  return req.data;
+};
+
+export const getTotalAIMessagesMetrics = async () => {
+  const req = await $axios.get(`/user/metrics/ai-messages`);
+  return req.data;
+};
+
+export const getTotalAgents = async () => {
+  const req = await $axios.get(`/user/metrics/agents`);
+  return req.data;
+};
+
+export const getCallLogSentimentAnalysis = async () => {
+  const req = await $axios.get(`/user/call-logs/sentiment`);
+  return req.data;
+};
+
+export const getConversationSentimentAnalysis = async () => {
+  const req = await $axios.get(`/user/conversation/sentiment`);
+  return req.data;
+};
+
+export const getConversationMessagesSentimentAnalysis = async (id: string) => {
+  const req = await $axios.get(`/user/conversation/${id}/sentiment`);
+  return req.data;
+};
