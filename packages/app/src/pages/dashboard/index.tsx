@@ -366,7 +366,6 @@ function SentimentCard() {
   >(undefined);
   const [progressBarValue, setProgressBarValue] = useState(0);
 
-  // Calculate highest sentiment
   useEffect(() => {
     const currentPercentages = analysis[activeTab]?.percentages || {};
     const highest = Object.entries(currentPercentages).reduce(
@@ -384,7 +383,6 @@ function SentimentCard() {
     );
   }, [activeTab, analysis]);
 
-  // Update progress bar value
   useEffect(() => {
     if (highestSentiment) {
       setTimeout(() => {
@@ -393,7 +391,6 @@ function SentimentCard() {
     }
   }, [highestSentiment]);
 
-  // Constants
   const tabs = [
     { name: "conversations", title: "Conversations" },
     { name: "call-logs", title: "Call Logs" },
@@ -405,7 +402,6 @@ function SentimentCard() {
     { label: "Negative", colorClass: "bg-red-305" },
   ];
 
-  // Determine color and text for the progress bar
   const sentimentColor = highestSentiment
     ? {
         positive: "#22C55E",
