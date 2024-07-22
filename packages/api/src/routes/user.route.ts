@@ -27,6 +27,84 @@ export default class UserRoute {
       )
     );
 
+    this.router.get(
+      `${this.path}/conversation/sentiment`,
+      useCatchErrors(
+        isAuthenticated(
+          this.userController.retrieveSentimentAnalysisOfUsersConversations.bind(
+            this.userController
+          )
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/conversation/:conversation_id/sentiment`,
+      useCatchErrors(
+        isAuthenticated(
+          this.userController.retrieveSentimentAnalysisOfConversationMessages.bind(
+            this.userController
+          )
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/call-logs/sentiment`,
+      useCatchErrors(
+        isAuthenticated(
+          this.userController.retrieveSentimentAnalysisOfCallLogs.bind(
+            this.userController
+          )
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/metrics/agents`,
+      useCatchErrors(
+        isAuthenticated(
+          this.userController.getTotalAgents.bind(this.userController)
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/metrics/knowledgebase`,
+      useCatchErrors(
+        isAuthenticated(
+          this.userController.getTotalKnowledgeBase.bind(this.userController)
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/metrics/ai-messages`,
+      useCatchErrors(
+        isAuthenticated(
+          this.userController.getTotalAIMessages.bind(this.userController)
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/metrics/conversations`,
+      useCatchErrors(
+        isAuthenticated(
+          this.userController.getTotalConversations.bind(this.userController)
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/metrics/customer-growth`,
+      useCatchErrors(
+        isAuthenticated(
+          this.userController.getCustomerGrowthStats.bind(this.userController)
+        )
+      )
+    );
+
     // Widget Account Section
     this.router.get(
       `${this.path}/chat-widget-account/:agent_id`,
