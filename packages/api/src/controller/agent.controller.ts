@@ -585,6 +585,7 @@ export default class AgentController extends BaseController {
           },
         },
         created_at: true,
+        activated: true,
       },
     });
 

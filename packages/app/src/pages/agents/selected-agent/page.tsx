@@ -1,12 +1,17 @@
 import AgentSidebar from "@/components/agents/sidebar";
-import { FlexColCenter, FlexRowCenter, FlexRowStart } from "@/components/Flex";
+import {
+  FlexColCenter,
+  FlexRowCenter,
+  FlexRowCenterBtw,
+  FlexRowStart,
+} from "@/components/Flex";
 import type { AgentType } from "@/types";
 import { useEffect, useState } from "react";
 import GeneralPage from "./general";
 import type { AgentActiveTabs, ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { getAgent } from "@/http/requests";
+import { activateAgent, getAgent } from "@/http/requests";
 import { Spinner } from "@/components/Spinner";
 import toast from "react-hot-toast";
 import SettingsPage from "./settings";
@@ -28,6 +33,7 @@ interface IAgentInfo {
   integrations?: number;
   contact_number?: string;
   created_at?: Date;
+  activated: boolean;
 }
 
 export default function SelectedAgent() {
@@ -43,6 +49,7 @@ export default function SelectedAgent() {
   const [error, setError] = useState<string | null>(null);
   const [agentInfo, setAgentInfo] = useState<IAgentInfo | null>(null);
   const [pageloading, setPageLoading] = useState(true);
+  const [activatingAgent, setActivatingAgent] = useState(false);
   const getAgentQuery = useMutation({
     mutationFn: async (agentId: string) => await getAgent(agentId!),
     onSuccess: (data) => {
@@ -85,26 +92,58 @@ export default function SelectedAgent() {
   }
 
   return (
-    <FlexRowStart className="w-full h-full bg-white-200/20  overflow-y-hidden p-0 m-0 gap-0">
-      {/* sidebar */}
-      <AgentSidebar
-        agent_info={agentInfo!}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+    <>
+      {!agentInfo?.activated && (
+        <FlexRowCenterBtw className="w-full top-0 left-0 bg-yellow-100 py-1 px-3 font-ppReg text-xs text-dark-100">
+          <span>
+            ⚠️ Your agent is currently inactive. Activate it to start receiving
+            calls.
+          </span>
+          <button
+            className="w-[90px] h-[30px] bg-dark-100 px-3 text-xs font-ppReg drop-shadow disabled:bg-dark-100/50 disabled:text-white-100 enableBounceEffect outline-none border-none text-white-100 rounded-md"
+            disabled={agentInfo?.activated}
+            onClick={() => {
+              setActivatingAgent(true);
+              toast.promise(activateAgent(agentId!), {
+                loading: "Activating agent..",
+                success: () => {
+                  setActivatingAgent(false);
+                  getAgentQuery.mutate(agentId!);
+                  return "Agent activated";
+                },
+                error: (error: any) => {
+                  setActivatingAgent(false);
+                  const err = error.response.data as ResponseData;
+                  return err.message ?? "Failed to activate agent";
+                },
+              });
+            }}
+          >
+            Activate
+          </button>
+        </FlexRowCenterBtw>
+      )}
+      <FlexRowStart className="w-full h-full bg-white-200/20  overflow-y-hidden p-0 m-0 gap-0">
+        {/* sidebar */}
+        <AgentSidebar
+          agent_info={agentInfo!}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
 
-      {/* main content */}
-      <div className="w-full h-full overflow-auto relative">
-        {activeTab === "general" && <GeneralPage />}
-        {activeTab === "settings" && (
-          <SettingsPage agent_id={agentId!} type={agentInfo.type!} />
-        )}
-        {activeTab === "appearance" && (
-          <Appearance agent_id={agentId!} type={agentInfo.type!} />
-        )}
-        {activeTab === "knowledge-base" && <KnowledgeBase />}
-        {activeTab === "integrations" && <Integrations />}
-      </div>
-    </FlexRowStart>
+        {/* main content */}
+        <div className="w-full h-full overflow-auto relative">
+          {activeTab === "general" && <GeneralPage />}
+          {activeTab === "settings" && (
+            <SettingsPage agent_id={agentId!} type={agentInfo.type!} />
+          )}
+          {activeTab === "appearance" && (
+            <Appearance agent_id={agentId!} type={agentInfo.type!} />
+          )}
+          {activeTab === "knowledge-base" && <KnowledgeBase />}
+          {activeTab === "integrations" && <Integrations />}
+        </div>
+      </FlexRowStart>
+    </>
   );
 }

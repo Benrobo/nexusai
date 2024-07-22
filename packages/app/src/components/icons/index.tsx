@@ -580,3 +580,11 @@ export const Link = (props: SvgIconProps) => (
     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
   </IconMarkup>
 );
+
+export const SquareArrowOutUpRight = (props: SvgIconProps) => (
+  <IconMarkup {...props}>
+    <path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" />
+    <path d="m21 3-9 9" />
+    <path d="M15 3h6v6" />
+  </IconMarkup>
+);

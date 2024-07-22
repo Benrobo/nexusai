@@ -1,6 +1,7 @@
 "use client";
 import {
   FlexColCenter,
+  FlexColEnd,
   FlexColStart,
   FlexRowCenter,
   FlexRowCenterBtw,
@@ -8,26 +9,18 @@ import {
   FlexRowStart,
   FlexRowStartBtw,
 } from "@/components/Flex";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { CheckCheck, Pen, ShieldCheck } from "@/components/icons";
 import {
-  cn,
-  formatNumber,
-  formatPhoneNumber,
-  validatePhoneNumber,
-} from "@/lib/utils";
+  CheckCheck,
+  Pen,
+  ShieldCheck,
+  SquareArrowOutUpRight,
+  Trash,
+} from "@/components/icons";
+import { cn, formatNumber, validatePhoneNumber } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import {
-  activateAgent,
   getAgentFwdNumber,
   getAgentSettings,
   sendOTP,
@@ -72,7 +65,6 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
   const [settingsDetails, setSettingsDetails] = useState<AgentSettings>(
     {} as AgentSettings
   );
-  const [activatingAgent, setActivatingAgent] = useState(false);
   const [forwardingNum, setForwardingNum] = useState<string | null>(null);
   const [handoverEditMode, setHandoverEditMode] = useState(false);
   const [addHandoverNumber, setAddHandoverNumber] = useState(false);
@@ -181,36 +173,6 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
 
   return (
     <>
-      {!agentSettings?.activated && (
-        <FlexRowCenterBtw className="w-full top-0 left-0 bg-yellow-100 py-1 px-3 font-ppReg text-xs text-dark-100">
-          <span>
-            ⚠️ Your agent is currently inactive. Activate it to start receiving
-            calls.
-          </span>
-          <button
-            className="w-[90px] h-[30px] bg-dark-100 px-3 text-xs font-ppReg drop-shadow disabled:bg-dark-100/50 disabled:text-white-100 scale-[.85] active:scale-[.90] target:scale-[.80] scale-1 transition-all outline-none border-none text-white-100 rounded-md"
-            disabled={activatingAgent}
-            onClick={() => {
-              setActivatingAgent(true);
-              toast.promise(activateAgent(agent_id), {
-                loading: "Activating agent..",
-                success: () => {
-                  setActivatingAgent(false);
-                  getAgentSettingsQuery.mutate(agent_id);
-                  return "Agent activated";
-                },
-                error: (error: any) => {
-                  setActivatingAgent(false);
-                  const err = error.response.data as ResponseData;
-                  return err.message ?? "Failed to activate agent";
-                },
-              });
-            }}
-          >
-            Activate
-          </button>
-        </FlexRowCenterBtw>
-      )}
       <div className="w-full max-w-[100%] h-full px-10 py-10 overflow-y-scroll pb-[50em] hideScrollBar2">
         <FlexColStart className="w-full h-full ">
           <FlexRowStartBtw className="w-full px-3">
@@ -223,7 +185,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
               </p>
             </FlexColStart>
 
-            <FlexRowEnd className="w-auto">
+            {/* <FlexRowEnd className="w-auto">
               <Button
                 intent={"primary"}
                 className="w-[150px] h-[36px] px-4 text-xs font-ppReg drop-shadow disabled:bg-blue-100/70 disabled:text-white-100"
@@ -234,7 +196,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
               >
                 Save Changes
               </Button>
-            </FlexRowEnd>
+            </FlexRowEnd> */}
           </FlexRowStartBtw>
 
           <br />
@@ -447,6 +409,65 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                 )}
               </>
             )}
+
+            {/* Active Subscription section */}
+            <FlexColStart className="w-full h-[115px] rounded-md border-[.5px] border-white-400/30 px-4 py-4 relative overflow-hidden">
+              <FlexRowStartBtw className="w-full gap-2">
+                <FlexColStart className="w-full gap-1">
+                  <p className="text-md font-ppB text-dark-100">
+                    Active Subscription
+                  </p>
+                  <span className="text-xs font-ppReg text-dark-100/50">
+                    subcription is due{" "}
+                    <span className="text-dark-100 font-ppM">
+                      20, June 2024
+                    </span>
+                  </span>
+                </FlexColStart>
+
+                <FlexColEnd className="w-full h-full gap-4">
+                  <p className="text-sm font-jb font-semibold text-dark-100">
+                    21 days remaining
+                  </p>
+                  <Button
+                    intent={"dark"}
+                    className="w-[180px] h-[36px] rounded-lg px-4 text-xs font-ppReg drop-shadow disabled:bg-blue-100/70 disabled:text-white-100"
+                    // disabled={enableSaveChangesButton()}
+                    // onClick={saveChanges}
+                    isLoading={updateAgentSettingsMut.isPending || tabLoading}
+                    rightIcon={<SquareArrowOutUpRight size={15} />}
+                  >
+                    View Billing Portal
+                  </Button>
+                </FlexColEnd>
+              </FlexRowStartBtw>
+
+              {true && (
+                <FlexColCenter className="w-full h-full backdrop-blur-md absolute top-0 left-0 bg-white-300 z-[10] gap-1">
+                  <p className="text-dark-100 text-sm font-ppB">
+                    Phone Number Subscription
+                  </p>
+                  <p className="text-dark-100 text-xs font-ppM">
+                    You have not subscribed to a phone number yet.
+                  </p>
+                </FlexColCenter>
+              )}
+            </FlexColStart>
+
+            <FlexColCenter className="w-full h-auto mt-10">
+              <FlexRowStartBtw className="w-full h-full px-5 py-3 border-[1px] border-red-305 bg-red-305/10 rounded-md">
+                <FlexColStart className="w-full">
+                  <h1 className="font-ppB text-sm text-red-305">Danger Zone</h1>
+                  <p className="text-sm font-ppReg text-red-305">
+                    Please note that this action is irreversible.
+                  </p>
+                </FlexColStart>
+                <Button className="w-auto min-w-[200px] px-10 rounded-xl bg-red-305/80 text-xs text-white-100  hover:bg-red-305 enableBounceEffect font-ppM">
+                  <Trash size={15} className="stroke-white-100" />
+                  <span>Delete Account</span>
+                </Button>
+              </FlexRowStartBtw>
+            </FlexColCenter>
           </FlexColStart>
         </FlexColStart>
       </div>
