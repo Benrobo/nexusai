@@ -27,7 +27,11 @@ export default class App {
     this.initializeMiddlewares();
 
     // telegram bot service
-    new TelegramBotService();
+    try {
+      new TelegramBotService();
+    } catch (e: any) {
+      logger.error("Error initializing Telegram Bot", e);
+    }
   }
 
   initDB() {
