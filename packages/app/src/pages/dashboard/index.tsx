@@ -45,7 +45,7 @@ export default function Dashboard() {
     <FlexColStart className="w-full h-screen relative bg-white-300">
       <FlexColStart className="w-full h-screen md:w-full xl:max-w-[90%] mx-auto">
         {/* header */}
-        <FlexColStart className="w-full h-auto px-8 py-7">
+        <FlexColStart className="w-full h-auto px-4 lg:px-8 py-7">
           <FlexColStart className="w-full gap-0 mb-4 mt-3">
             {/* <p className="text-md font-ppM text-white-400">Overview</p> */}
             <h1 className="text-[25px] font-ppSB text-dark-100">
@@ -60,8 +60,8 @@ export default function Dashboard() {
           </FlexColStart>
 
           {/* dashboard cards */}
-          <div className="w-full grid grid-cols-3 gap-4">
-            <div className="w-full h-auto flex flex-wrap gap-4 col-span-2">
+          <div className="w-full grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="w-full h-auto flex flex-wrap gap-4 col-span-1 lg:col-span-2">
               {/* metrics section */}
               <MetricCards
                 type="customers"
