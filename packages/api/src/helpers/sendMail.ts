@@ -27,8 +27,6 @@ export default async function sendMail(props: {
       console.error("Error sending mail", mailSent.error);
       throw new Error("Error sending mail");
     }
-
-    console.log(mailSent);
     console.log("Mail sent successfully: ", props.to);
   } catch (error) {
     console.error("Error sending mail", error);
