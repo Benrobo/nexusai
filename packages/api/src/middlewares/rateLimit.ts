@@ -22,7 +22,6 @@ export default function rateLimit(fn: Function, shouldCache: Boolean) {
     const data = await redis.get(key);
     if (!data) {
       if (shouldCache) {
-        // set key to expire in 1 minute
         const exp = 20; // 20sec
         await redis.set(key, userId);
         await redis.expire(key, exp);
@@ -32,7 +31,7 @@ export default function rateLimit(fn: Function, shouldCache: Boolean) {
     } else {
       logger.info("Rate limit exceeded");
       res.status(429).json({
-        message: "Too many requests, please try again later",
+        message: "Too many requests. hold on",
       });
     }
   };
