@@ -52,39 +52,6 @@ enum KnowledgeBaseType {
     NOTION // COMING SOON
 }
 
-enum SubscriptionStatus {
-    // Currently in a trial period.
-    on_trial
-
-    // Active with ongoing payments.
-    active
-
-    // Payment collection paused.
-    paused
-
-    // Renewal payment failed, with retries.
-    past_due
-
-    // Unsuccessful payment recovery after 4 attempts.
-    unpaid
-
-    // Future payments cancelled, but still on a grace period.
-    cancelled
-
-    // Subscription has expired.
-    expired
-}
-
-enum SubscriptionType {
-    IN_APP // handle the in-app subscription for premium features
-    TWILIO_PHONE_NUMBERS // handle the twilio phone numbers subscription
-}
-
-enum HandoverCondition {
-    emergency
-    help
-}
-
 enum KnowledgeBaseStatus {
     trained
     untrained
@@ -110,8 +77,11 @@ model Users {
     @@map(name: "users")
 }
 
-// users are limited to 2 agents per workspace
-// AI Agents
+enum HandoverCondition {
+    emergency
+    help
+}
+
 model Agents {
     id     String    @id @default(cuid())
     userId String
@@ -135,6 +105,7 @@ model Agents {
     call_logs             CallLogs[]
     integrations          Integration[]
     chatbot_config        ChatbotConfig?
+    subscriptions         Subscriptions?
 
     @@index([userId])
     @@map(name: "agents")
@@ -380,9 +351,9 @@ model Conversations {
     created_at            DateTime @default(now())
     conversationAccountId String?
 
-    agents              Agents?            @relation(fields: [agentId], references: [id])
+    agents              Agents?            @relation(fields: [agentId], references: [id], onDelete: Cascade)
     chat_messages       ChatMessages[]
-    widget_user_account ChatWidgetAccount? @relation(fields: [conversationAccountId], references: [id])
+    widget_user_account ChatWidgetAccount? @relation(fields: [conversationAccountId], references: [id], onDelete: Cascade)
     admin_in_control    Boolean?           @default(false)
 
     @@index([agentId])
@@ -425,7 +396,7 @@ model ChatMessages {
     is_read_customer Boolean?     @default(false)
     is_read_admin    Boolean?     @default(false)
 
-    conversations Conversations @relation(fields: [convId], references: [id])
+    conversations Conversations @relation(fields: [convId], references: [id], onDelete: Cascade)
 
     @@index([senderId])
     @@index([agentId])
@@ -435,7 +406,6 @@ model ChatMessages {
 
 // <==============  CHATBOT INTEGRATION SECTION (END)  ====================>
 
-// call logs
 model CallLogs {
     id             String  @id @default(cuid())
     refId          String  @unique
@@ -451,8 +421,8 @@ model CallLogs {
 
     analysis CallLogsAnalysis?
 
-    agent    Agents             @relation(fields: [agentId], references: [id])
-    user     Users              @relation(fields: [userId], references: [id])
+    agent    Agents             @relation(fields: [agentId], references: [id], onDelete: Cascade)
+    user     Users              @relation(fields: [userId], references: [id], onDelete: Cascade)
     messages CallLogsMessages[]
     entries  CallLogEntry?
     is_read  Boolean?           @default(false)
@@ -471,7 +441,7 @@ model CallLogsMessages {
     content     String
     created_at  DateTime        @default(now())
 
-    call_logs CallLogs @relation(fields: [call_log_id], references: [id])
+    call_logs CallLogs @relation(fields: [call_log_id], references: [id], onDelete: Cascade)
 
     @@index([fromId])
     @@index([toId])
@@ -508,7 +478,7 @@ model CallLogsAnalysis {
 
     created_at DateTime @default(now())
 
-    call_logs CallLogs @relation(fields: [callLogId], references: [id])
+    call_logs CallLogs @relation(fields: [callLogId], references: [id], onDelete: Cascade)
 
     @@index([callLogId])
     @@map(name: "call_logs_analysis")
@@ -516,15 +486,44 @@ model CallLogsAnalysis {
 
 // Subscriptions
 
+enum SubscriptionStatus {
+    // Currently in a trial period.
+    on_trial
+
+    // Active with ongoing payments.
+    active
+
+    // Payment collection paused.
+    paused
+
+    // Renewal payment failed, with retries.
+    past_due
+
+    // Unsuccessful payment recovery after 4 attempts.
+    unpaid
+
+    // Future payments cancelled, but still on a grace period.
+    cancelled
+
+    // Subscription has expired.
+    expired
+}
+
+enum SubscriptionType {
+    IN_APP // handle the in-app subscription for premium features
+    TWILIO_PHONE_NUMBERS // handle the twilio phone numbers subscription
+}
+
 model Subscriptions {
     id         String  @id @default(cuid())
     uId        String
     user_name  String?
     user_email String?
+    agent_id   String? @unique
 
     type SubscriptionType
 
-    grace_period DateTime? // 3 days grace period for (TWILIO_PHONE_NUMBERS)
+    grace_period DateTime? // 1 day grace period for (TWILIO_PHONE_NUMBERS)
 
     product_id   String
     product_name String?
@@ -550,7 +549,9 @@ model Subscriptions {
 
     test_mode Boolean @default(false)
 
-    user Users @relation(fields: [uId], references: [uId])
+    user  Users   @relation(fields: [uId], references: [uId], onDelete: Cascade)
+    agent Agents? @relation(fields: [agent_id], references: [id], onDelete: Cascade)
 
+    @@index([uId])
     @@map(name: "subscriptions")
 }
