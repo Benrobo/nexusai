@@ -186,7 +186,7 @@ function AgentCard({
   return (
     <FlexColStart className="w-full max-w-[350px] pt-4 rounded-md outline outline-[.5px] outline-white-400/80">
       <Link
-        to={`/agents/${id}?tab=general`}
+        to={`/agents/${id}?tab=settings`}
         className="flex flex-col items-start justify-start w-full"
       >
         <FlexRowStartBtw className="w-full px-6 ">
