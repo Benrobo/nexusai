@@ -25,10 +25,6 @@ interface IAgentSidebarProps {
 
 const sidebarItems = [
   {
-    name: "General",
-    key: "general",
-  },
-  {
     name: "Integrations",
     key: "integrations",
   },
