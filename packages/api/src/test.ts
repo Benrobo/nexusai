@@ -1,11 +1,13 @@
 import { TwilioService } from "./services/twilio.service.js";
 import GeminiService from "./services/gemini.service.js";
-import fs from "fs";
-import {
-  extractLinkMarkup,
-  scrapeLinksFromWebpage,
-} from "./services/scrapper.js";
+import fs, { createWriteStream } from "fs";
+import { scrapeLinksFromWebpage } from "./services/scrapper.js";
 import { cfQwenChat } from "./services/cloudflare.service.js";
+import TTSService from "./services/tts.service.js";
+import shortUUID from "short-uuid";
+import { createHash } from "crypto";
+import PhraseService from "./services/phrase.service.js";
+import redis from "./config/redis.js";
 
 // Test all services without writing test scripts
 
@@ -15,6 +17,24 @@ export default async () => {
     // const twService = new TwilioService();
     const geminiService = new GeminiService();
     const twService = new TwilioService();
+    const phraseService = new PhraseService();
+    const tts = new TTSService();
+
+    try {
+      // const resp = await tts.xiLabTTS(
+      //   "Hello, this is a test. How are you today? I hope you're doing well."
+      // );
+      // const upload = await phraseService.storePhrase(
+      //   "agent-1",
+      //   "Hello, this is a test. How are you today? I hope you're doing well.",
+      //   resp
+      // );
+      // console.log(upload);
+    } catch (e: any) {
+      console.log(e);
+    }
+
+    // console.log(resp);
 
     // const qwenData = await cfQwenChat({});
 

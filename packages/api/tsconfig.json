@@ -5,6 +5,7 @@
     "target": "es6",
     "lib": ["es2017", "esnext.asynciterable", "DOM"],
     "typeRoots": ["node_modules/@types"],
+    "resolveJsonModule": true,
     "module": "es6",
     "allowSyntheticDefaultImports": true,
     // "module": "ES2022", // "ES2022" etc
@@ -16,7 +17,7 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["./**/*", "./src/**/*"],
+  "include": ["./**/*", "./src/**/*", "./src/config/*.json"],
   "exclude": ["node_modules", "./dist/**/*"],
   "ts-node": {
     "require": ["tsconfig-paths/register"],

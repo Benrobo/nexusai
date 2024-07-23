@@ -18,6 +18,9 @@ import type {
   InitConvRestProps,
 } from "../types/twilio-service.types.js";
 import { defaultAgentName } from "../data/agent/config.js";
+import defaultAgentVoices from "../data/agent/voice.js";
+import TTSService from "./tts.service.js";
+import PhraseService from "./phrase.service.js";
 
 dotenv.config();
 
@@ -30,6 +33,7 @@ export class TwilioService {
     env.TWILIO.TEST_AUTH_TOKEN
   );
   aiService = new AIService();
+  phraseService = new PhraseService();
 
   constructor() {}
 
@@ -162,13 +166,14 @@ export class TwilioService {
     if (agent_type === "ANTI_THEFT") {
       const prompt = twimlPrompt.find((p) => p.type === "INIT_ANTI_THEFT");
 
-      twiml.say(prompt.msg);
+      const audioUrl = await this.getAudioUrl(agent?.name, prompt.msg);
+      twiml.play(audioUrl);
       twiml.gather({
         input: ["speech"],
         action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
         method: "POST",
-        timeout: 5,
-        speechTimeout: "5",
+        timeout: 10,
+        speechTimeout: "10",
       });
 
       sendXMLResponse(res, twiml.toString());
@@ -179,17 +184,29 @@ export class TwilioService {
         .find((p) => p.type === "INIT_SALES_ASSISTANT")
         .msg.replace("{{agent_name}}", agent?.name ?? defaultAgentName);
 
-      twiml.say(prompt);
+      const audioUrl = await this.getAudioUrl(agent?.name, prompt);
+
+      twiml.play(audioUrl);
       twiml.gather({
         input: ["speech"],
         action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
         method: "POST",
         timeout: 5,
-        speechTimeout: "5",
+        speechTimeout: "auto",
       });
 
       sendXMLResponse(res, twiml.toString());
     }
+  }
+
+  private async getAudioUrl(agentName: string, prompt: string) {
+    let audioUrl = await this.phraseService.retrievePhrase(agentName, prompt);
+
+    if (!audioUrl) {
+      audioUrl = await this.phraseService.storePhrase(agentName, prompt);
+    }
+
+    return audioUrl;
   }
 
   // ANTI-THEFT VOICE CALL PROCESSING
@@ -211,10 +228,12 @@ export class TwilioService {
             },
           },
           userId: true,
+          name: true,
         },
       });
-
-      const agent = agents.find((a) => a.used_number.phone === calledPhone);
+      const agent = agents
+        .filter((a) => a.used_number !== null)
+        .find((a) => a.used_number?.phone === calledPhone);
       const agentInfo = agent
         ? {
             agent_id: agent.used_number.agentId,
@@ -238,8 +257,10 @@ export class TwilioService {
         cached_conv_info: convCachedInfo,
       });
 
+      const audioUrl = await this.getAudioUrl(agent?.name, conv.msg);
+
       if (conv.ended) {
-        twiml.say(conv.msg);
+        twiml.play(audioUrl);
         twiml.hangup();
 
         await redis.del(callRefId);
@@ -249,15 +270,17 @@ export class TwilioService {
             input: ["speech"],
             action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
             method: "POST",
-            timeout: 5,
-            speechTimeout: "5",
+            timeout: 10,
+            speechTimeout: "10",
           })
-          .say(conv.msg!);
+          .play(audioUrl);
       }
       sendXMLResponse(res, twiml.toString());
     } catch (e: any) {
       console.log(e);
-      twiml.say("Something went wrong. Please try again later.");
+      twiml.play(
+        defaultAgentVoices.find((v) => v.type === "error-occurred").path
+      );
       twiml.hangup();
       sendXMLResponse(res, twiml.toString());
     }
@@ -282,10 +305,13 @@ export class TwilioService {
             },
           },
           userId: true,
+          name: true,
         },
       });
 
-      const agent = agents.find((a) => a.used_number.phone === calledPhone);
+      const agent = agents
+        .filter((a) => a.used_number !== null)
+        .find((a) => a.used_number?.phone === calledPhone);
       const agentInfo = agent
         ? {
             agent_id: agent.used_number.agentId,
@@ -293,7 +319,6 @@ export class TwilioService {
           }
         : null;
 
-      // decline call if agent has no linked knowledge base / data source.
       const linkedKb = await prisma.linkedKnowledgeBase.findMany({
         where: {
           agentId: agentInfo?.agent_id,
@@ -301,8 +326,8 @@ export class TwilioService {
       });
 
       if (!linkedKb || linkedKb.length === 0) {
-        twiml.say(
-          twimlPrompt.find((p) => p.type === "KNOWLEDGE_BASE_NOT_FOUND").msg
+        twiml.play(
+          defaultAgentVoices.find((v) => v.type === "datasource-notfound").path
         );
         twiml.hangup();
         sendXMLResponse(res, twiml.toString());
@@ -326,13 +351,14 @@ export class TwilioService {
         cached_conv_info: convCachedInfo,
       });
 
+      const audioUrl = await this.getAudioUrl(agent?.name, conv.msg);
       if (conv.ended) {
-        twiml.say(conv.msg);
+        twiml.play(audioUrl);
         twiml.hangup();
 
         await redis.del(callRefId);
       } else if (conv?.escallated?.number) {
-        twiml.say(conv.msg);
+        twiml.play(audioUrl);
         twiml.dial(conv.escallated.number);
       } else {
         twiml
@@ -343,12 +369,14 @@ export class TwilioService {
             timeout: 5,
             speechTimeout: "5",
           })
-          .say(conv.msg!);
+          .play(audioUrl!);
       }
       sendXMLResponse(res, twiml.toString());
     } catch (e: any) {
       console.log(e);
-      twiml.say("Something went wrong. Please try again later.");
+      twiml.play(
+        defaultAgentVoices.find((v) => v.type === "error-occurred").path
+      );
       twiml.hangup();
       sendXMLResponse(res, twiml.toString());
     }

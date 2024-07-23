@@ -36,6 +36,7 @@ export default class App {
 
   initializeMiddlewares() {
     // initialize server middlewares
+    this.app.use(express.static("public"));
     this.app.use(requestLogger);
     this.app.use(
       cors({

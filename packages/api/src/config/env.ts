@@ -49,6 +49,18 @@ const env = {
     AUTH_TOKEN: process.env.CF_AUTH_TOKEN!,
     ACCT_ID: process.env.CF_ACCT_ID!,
   },
+  TTS: {
+    XI_LAB_API_KEY: process.env.XI_LAB_API_KEY!,
+  },
+  FIREBASE: {
+    API_KEY: process.env.FIREBASE_API_KEY!,
+    AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN!,
+    PROJECT_ID: process.env.FIREBASE_PROJECT_ID!,
+    STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET!,
+    MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID!,
+    APP_ID: process.env.FIREBASE_APP_ID!,
+    MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID!,
+  },
 };
 
 export default env;

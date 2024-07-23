@@ -44,7 +44,7 @@ export const twimlPrompt = [
   },
   {
     type: "INIT_ANTI_THEFT",
-    msg: `Hi, it ${AGENT_NAME}, here to help.`,
+    msg: `Hi, it ${AGENT_NAME}, here to help. Who's calling?`,
   },
   {
     type: "INIT_SALES_ASSISTANT",
