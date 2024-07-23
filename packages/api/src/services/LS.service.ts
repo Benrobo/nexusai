@@ -73,4 +73,37 @@ export default class LemonsqueezyServices {
       );
     }
   }
+
+  async getCustomerPortalUrl(customer_id: string) {
+    const api = `https://api.lemonsqueezy.com/v1/customers/${customer_id}`;
+    const res = await axios.get(api, {
+      headers: {
+        Authorization: `Bearer ${env.LS.API_KEY}`,
+      },
+    });
+
+    const data = res.data;
+
+    if (data?.data) {
+      const url = data?.data?.attributes?.urls?.customer_portal;
+      return url;
+    }
+    return null;
+  }
+
+  async cancelSubscription(sub_id: string) {
+    const api = `https://api.lemonsqueezy.com/v1/subscriptions/${sub_id}`;
+    const res = await axios.delete(api, {
+      headers: {
+        Authorization: `Bearer ${env.LS.API_KEY}`,
+      },
+    });
+
+    const data = res.data;
+
+    if (data?.data) {
+      return data;
+    }
+    return null;
+  }
 }
