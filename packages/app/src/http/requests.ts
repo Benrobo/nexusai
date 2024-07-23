@@ -1,6 +1,5 @@
 import type { NewBotConfigData } from "@/pages/agents/selected-agent/appearance";
 import $axios from "./axios";
-import type { ValidIntegrations } from "@/data/integration";
 
 export const signInUser = async (data: any) => {
   const resp = await $axios.post("/auth/otp-auth", data);
@@ -12,7 +11,6 @@ export const login = async (data: any) => {
   return resp.data;
 };
 
-// fetch users info
 export const getUser = async () => {
   const req = await $axios.get("/user");
   return req.data;
@@ -294,5 +292,22 @@ export const getConversationSentimentAnalysis = async () => {
 
 export const getConversationMessagesSentimentAnalysis = async (id: string) => {
   const req = await $axios.get(`/user/conversation/${id}/sentiment`);
+  return req.data;
+};
+
+export const getCustomerPortal = async (product_id: string) => {
+  const req = await $axios.get(`/agent/subscription/portal/${product_id}`);
+  return req.data;
+};
+
+export const getAgentSubscription = async (agent_id: string) => {
+  const req = await $axios.get(`/agent/subscription/${agent_id}`);
+  return req.data;
+};
+
+export const deleteAgent = async (id: string) => {
+  const req = await $axios.delete(
+    `/agent/${id}?tid=${Math.floor(Math.random() * 10000)}`
+  );
   return req.data;
 };
