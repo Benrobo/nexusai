@@ -3,8 +3,6 @@ import {
   FlexColCenter,
   FlexColEnd,
   FlexColStart,
-  FlexRowCenter,
-  FlexRowCenterBtw,
   FlexRowEnd,
   FlexRowStart,
   FlexRowStartBtw,
@@ -13,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import {
   CheckCheck,
   Pen,
-  ShieldCheck,
   SquareArrowOutUpRight,
   Trash,
 } from "@/components/icons";
@@ -21,8 +18,11 @@ import { cn, formatNumber, validatePhoneNumber } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
+  deleteAgent,
   getAgentFwdNumber,
   getAgentSettings,
+  getAgentSubscription,
+  getCustomerPortal,
   sendOTP,
   updateAgentSettings,
 } from "@/http/requests";
@@ -32,43 +32,43 @@ import { Spinner } from "@/components/Spinner";
 import Button from "@/components/ui/button";
 import ManagePhoneNumber from "@/components/agents/settings/manage_phone_number";
 import VerifyPhoneModal from "@/components/agents/verify-phone";
-
-const handoverConditions = [
-  {
-    title: "Emergency",
-    value: "emergency",
-  },
-  {
-    title: "Help",
-    value: "help",
-  },
-];
-
-interface AgentSettings {
-  allow_handover: boolean;
-  handover_condition: "emergency" | "help";
-  security_code: string;
-  activated: boolean;
-}
+import { FullPageLoader } from "@/components/Loader";
+import dayjs from "dayjs";
 
 interface SettingsProps {
   agent_id: string;
   type: AgentType;
 }
 
+interface PhoneSubscriptionData {
+  id: string;
+  status: "on_trial" | "active" | "paused" | "cancelled" | "expired";
+  renews_at: string;
+  ends_at: string | null;
+  product_id: string;
+}
+
+interface AgentSettings {
+  allow_handover: boolean;
+  handover_condition: string;
+  security_code: string;
+  activated: boolean;
+  purchased_number: {
+    phone: string;
+  } | null;
+}
+
 export default function SettingsPage({ agent_id, type }: SettingsProps) {
-  const [error, setError] = useState<null | string>(null);
-  const [tabLoading, setTabLoading] = useState(true);
-  const [agentSettings, setAgentSettings] = useState<AgentSettings | null>(
-    null
-  );
-  const [settingsDetails, setSettingsDetails] = useState<AgentSettings>(
-    {} as AgentSettings
-  );
+  const [phoneSubscription, setPhoneSubscription] =
+    useState<PhoneSubscriptionData | null>(null);
   const [forwardingNum, setForwardingNum] = useState<string | null>(null);
   const [handoverEditMode, setHandoverEditMode] = useState(false);
   const [addHandoverNumber, setAddHandoverNumber] = useState(false);
   const [handoverNum, setHandoverNum] = useState("");
+  const [deletingAgent, setDeletingAgent] = useState(false);
+  const [agentSettings, setAgentSettings] = useState<AgentSettings | null>(
+    null
+  );
   const getFwdNumberQuery = useMutation({
     mutationFn: async (id: string) => await getAgentFwdNumber(id),
     onSuccess: (data) => {
@@ -83,24 +83,9 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
       toast.error(err.message);
     },
   });
-  const getAgentSettingsQuery = useMutation({
-    mutationFn: async (data: string) => getAgentSettings(data),
-    onSuccess: (data) => {
-      const resp = data as ResponseData;
-      setAgentSettings(resp.data);
-      setSettingsDetails(resp.data);
-      setTabLoading(false);
-    },
-    onError: (error) => {
-      const err = (error as any).response.data as ResponseData;
-      setError(err.message);
-      setTabLoading(false);
-      toast.error(err.message);
-    },
-  });
   const updateAgentSettingsMut = useMutation({
     mutationFn: async (data: any) => updateAgentSettings(data),
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Settings updated");
       window.location.reload();
     },
@@ -121,55 +106,58 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
       setHandoverNum("");
     },
   });
+  const getAgentSubscriptionMut = useMutation({
+    mutationFn: async (id: string) => getAgentSubscription(id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      setPhoneSubscription(resp.data);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
+  const getCustomerPortalMut = useMutation({
+    mutationFn: async (id: string) => getCustomerPortal(id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      window.open(resp.data, "_blank");
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
+  const getAgentSettingsMut = useMutation({
+    mutationFn: async (id: string) => getAgentSettings(id),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      setAgentSettings(resp.data);
+    },
+    onError: (error) => {
+      const err = (error as any).response.data as ResponseData;
+      toast.error(err.message);
+    },
+  });
 
   useEffect(() => {
-    if (agent_id && !agentSettings) getAgentSettingsQuery.mutate(agent_id!);
-    if (agent_id && !forwardingNum) getFwdNumberQuery.mutate(agent_id);
+    if (agent_id) {
+      if (!forwardingNum) getFwdNumberQuery.mutate(agent_id);
+      if (!agentSettings) getAgentSettingsMut.mutate(agent_id);
+    }
   }, [agent_id]);
 
-  const handleFormChange = (
-    key: keyof AgentSettings,
-    value: string | boolean
-  ) => {
-    setSettingsDetails((prev: any) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const enableSaveChangesButton = () => {
-    if (agentSettings?.allow_handover !== settingsDetails?.allow_handover)
-      return false;
-    if (
-      agentSettings?.handover_condition !== settingsDetails?.handover_condition
-    )
-      return false;
-    if (agentSettings?.security_code !== settingsDetails?.security_code)
-      return false;
-    return true;
-  };
-
-  const saveChanges = async () => {
-    for (const key of Object.keys(settingsDetails!)) {
-      const noValue = !!settingsDetails[key as keyof AgentSettings];
-      if (!noValue) {
-        // @ts-expect-error
-        delete settingsDetails[key];
-      }
+  useEffect(() => {
+    if (agentSettings) {
+      if (
+        ["ANTI_THEFT", "SALES_ASSISTANT"].includes(type) &&
+        agentSettings?.purchased_number !== null
+      )
+        getAgentSubscriptionMut.mutate(agent_id);
     }
-    updateAgentSettingsMut.mutate({
-      ...settingsDetails,
-      agent_id,
-    });
-  };
+  }, [agentSettings]);
 
-  if (tabLoading) {
-    return (
-      <FlexRowCenter className="w-full h-full">
-        <Spinner color="#000" />
-      </FlexRowCenter>
-    );
-  }
+  const phoneSubDaysLeft = dayjs(phoneSubscription?.renews_at).daysInMonth();
 
   return (
     <>
@@ -184,19 +172,6 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                 Manage configurations and settings for the agent.
               </p>
             </FlexColStart>
-
-            {/* <FlexRowEnd className="w-auto">
-              <Button
-                intent={"primary"}
-                className="w-[150px] h-[36px] px-4 text-xs font-ppReg drop-shadow disabled:bg-blue-100/70 disabled:text-white-100"
-                disabled={enableSaveChangesButton()}
-                onClick={saveChanges}
-                enableBounceEffect={true}
-                isLoading={updateAgentSettingsMut.isPending || tabLoading}
-              >
-                Save Changes
-              </Button>
-            </FlexRowEnd> */}
           </FlexRowStartBtw>
 
           <br />
@@ -207,98 +182,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
             type
           ) && <ManagePhoneNumber agent_id={agent_id} />}
 
-          {/* settings sections  */}
-          <FlexColStart
-            className={cn("w-full min-h-[250px] mt-10 relative px-1")}
-          >
-            {/* handover settings */}
-            {/* {type === "ANTI_THEFT" && (
-            <>
-              <FlexColStart className="w-auto gap-0">
-                <h1 className="text-lg font-bold font-jb text-dark-100">
-                  Handover
-                </h1>
-                <p className="text-xs font-ppReg text-white-400/80 mt-1">
-                  Configure handover settings for the agent.
-                </p>
-              </FlexColStart>
-
-              <FlexColStart className="w-full gap-1 rounded-md bg-white-300">
-                <FlexRowCenterBtw className="w-full gap-2 px-4 py-3 rounded-md">
-                  <p className="text-xs font-ppReg text-dark-100">
-                    Enable handover
-                  </p>
-                  <Switch
-                    onCheckedChange={(val: boolean) => {
-                      handleFormChange("allow_handover", val);
-                    }}
-                    className="data-[state=unchecked]:bg-white-400/30"
-                    checked={
-                      settingsDetails?.allow_handover ??
-                      agentSettings?.allow_handover
-                    }
-                  />
-                </FlexRowCenterBtw>
-                <span className="w-full p-[.3px] bg-white-400/30"></span>
-                <FlexRowCenterBtw className="w-full gap-2 px-4 py-2 mt-0">
-                  <p className="text-xs font-ppReg text-dark-100">
-                    Handover Condition
-                  </p>
-                  <Select
-                    onValueChange={(val) => {
-                      handleFormChange("handover_condition", val);
-                    }}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue
-                        placeholder={
-                          agentSettings?.handover_condition ?? "Select"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {handoverConditions.map((c, i) => (
-                        <SelectItem
-                          key={i}
-                          value={c.value}
-                          className="font-ppReg"
-                        >
-                          {c.value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FlexRowCenterBtw>
-              </FlexColStart>
-
-              <FlexRowCenterBtw className="w-full gap-2 px-4 py-3 mt-2 rounded-md bg-white-300">
-                <FlexRowStart>
-                  <ShieldCheck className="p-[5px] rounded-full bg-dark-100/70" />
-                  <FlexColStart className="w-auto gap-0">
-                    <p className="text-xs font-ppReg text-dark-100">
-                      Security code
-                    </p>
-                    <span className="text-[10px] font-ppL text-dark-100/50">
-                      Security code would be required for emergency scenario.
-                    </span>
-                  </FlexColStart>
-                </FlexRowStart>
-                <Input
-                  className="w-[150px] text-md font-jb placeholder:text-white-400/50 tracking-wide "
-                  type="number"
-                  placeholder="456234"
-                  value={settingsDetails?.security_code ?? ""}
-                  onChange={(e: any) => {
-                    const val = (e.target as any).value;
-                    if (val.length > 6) return;
-                    handleFormChange("security_code", (e.target as any).value);
-                  }}
-                />
-              </FlexRowCenterBtw>
-            </>
-          )} */}
-
-            {/* Escallation number */}
+          <FlexColStart className={cn("w-full h-auto mt-10 relative px-1")}>
             {["SALES_ASSISTANT"].includes(type) && (
               <>
                 <FlexRowStartBtw className="w-full gap-1 rounded-md bg-white-300 px-4 py-2">
@@ -380,19 +264,6 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                     )}
                   </FlexRowEnd>
                 </FlexRowStartBtw>
-                {/* 
-              {otpSent && (
-                <FlexRowEnd className="w-full">
-                  <Timer
-                    time={20}
-                    onClick={() => {
-                      sendOTPMut.mutate({
-                        phone: handoverNum,
-                      });
-                    }}
-                  />
-                </FlexRowEnd>
-              )} */}
 
                 {/* verify phone modal */}
                 {addHandoverNumber && (
@@ -400,7 +271,6 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                     closeModal={() => setAddHandoverNumber(false)}
                     isOpen={addHandoverNumber}
                     refetchVerifiedPhone={() => {
-                      getAgentSettingsQuery.mutate(agent_id);
                       getFwdNumberQuery.mutate(agent_id);
                       setHandoverNum("");
                     }}
@@ -410,49 +280,81 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
               </>
             )}
 
-            {/* Active Subscription section */}
-            <FlexColStart className="w-full h-[115px] rounded-md border-[.5px] border-white-400/30 px-4 py-4 relative overflow-hidden">
-              <FlexRowStartBtw className="w-full gap-2">
-                <FlexColStart className="w-full gap-1">
-                  <p className="text-md font-ppB text-dark-100">
-                    Active Subscription
-                  </p>
-                  <span className="text-xs font-ppReg text-dark-100/50">
-                    subcription is due{" "}
-                    <span className="text-dark-100 font-ppM">
-                      20, June 2024
-                    </span>
-                  </span>
-                </FlexColStart>
+            {["ANTI_THEFT", "SALES_ASSISTANT"].includes(type) && (
+              <FlexColStart className="w-full h-[115px] max-h-[120px] rounded-md border-[.5px] border-white-400/30 px-4 py-4 relative overflow-hidden mt-10">
+                <FlexRowStartBtw className="w-full gap-2">
+                  {getAgentSubscriptionMut.isPending ? (
+                    <FullPageLoader showText={false} fixed={false} />
+                  ) : !getAgentSubscriptionMut.isPending &&
+                    phoneSubscription ? (
+                    <>
+                      <FlexColStart className="w-full gap-1">
+                        <FlexRowStart className="w-auto">
+                          <p className="text-md font-ppB text-dark-100">
+                            Active Subscription
+                          </p>
 
-                <FlexColEnd className="w-full h-full gap-4">
-                  <p className="text-sm font-jb font-semibold text-dark-100">
-                    21 days remaining
-                  </p>
-                  <Button
-                    intent={"dark"}
-                    className="w-[180px] h-[36px] rounded-lg px-4 text-xs font-ppReg drop-shadow disabled:bg-blue-100/70 disabled:text-white-100"
-                    // disabled={enableSaveChangesButton()}
-                    // onClick={saveChanges}
-                    isLoading={updateAgentSettingsMut.isPending || tabLoading}
-                    rightIcon={<SquareArrowOutUpRight size={15} />}
-                  >
-                    View Billing Portal
-                  </Button>
-                </FlexColEnd>
-              </FlexRowStartBtw>
+                          <span
+                            className={cn(
+                              "text-xs font-ppReg rounded-full text-white-100 px-2 py-[1px] flex-center gap-1",
+                              phoneSubscription?.status === "active"
+                                ? "bg-blue-101"
+                                : "bg-red-305"
+                            )}
+                          >
+                            <div className="w-[4px] h-[4px] bg-white-100 rounded-full" />
+                            {phoneSubscription?.status}
+                          </span>
+                        </FlexRowStart>
+                        <span className="text-xs font-ppReg text-dark-100/50">
+                          subcription is due{" "}
+                          <span className="text-dark-100 font-ppM">
+                            {dayjs(phoneSubscription?.renews_at).format(
+                              "DD, MMM YYYY [at] hh:mm A"
+                            )}
+                          </span>
+                        </span>
+                      </FlexColStart>
 
-              {true && (
-                <FlexColCenter className="w-full h-full backdrop-blur-md absolute top-0 left-0 bg-white-300 z-[10] gap-1">
-                  <p className="text-dark-100 text-sm font-ppB">
-                    Phone Number Subscription
-                  </p>
-                  <p className="text-dark-100 text-xs font-ppM">
-                    You have not subscribed to a phone number yet.
-                  </p>
-                </FlexColCenter>
-              )}
-            </FlexColStart>
+                      <FlexColEnd className="w-full h-full gap-4">
+                        <p className="text-sm font-jb font-semibold text-dark-100">
+                          {/* 21 days remaining */}
+                          {phoneSubDaysLeft}{" "}
+                          {Number(phoneSubDaysLeft) === 1 ? "day" : "days"}{" "}
+                          remaining.
+                        </p>
+                        <Button
+                          intent={"dark"}
+                          className="w-auto max-w-[200px] h-[36px] rounded-lg px-4 text-xs font-ppReg drop-shadow disabled:bg-dark-100/50 disabled:text-white-100 disabled"
+                          disabled={getCustomerPortalMut.isPending}
+                          onClick={() => {
+                            getCustomerPortalMut.mutate(phoneSubscription?.id!);
+                          }}
+                          isLoading={updateAgentSettingsMut.isPending}
+                          rightIcon={<SquareArrowOutUpRight size={15} />}
+                        >
+                          {getCustomerPortalMut.isPending && (
+                            <Spinner color="#fff" size={15} />
+                          )}{" "}
+                          View Billing Portal
+                        </Button>
+                      </FlexColEnd>
+                    </>
+                  ) : null}
+                </FlexRowStartBtw>
+
+                {!getAgentSubscriptionMut.isPending && !phoneSubscription && (
+                  <FlexColCenter className="w-full h-full backdrop-blur-md absolute top-0 left-0 bg-white-300 z-[10] gap-1">
+                    <p className="text-dark-100 text-sm font-ppB">
+                      Phone Number Subscription
+                    </p>
+                    <p className="text-dark-100 text-xs font-ppM">
+                      You have not subscribed to a phone number yet.
+                    </p>
+                  </FlexColCenter>
+                )}
+              </FlexColStart>
+            )}
 
             <FlexColCenter className="w-full h-auto mt-10">
               <FlexRowStartBtw className="w-full h-full px-5 py-3 border-[1px] border-red-305 bg-red-305/10 rounded-md">
@@ -462,71 +364,41 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                     Please note that this action is irreversible.
                   </p>
                 </FlexColStart>
-                <Button className="w-auto min-w-[200px] px-10 rounded-xl bg-red-305/80 text-xs text-white-100  hover:bg-red-305 enableBounceEffect font-ppM">
+                <Button
+                  className="w-auto min-w-[200px] px-10 rounded-xl bg-red-305/80 text-xs text-white-100  hover:bg-red-305 enableBounceEffect font-ppM disabled:bg-red-305/50 disabled:text-white-100"
+                  onClick={() => {
+                    const confirm = window.confirm(
+                      "Are you sure you want to delete this agent?"
+                    );
+                    if (!confirm) return;
+
+                    setDeletingAgent(true);
+                    toast.promise(deleteAgent(agent_id), {
+                      loading: "Deleting agent...",
+                      success: () => {
+                        setDeletingAgent(false);
+                        setTimeout(() => {
+                          window.location.href = "/agents";
+                        }, 1000);
+                        return "Agent deleted successfully";
+                      },
+                      error: () => {
+                        setDeletingAgent(false);
+                        return "Failed to delete agent";
+                      },
+                    });
+                  }}
+                  isLoading={deletingAgent}
+                  disabled={deletingAgent}
+                >
                   <Trash size={15} className="stroke-white-100" />
-                  <span>Delete Account</span>
+                  <span>Delete Agent</span>
                 </Button>
               </FlexRowStartBtw>
             </FlexColCenter>
           </FlexColStart>
         </FlexColStart>
       </div>
-    </>
-  );
-}
-
-function NotSupportedOverlay({ type }: { type: string }) {
-  return (
-    <button disabled className="w-full h-full">
-      <FlexColCenter className="w-full h-full backdrop-blur-md absolute top-0 left-0 bg-white-300 z-[10]">
-        <p className="text-dark-100 font-jb">Not Supported</p>
-        <p className="text-white-400 text-xs font-ppReg">
-          Only for {type ?? "Anti-Theft"} agent
-        </p>
-      </FlexColCenter>
-    </button>
-  );
-}
-
-function Timer({
-  time,
-  onClick,
-  resend,
-}: {
-  time: number;
-  onClick: () => void;
-  resend?: () => void;
-}) {
-  const [timer, setTimer] = useState(time);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (timer <= 0) {
-        resend && resend();
-        return clearInterval(interval);
-      }
-      setTimer((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timer]);
-  return (
-    <>
-      {timer > 1 && (
-        <p className="text-xs font-ppReg text-white-400">{timer}s</p>
-      )}
-
-      {/* resend */}
-      {timer <= 0 && (
-        <button
-          className="text-[10px] font-jb underline"
-          onClick={() => {
-            setTimer(20);
-            onClick && onClick();
-          }}
-          disabled={timer > 0}
-        >
-          Resend OTP
-        </button>
-      )}
     </>
   );
 }
