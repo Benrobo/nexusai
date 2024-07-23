@@ -20,8 +20,9 @@ import shortUUID from "short-uuid";
 import prisma from "../prisma/prisma.js";
 import { TwilioService } from "../services/twilio.service.js";
 import redis from "../config/redis.js";
-import rateLimit from "../middlewares/rateLimit.js";
 import type { IntegrationType } from "@prisma/client";
+import LemonsqueezyServices from "../services/LS.service.js";
+import retry from "async-retry";
 
 interface ICreateAG {
   name: string;
@@ -35,9 +36,12 @@ interface IUpdateAgentSettings {
   agent_id: string;
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export default class AgentController extends BaseController {
   otpManager = new OTPManager();
   twService = new TwilioService();
+  lsService = new LemonsqueezyServices();
   constructor() {
     super();
   }
@@ -48,7 +52,6 @@ export default class AgentController extends BaseController {
 
     await ZodValidation(verifyUsPhoneSchema, payload, req.serverUrl!);
 
-    // check if phone number exists in forwarding number
     const fwdNum = await prisma.forwardingNumber.findFirst({
       where: {
         phone: payload.phone,
@@ -63,7 +66,6 @@ export default class AgentController extends BaseController {
       );
     }
 
-    // send OTP to phone number
     const otpSent = await this.otpManager.sendOTP(payload.phone, user.id);
 
     if (!otpSent) {
@@ -82,7 +84,7 @@ export default class AgentController extends BaseController {
     const key = `rate-limit:${ip}`;
 
     await redis.set(key, user.id);
-    await redis.expire(key, 60);
+    await redis.expire(key, 20);
 
     sendResponse.success(
       res,
@@ -123,7 +125,6 @@ export default class AgentController extends BaseController {
     );
   }
 
-  // make sure phone number starts with +1 for US.
   async verifyPhone(req: Request & IReqObject, res: Response) {
     const user = req["user"];
     const payload = req.body as { otp: string; agentId: string };
@@ -273,6 +274,76 @@ export default class AgentController extends BaseController {
     );
   }
 
+  async deleteAgent(req: Request & IReqObject, res: Response) {
+    const user = req["user"];
+    const agentId = req.params["id"];
+
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: agentId,
+        userId: user.id,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    const purchasedNumber = await prisma.purchasedPhoneNumbers.findFirst({
+      where: {
+        userId: user.id,
+        agent_id: agentId,
+      },
+    });
+
+    if (process.env.NODE_ENV !== "development") {
+      const phoneSID = purchasedNumber?.phone_number_sid;
+      if (phoneSID) {
+        const deleted = await this.twService.releasePhoneNumber(phoneSID);
+        if (deleted) console.log("✅ Phone number released successfully");
+        else console.log("❌ Error releasing phone number");
+      } else console.log("No phone number to release.");
+    }
+
+    const subscription = await prisma.subscriptions.findFirst({
+      where: {
+        subscription_id: purchasedNumber?.sub_id,
+      },
+    });
+
+    if (subscription) {
+      await retry(
+        async () =>
+          await this.lsService.cancelSubscription(subscription.subscription_id),
+        {
+          maxTimeout: 1000,
+          retries: 3,
+          onRetry: (err, attempt) => {
+            console.log("❌ Error canceling subscription");
+            console.log(`Attempt ${attempt} failed: ${err}`);
+          },
+        }
+      );
+    } else {
+      console.log("No subscription to cancel.");
+    }
+
+    await sleep(4000);
+
+    await prisma.agents.delete({
+      where: {
+        id: agentId,
+      },
+    });
+
+    sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Agent deleted successfully",
+      200
+    );
+  }
+
   async getChatbotConfig(req: Request & IReqObject, res: Response) {
     const agentId = req.params["id"];
 
@@ -389,7 +460,21 @@ export default class AgentController extends BaseController {
     }
 
     if (agent.type === "SALES_ASSISTANT") {
-      // check if user added at least one knowledge base
+      const purchasedNumber = await prisma.purchasedPhoneNumbers.findFirst({
+        where: {
+          userId: user.id,
+          agent_id: agentId as string,
+        },
+      });
+
+      if (!purchasedNumber) {
+        throw new HttpException(
+          RESPONSE_CODE.BAD_REQUEST,
+          "Buy a number to activate agent",
+          400
+        );
+      }
+
       const knowledgeBase = await prisma.knowledgeBase.findFirst({
         where: {
           userId: user.id,
@@ -412,22 +497,6 @@ export default class AgentController extends BaseController {
         );
       }
 
-      const purchasedNumber = await prisma.purchasedPhoneNumbers.findFirst({
-        where: {
-          userId: user.id,
-          agent_id: agentId as string,
-        },
-      });
-
-      if (!purchasedNumber) {
-        throw new HttpException(
-          RESPONSE_CODE.BAD_REQUEST,
-          "Buy a number to activate agent",
-          400
-        );
-      }
-
-      // activate agent
       await prisma.agents.update({
         where: {
           id: agentId as string,
@@ -445,7 +514,6 @@ export default class AgentController extends BaseController {
       );
     }
     if (agent.type === "ANTI_THEFT") {
-      // check if user bought a number
       const purchasedNumber = await prisma.purchasedPhoneNumbers.findFirst({
         where: {
           userId: user.id,
@@ -461,7 +529,6 @@ export default class AgentController extends BaseController {
         );
       }
 
-      // activate agent
       await prisma.agents.update({
         where: {
           id: agentId as string,
@@ -479,7 +546,6 @@ export default class AgentController extends BaseController {
       );
     }
     if (agent.type === "CHATBOT") {
-      // check if user added at least one knowledge base
       const knowledgeBase = await prisma.knowledgeBase.findFirst({
         where: {
           userId: user.id,
@@ -502,7 +568,6 @@ export default class AgentController extends BaseController {
         );
       }
 
-      // activate agent
       await prisma.agents.update({
         where: {
           id: agentId as string,
@@ -621,6 +686,11 @@ export default class AgentController extends BaseController {
           },
         },
         activated: true,
+        purchased_number: {
+          select: {
+            phone: true,
+          },
+        },
       },
     });
 
@@ -635,6 +705,7 @@ export default class AgentController extends BaseController {
       handover_condition: settings?.handover_condition ?? null,
       security_code: settings?.security_code ?? null,
       activated: agentSettings.activated,
+      purchased_number: agentSettings.purchased_number,
     };
 
     return sendResponse.success(
@@ -643,6 +714,98 @@ export default class AgentController extends BaseController {
       "Agent settings retrieved successfully",
       200,
       formattedSettings
+    );
+  }
+
+  async getSubscription(req: Request & IReqObject, res: Response) {
+    const userId = req.user.id;
+    const agentId = req.params["agent_id"];
+
+    const agent = await prisma.agents.findFirst({
+      where: {
+        id: agentId,
+        userId,
+      },
+    });
+
+    if (!agent) {
+      throw new HttpException(RESPONSE_CODE.NOT_FOUND, "Agent not found", 404);
+    }
+
+    const purchasedNumber = await prisma.purchasedPhoneNumbers.findFirst({
+      where: {
+        userId,
+        agent_id: agentId,
+      },
+    });
+
+    if (!purchasedNumber) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Subscription not found",
+        404
+      );
+    }
+
+    const subscription = await prisma.subscriptions.findFirst({
+      where: {
+        subscription_id: purchasedNumber.sub_id,
+        type: "TWILIO_PHONE_NUMBERS",
+      },
+      select: {
+        status: true,
+        renews_at: true,
+        ends_at: true,
+        product_id: true,
+        subscription_id: true,
+      },
+    });
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Subscription retrieved successfully",
+      200,
+      {
+        id: subscription.subscription_id,
+        ...subscription,
+      }
+    );
+  }
+
+  async getCustomerPortal(req: Request & IReqObject, res: Response) {
+    const sub_id = req.params["sub_id"];
+
+    const subscription = await prisma.subscriptions.findFirst({
+      where: { subscription_id: sub_id, uId: req.user.id },
+    });
+
+    if (!subscription) {
+      throw new HttpException(
+        RESPONSE_CODE.NOT_FOUND,
+        "Subscription not found",
+        404
+      );
+    }
+
+    const url = await this.lsService.getCustomerPortalUrl(
+      subscription.customer_id as string
+    );
+
+    if (!url) {
+      throw new HttpException(
+        RESPONSE_CODE.ERROR,
+        "Error getting customer portal url",
+        400
+      );
+    }
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Success",
+      200,
+      url
     );
   }
 
