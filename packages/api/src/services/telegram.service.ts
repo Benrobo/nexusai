@@ -10,6 +10,7 @@ import type {
 } from "../types/telegram.type.js";
 import type { Update } from "telegraf/typings/core/types/typegram.js";
 import AIService from "./AI.service.js";
+import retry from "async-retry";
 
 const botCommands = [
   {
@@ -113,13 +114,34 @@ export default class TelegramBotService {
   aiService: AIService;
 
   constructor() {
+    this.aiService = new AIService();
+    this.initBot();
+  }
+
+  private async initBot() {
     try {
-      this.bot = new Telegraf(env.TG.BOT_TOKEN);
-      this.aiService = new AIService();
-      this.init();
-      this.bot.launch();
+      await retry(
+        async () => {
+          this.bot = new Telegraf(env.TG.BOT_TOKEN);
+          this.init();
+          await this.bot.launch();
+          logger.info("Telegram Bot launched successfully");
+        },
+        {
+          retries: 5,
+          minTimeout: 500,
+          onRetry: (attempt) => {
+            console.log("");
+            logger.warn(
+              `Retrying to initialize Telegram Bot: Attempt ${attempt}`
+            );
+          },
+        }
+      );
     } catch (e) {
-      logger.error("Error initializing Telegram Bot", e);
+      console.log("");
+      logger.error("Error initializing Telegram Bot after retries", e);
+      console.log("");
     }
   }
 
