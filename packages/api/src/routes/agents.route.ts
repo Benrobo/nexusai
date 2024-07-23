@@ -67,7 +67,6 @@ export default class AgentRoute {
       )
     );
 
-    // get agent active phone number
     this.router.get(
       `${this.path}/active-number/:id`,
       useCatchErrors(
@@ -86,7 +85,6 @@ export default class AgentRoute {
       )
     );
 
-    // send otp to phone number
     this.router.post(
       `${this.path}/send-otp`,
       useCatchErrors(
@@ -104,6 +102,24 @@ export default class AgentRoute {
       useCatchErrors(
         isAuthenticated(
           this.agentController.getForwardedNumber.bind(this.agentController)
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/subscription/:agent_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.getSubscription.bind(this.agentController)
+        )
+      )
+    );
+
+    this.router.get(
+      `${this.path}/subscription/portal/:sub_id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.getCustomerPortal.bind(this.agentController)
         )
       )
     );
@@ -143,6 +159,15 @@ export default class AgentRoute {
       useCatchErrors(
         isAuthenticated(
           this.agentController.createAgent.bind(this.agentController)
+        )
+      )
+    );
+
+    this.router.delete(
+      `${this.path}/:id`,
+      useCatchErrors(
+        isAuthenticated(
+          this.agentController.deleteAgent.bind(this.agentController)
         )
       )
     );
