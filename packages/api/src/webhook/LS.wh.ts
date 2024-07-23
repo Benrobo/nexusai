@@ -12,6 +12,8 @@ import prisma from "../prisma/prisma.js";
 import retry from "../lib/retry.js";
 import { TwilioService } from "../services/twilio.service.js";
 import shortUUID from "short-uuid";
+import dayjs from "dayjs";
+import sendMail from "../helpers/sendMail.js";
 
 // Lemonsuqeezy Webhook Handler
 export default class LSWebhookHandler {
@@ -28,7 +30,10 @@ export default class LSWebhookHandler {
     const { event_name } = meta;
 
     switch (event_name) {
-      case "subscription_created" || "subscription_updated":
+      case "subscription_created":
+        await this.handleSubscriptionState(body);
+        break;
+      case "subscription_updated":
         await this.handleSubscriptionState(body);
         break;
       default:
@@ -68,7 +73,6 @@ export default class LSWebhookHandler {
         throw new HttpException(RESPONSE_CODE.USER_NOT_FOUND, msg, 404);
       }
 
-      // Prevent duplicate subscription
       const userSubscription = await prisma.subscriptions.findFirst({
         where: {
           uId: user_id,
@@ -121,6 +125,11 @@ export default class LSWebhookHandler {
                 uId: user_id,
               },
             },
+            agent: {
+              connect: {
+                id: custom_data?.agent_id,
+              },
+            },
           },
         });
 
@@ -152,7 +161,7 @@ export default class LSWebhookHandler {
           retries: 3,
         });
       } else {
-        logger.info("Subscription Updated");
+        await this.SubscriptionUpdated(data as LS_Subscription, custom_data);
       }
     } catch (e: any) {
       console.log(e);
@@ -161,9 +170,105 @@ export default class LSWebhookHandler {
   }
 
   private async SubscriptionUpdated(data: LS_Subscription, custom_data: any) {
-    // log subscription updated
-    logger.info("Subscription Updated");
-    console.log(data);
+    try {
+      console.log("SUBSCRIPTION UPDATED EVENT");
+      const { status, ends_at, product_name } = (data as LS_Subscription)
+        ?.attributes;
+      const { user_id, agent_id } = custom_data;
+
+      const user = await prisma.users.findFirst({ where: { uId: user_id } });
+
+      if (
+        (
+          ["cancelled", "expired", "past_due", "unpaid"] as (typeof status)[]
+        ).includes(status)
+      ) {
+        const grace_period = dayjs().add(1, "day").toDate();
+        await prisma.subscriptions.update({
+          where: {
+            subscription_id: data.id,
+          },
+          data: {
+            status,
+            grace_period,
+            ends_at,
+          },
+        });
+
+        const subscriptionGracePeriodNotif = `
+          <p>Dear ${user.fullname},</p>
+
+          <p>Your subscription to <b>${product_name} (NexusAI)</b> has been cancelled.</p>
+          <p>You have a grace period of <b>24 hours</b> to renew your subscription before your phone number is removed from the system.</p>
+          <p>Kindly renew your subscription to continue using your phone number.</p>
+
+          <p>Thank you for using NexusAI.</p>
+          `;
+
+        await retry({
+          fn: sendMail,
+          args: [
+            {
+              to: user.email,
+              subject: "🚨 Subscription Cancellation Notification",
+              html: subscriptionGracePeriodNotif,
+            },
+          ],
+          functionName: "sendMail - Subscription Cancellation Notification",
+          retries: 5,
+        });
+      }
+      if (status === "active") {
+        const agent = await prisma.agents.findFirst({
+          where: {
+            userId: user_id,
+            id: agent_id,
+          },
+        });
+
+        if (!agent) {
+          // send user a mail that their subscription was resumed but no agent was found for the subscription
+          const mailTemplate = `
+          <p>Dear ${user.fullname},</p>
+
+          <p>Your subscription to <b>${product_name} (NexusAI)</b> has been resumed.</p>
+          <p>However, we could not find an agent for your subscription. Kindly contact support to resolve this issue or cancel your subscription, if this was not intentional.</p>
+
+          <p>Thank you for using NexusAI.</p>
+        `;
+
+          await retry({
+            fn: sendMail,
+            args: [
+              {
+                to: user.email,
+                subject: "🚨 Subscription Resumed Notification",
+                html: mailTemplate,
+              },
+            ],
+            functionName: "sendMail - Subscription Resumed Notification",
+            retries: 5,
+          });
+          console.log(`❌ Subscription Resumed but no agent found`);
+          return;
+        }
+        await prisma.subscriptions.update({
+          where: {
+            subscription_id: data.id,
+          },
+          data: {
+            status,
+            grace_period: null,
+            ends_at,
+          },
+        });
+
+        console.log(`✅ Subscription Resumed`);
+      }
+    } catch (e: any) {
+      console.log(` ❌ Error updating subscription: ${e.message}`);
+      console.log(e);
+    }
   }
 
   private async verifyWebhook(req: Request, res: Response) {
