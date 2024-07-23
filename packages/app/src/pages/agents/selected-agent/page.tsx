@@ -49,7 +49,7 @@ export default function SelectedAgent() {
   const [error, setError] = useState<string | null>(null);
   const [agentInfo, setAgentInfo] = useState<IAgentInfo | null>(null);
   const [pageloading, setPageLoading] = useState(true);
-  const [activatingAgent, setActivatingAgent] = useState(false);
+  const [_, setActivatingAgent] = useState(false);
   const getAgentQuery = useMutation({
     mutationFn: async (agentId: string) => await getAgent(agentId!),
     onSuccess: (data) => {
