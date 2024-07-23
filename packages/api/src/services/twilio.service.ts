@@ -3,11 +3,7 @@ import HttpException from "../lib/exception.js";
 import env from "../config/env.js";
 import twClient from "../config/twillio/twilio_client.js";
 import prisma from "../prisma/prisma.js";
-import {
-  RESPONSE_CODE,
-  type AgentType,
-  type TwilioIncomingCallVoiceResponse,
-} from "../types/index.js";
+import { RESPONSE_CODE } from "../types/index.js";
 import dotenv from "dotenv";
 import logger from "../config/logger.js";
 import { twimlPrompt } from "../data/twilio/prompt.js";
@@ -25,9 +21,7 @@ import { defaultAgentName } from "../data/agent/config.js";
 
 dotenv.config();
 
-/**
- * Note: TwiMl instance is being used multiple times in the class to prevent stack response.
- */
+// Note: TwiMl instance is being used multiple times in the class to prevent stack response.
 
 export class TwilioService {
   prod_tw_client = twClient(env.TWILIO.ACCT_SID, env.TWILIO.AUTH_TOKEN);
@@ -62,7 +56,6 @@ export class TwilioService {
     if (!calledPhone) {
       logger.error(`Phone number ${To ?? ""} not found in database`);
 
-      // return twiml response
       const prompt = twimlPrompt.find(
         (p) => p.type === "CALLED_PHONE_NOT_FOUND"
       );
@@ -429,7 +422,7 @@ export class TwilioService {
       return null;
     }
   }
-  // Twilio Phone number Subscriptions
+
   async provisionPhoneNumber(props: ProvisioningPhoneNumberProps) {
     const { subscription_id, user_id, phone_number, agent_id } = props;
     const IN_DEV_MODE = process.env.NODE_ENV === "development";
@@ -586,5 +579,19 @@ export class TwilioService {
     logger.info(
       `✅ Phone number ${phone_number} provisioned for user ${user_id}`
     );
+  }
+
+  async releasePhoneNumber(phoneNumberSID: string) {
+    try {
+      const IN_DEV_MODE = process.env.NODE_ENV === "development";
+      const phone = IN_DEV_MODE
+        ? this.test_tw_client.incomingPhoneNumbers(phoneNumberSID)
+        : this.prod_tw_client.incomingPhoneNumbers(phoneNumberSID);
+      await phone.remove();
+      return true;
+    } catch (e: any) {
+      console.log("Error releasing phoneNumber", e);
+      return false;
+    }
   }
 }
