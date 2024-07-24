@@ -61,6 +61,7 @@ const env = {
     APP_ID: process.env.FIREBASE_APP_ID!,
     MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID!,
   },
+  NEXUS_CRON_TOKEN: process.env.NEXUS_CRON_TOKEN!,
 };
 
 export default env;
