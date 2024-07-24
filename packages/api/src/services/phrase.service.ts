@@ -1,15 +1,7 @@
 import { createHash } from "crypto";
-import { getStorage, getDownloadURL } from "firebase-admin/storage";
-import { initializeApp, cert } from "firebase-admin/app";
-import nexusServiceAcct from "../config/serviceAccountKey.js";
 import redis from "../config/redis.js";
 import TTSService from "./tts.service.js";
-
-const app = initializeApp({
-  credential: cert(nexusServiceAcct as unknown),
-  storageBucket: "nexusai-9f410.appspot.com",
-});
-const storage = getStorage(app);
+import { storage } from "../config/firebase.js";
 
 export default class PhraseService {
   ttsService = new TTSService();
