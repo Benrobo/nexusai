@@ -18,6 +18,8 @@ import redis from "../config/redis.js";
 import { getSentimentVariations } from "../data/agent/sentiment.js";
 import IntegrationService from "./integration.service.js";
 import TelegramHelper from "../helpers/telegram.helper.js";
+import { TwilioService } from "./twilio.service.js";
+import env from "../config/env.js";
 
 type IHandleConversationProps = {
   user_input: string;
@@ -56,6 +58,7 @@ export default class AIService {
   private geminiService = new GeminiService();
   private callLogService = new CallLogsService();
   private integrationService = new IntegrationService();
+  private twService = new TwilioService();
   constructor() {}
 
   public async determineCallIntent(msg: string, call_history?: string) {
@@ -905,6 +908,31 @@ export default class AIService {
     }
   }
 
+  private async getAgentForwardedNumber(agent_id: string) {
+    const userFowardedNum = await prisma.forwardingNumber.findFirst({
+      where: {
+        agentId: agent_id,
+      },
+    });
+
+    return userFowardedNum?.phone ?? null;
+  }
+
+  private async notifyCallee(callerPhone: string, calleePhone: string) {
+    const smsSent = await redis.get(`${callerPhone}_sms_sent`);
+
+    if (!smsSent) {
+      const template = `A call was made recently, click the link below to get more information. ${env.CLIENT_URL}/call-logs`;
+      await this.twService.sendSMS(calleePhone, template);
+
+      const exp = 5 * 60;
+      await redis.set(`${callerPhone}_sms_sent`, "true");
+      await redis.expire(`${callerPhone}_sms_sent`, exp);
+    } else {
+      logger.info("SMS already sent");
+    }
+  }
+
   private async processAntiTheftRequest(
     props: IHandleConversationProps
   ): Promise<ProcessAIRequestResponse> {
@@ -1119,6 +1147,14 @@ export default class AIService {
     if (callIntent.length > 0) {
       const intent = callIntent.find((f) => f.name === "determine_call_intent")
         ?.args?.action;
+
+      const forwardedNum = await this.getAgentForwardedNumber(
+        agent_info.agent_id
+      );
+      await this.notifyCallee(
+        cached_conv_info.callerPhone,
+        forwardedNum ?? cached_conv_info.calledPhone
+      );
 
       // check if any appointment was previously requested
       if (intent === "GREETINGS") {
