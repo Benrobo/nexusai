@@ -90,7 +90,7 @@ export default function DashboardSidebar() {
             </FlexRowStartCenter>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[220px] mt-0 p-0 rounded-md bg-brown-102 outline outline-[1px] outline-white-400/50 border-none">
+        <PopoverContent className="w-[220px] ml-3 mt-0 p-0 rounded-md bg-brown-102 outline outline-[1px] outline-white-400/50 border-none shadow-2xl drop-shadow-2xl">
           <FlexColStart className="w-full px-3 py-3 border-b-[.5px] border-b-white-300/30">
             <p className="text-xs font-ppM text-white-300">
               <span className="text-white-400">Signed in as</span>

@@ -86,7 +86,7 @@ export default class AgentRoute {
     );
 
     this.router.post(
-      `${this.path}/send-otp`,
+      `${this.path}/send-otp/:agent_id`,
       useCatchErrors(
         isAuthenticated(
           rateLimit(

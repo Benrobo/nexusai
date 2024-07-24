@@ -151,7 +151,7 @@ model ChatbotConfig {
 model ForwardingNumber {
     id         String   @id @default(cuid())
     agentId    String   @unique
-    phone      String   @unique
+    phone      String
     country    String?
     created_at DateTime @default(now())
 

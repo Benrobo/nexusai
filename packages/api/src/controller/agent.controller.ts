@@ -23,6 +23,7 @@ import redis from "../config/redis.js";
 import type { IntegrationType } from "@prisma/client";
 import LemonsqueezyServices from "../services/LS.service.js";
 import retry from "async-retry";
+import { integrations } from "googleapis/build/src/apis/integrations/index.js";
 
 interface ICreateAG {
   name: string;
@@ -48,6 +49,7 @@ export default class AgentController extends BaseController {
 
   async sendOTP(req: Request & IReqObject, res: Response) {
     const user = req["user"];
+    const agent_id = req.params["agent_id"];
     const payload = req.body as { phone: string };
 
     await ZodValidation(verifyUsPhoneSchema, payload, req.serverUrl!);
@@ -55,6 +57,7 @@ export default class AgentController extends BaseController {
     const fwdNum = await prisma.forwardingNumber.findFirst({
       where: {
         phone: payload.phone,
+        agentId: agent_id,
       },
     });
 
@@ -127,7 +130,6 @@ export default class AgentController extends BaseController {
 
     await ZodValidation(VerifyOTPCode, payload, req.serverUrl!);
 
-    // check if agent exists
     const agent = await prisma.agents.findFirst({
       where: {
         id: payload.agentId,
@@ -143,8 +145,6 @@ export default class AgentController extends BaseController {
 
     const otp = await this.otpManager.verifyOTP(user.id, otpcode);
 
-    // save the number in forwarded numbers
-    // check if phone number exists
     const forwardingNum = await prisma.forwardingNumber.findFirst({
       where: {
         agentId: payload.agentId,
@@ -160,7 +160,6 @@ export default class AgentController extends BaseController {
         },
       });
     } else {
-      // update
       await prisma.forwardingNumber.update({
         where: {
           id: forwardingNum.id,
@@ -440,6 +439,22 @@ export default class AgentController extends BaseController {
     );
   }
 
+  private async forwardedNumberExists(agent_id: string) {
+    const forwardedNumber = await prisma.forwardingNumber.findFirst({
+      where: {
+        agentId: agent_id as string,
+      },
+    });
+
+    if (!forwardedNumber) {
+      throw new HttpException(
+        RESPONSE_CODE.BAD_REQUEST,
+        "Forwarded number is required",
+        400
+      );
+    }
+  }
+
   async activateAgent(req: Request & IReqObject, res: Response) {
     const user = req["user"];
     const agentId = req.params["id"];
@@ -470,6 +485,8 @@ export default class AgentController extends BaseController {
           400
         );
       }
+
+      await this.forwardedNumberExists(agentId);
 
       const knowledgeBase = await prisma.knowledgeBase.findFirst({
         where: {
@@ -524,6 +541,8 @@ export default class AgentController extends BaseController {
           400
         );
       }
+
+      await this.forwardedNumberExists(agentId);
 
       await prisma.agents.update({
         where: {
@@ -611,6 +630,12 @@ export default class AgentController extends BaseController {
         },
         agent_settings: true,
         created_at: true,
+        integrations: {
+          select: {
+            type: true,
+            url: true,
+          },
+        },
       },
     });
 
@@ -619,7 +644,12 @@ export default class AgentController extends BaseController {
       RESPONSE_CODE.SUCCESS,
       "Agents retrieved successfully",
       200,
-      agents
+      agents.map((a) => {
+        return {
+          ...a,
+          integrations: a.integrations.length,
+        };
+      })
     );
   }
 

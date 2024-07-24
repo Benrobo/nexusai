@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import type { ResponseData } from "@/types";
 import { Spinner } from "@/components/Spinner";
 import { formatNumber } from "@/lib/utils";
+import TooltipComp from "@/components/TooltipComp";
 
 dayjs.extend(relativeTime);
 
@@ -61,7 +62,15 @@ export default function Agents() {
 
     if (getAgentsQuery.data) {
       const resp = getAgentsQuery.data as ResponseData;
-      setAgents(resp.data);
+      const agents: IAgents[] = [];
+      resp.data.forEach((a: IAgents) => {
+        if (a.type === "ANTI_THEFT") {
+          agents.unshift(a);
+        } else {
+          agents.push(a);
+        }
+      });
+      setAgents(agents);
     }
   }, [getAgentsQuery]);
 
@@ -102,45 +111,6 @@ export default function Agents() {
                 active_number={a.used_number?.phone}
               />
             );
-            // if (a.type === "ANTI_THEFT") {
-            //   return (
-            //     <AgentCard
-            //       key={idx}
-            //       name={a.name}
-            //       date={a.created_at}
-            //       type={a.type}
-            //       protected_numbers={a.protected_numbers?.map((p) => p.phone)}
-            //       id={a.id}
-            //     />
-            //   );
-            // }
-            // if (a.type === "SALES_ASSISTANT") {
-            //   return (
-            //     <AgentCard
-            //       key={idx}
-            //       name={a.name}
-            //       date={a.created_at}
-            //       type={a.type}
-            //       contact_number={a.used_number?.phone}
-            //       integrations={a.integrations}
-            //       id={a.id}
-            //       active_number={a.used_number?.phone}
-            //     />
-            //   );
-            // }
-            // if (a.type === "CHATBOT") {
-            //   return (
-            //     <AgentCard
-            //       key={idx}
-            //       name={a.name}
-            //       date={a.created_at}
-            //       type={a.type}
-            //       contact_number={a.used_number?.phone}
-            //       integrations={a.integrations}
-            //       id={a.id}
-            //     />
-            //   );
-            // }
           })
         ) : (
           <FlexColCenter className="w-full h-full">
@@ -249,12 +219,16 @@ function AgentCard({
         </FlexRowStartCenter>
 
         {/* integrations */}
-        <FlexRowStartCenter className="w-auto gap-0">
-          <UnPlug size={15} className="stroke-dark-100 " />
-          <span className="w-[25px] h-[25px] border-[1px] border-dashed border-white-400 flex items-center justify-center text-xs rounded-full scale-[.80] ml-2">
-            {integrations ?? 0}
-          </span>
-        </FlexRowStartCenter>
+        {type !== "ANTI_THEFT" && (
+          <TooltipComp text={`${integrations} integrations`}>
+            <FlexRowStartCenter className="w-auto gap-0">
+              <UnPlug size={15} className="stroke-dark-100 " />
+              <span className="w-[25px] h-[25px] border-[1px] border-dashed border-white-400 flex items-center justify-center text-xs rounded-full scale-[.80] ml-2">
+                {integrations ?? 0}
+              </span>
+            </FlexRowStartCenter>
+          </TooltipComp>
+        )}
       </FlexRowStartBtw>
     </FlexColStart>
   );

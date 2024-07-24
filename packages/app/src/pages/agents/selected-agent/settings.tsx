@@ -95,7 +95,8 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
     },
   });
   const sendOTPMut = useMutation({
-    mutationFn: async (data: any) => sendOTP(data),
+    mutationFn: async (data: { phone: string; agent_id: string }) =>
+      sendOTP(data.phone, data.agent_id),
     onSuccess: () => {
       toast.success("OTP sent successfully");
       setAddHandoverNumber(true);
@@ -183,7 +184,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
           ) && <ManagePhoneNumber agent_id={agent_id} />}
 
           <FlexColStart className={cn("w-full h-auto mt-10 relative px-1")}>
-            {["SALES_ASSISTANT"].includes(type) && (
+            {["SALES_ASSISTANT", "ANTI_THEFT"].includes(type) && (
               <>
                 <FlexRowStartBtw className="w-full gap-1 rounded-md bg-white-300 px-4 py-2">
                   <FlexColStart className="w-auto gap-1">
@@ -193,8 +194,9 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                       </p>
                     </FlexRowStart>
                     <p className="text-xs font-jb text-white-400">
-                      The number to which the agent would be handed over to. (US
-                      only)
+                      {type === "SALES_ASSISTANT"
+                        ? "The number to which the agent would be handed over to. (US only)"
+                        : "Your personal phone number for anti-theft"}
                     </p>
                   </FlexColStart>
 
@@ -237,6 +239,7 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
                             }
                             sendOTPMut.mutate({
                               phone: handoverNum,
+                              agent_id,
                             });
                             return;
                           }

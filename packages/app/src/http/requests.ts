@@ -64,8 +64,8 @@ export const getVerifiedNumbers = async () => {
   return req.data;
 };
 
-export const sendOTP = async (data: any) => {
-  const req = await $axios.post("/agent/send-otp", data);
+export const sendOTP = async (phone: string, agent_id: string) => {
+  const req = await $axios.post(`/agent/send-otp/${agent_id}`, { phone });
   return req.data;
 };
 

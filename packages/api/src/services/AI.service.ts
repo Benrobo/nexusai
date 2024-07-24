@@ -20,6 +20,7 @@ import IntegrationService from "./integration.service.js";
 import TelegramHelper from "../helpers/telegram.helper.js";
 import env from "../config/env.js";
 import { sendSMS } from "../helpers/twilio.helper.js";
+import { sleep } from "./scrapper.js";
 
 type IHandleConversationProps = {
   user_input: string;
@@ -917,6 +918,8 @@ export default class AIService {
   }
 
   private async notifyCallee(callerPhone: string, calleePhone: string) {
+    await sleep(5000);
+
     const smsSent = await redis.get(`${callerPhone}_sms_sent`);
 
     if (!smsSent) {
@@ -942,6 +945,14 @@ export default class AIService {
     const _callReason = callLogEntry?.callReason ?? null;
     const _referral = callLogEntry?.referral ?? null;
     const _message = callLogEntry?.message ?? null;
+
+    const forwardedNum = await this.getAgentForwardedNumber(
+      agent_info.agent_id
+    );
+    await this.notifyCallee(
+      cached_conv_info.callerPhone,
+      forwardedNum ?? cached_conv_info.calledPhone
+    );
 
     if (!_callerName) {
       logger.info("Extracting caller name");
