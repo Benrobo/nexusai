@@ -3,7 +3,7 @@ import HttpException from "../lib/exception.js";
 import { RESPONSE_CODE, type IReqObject } from "../types/index.js";
 import prisma from "../prisma/prisma.js";
 import GoogleAuth, { googleClient } from "../lib/google.auth.js";
-import type { TokenInfo, Credentials } from "google-auth-library";
+import type { TokenInfo } from "google-auth-library";
 import JWT from "../lib/jwt.js";
 import env from "../config/env.js";
 
@@ -177,6 +177,23 @@ export function dualUserAuthenticator(fn: Function) {
       throw new HttpException(
         RESPONSE_CODE.UNAUTHORIZED,
         "Unauthorized, token not found in headers",
+        401
+      );
+    }
+  };
+}
+
+export function authorizeCronFunction(fn: Function) {
+  return async (req: Request & IReqObject, res: Response) => {
+    const headers = req.headers;
+    const cronToken = headers["x-nexus-cron-token"];
+
+    if (cronToken === env.NEXUS_CRON_TOKEN) {
+      return await fn(req, res);
+    } else {
+      throw new HttpException(
+        RESPONSE_CODE.UNAUTHORIZED,
+        "Unauthorized cron function, token not found in headers.",
         401
       );
     }
