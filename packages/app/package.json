@@ -23,6 +23,7 @@
     "axios": "^1.6.8",
     "class-variance-authority": "^0.7.0",
     "dayjs": "^1.11.11",
+    "framer-motion": "^11.3.17",
     "input-otp": "^1.2.4",
     "libphonenumber-js": "^1.11.4",
     "prettier": "^3.2.5",

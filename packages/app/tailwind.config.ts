@@ -83,6 +83,7 @@ module.exports = {
         brown: {
           100: "#303030",
           102: "#444444",
+          103: "#1c1c1c",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

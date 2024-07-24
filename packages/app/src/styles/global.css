@@ -49,3 +49,20 @@ body {
 pre {
   scrollbar-width: none;
 }
+
+.pattern-bg::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  /* z-index: 1; */
+  /* background-color: #1c1c1c; */
+  /* background-image: url("/assets/patterns/graph-paper.svg"); */
+  background-image: url("/assets/patterns/topography.svg");
+  opacity: 0.2;
+  object-fit: cover;
+  /* increase the pattern */
+  background-size: 50%;
+  /* reduce the pattern border */
+  /* background-repeat: no-repeat; */
+}

@@ -6,15 +6,15 @@ import TopBar from "@/components/landing/navigations/TopBar";
 
 export default function Home() {
   return (
-    <FlexColStart className="w-full h-screen hideScrollBar overflow-auto overflow-x-hidden mt-[4.5em] scroll-smooth">
+    <FlexColStart className="w-full h-screen hideScrollBar overflow-auto overflow-x-hidden mt-[4.5em] scroll-smooth bg-brown-103 ">
       {/* navigation section */}
       <TopBar />
 
       {/* components sections */}
       <Hero />
-      <Features />
-      <FAQ />
-      <Footer />
+      {/* <Features /> */}
+      {/* <FAQ /> */}
+      {/* <Footer /> */}
 
       {/* waitlist page (if in use, comment out the above sections including the footer and topbar) */}
       {/* <WaitlistPage /> */}
