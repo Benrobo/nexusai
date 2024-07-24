@@ -202,7 +202,7 @@ export class TwilioService {
     let audioUrl = await this.phraseService.retrievePhrase(agentName, prompt);
 
     if (!audioUrl) {
-      audioUrl = await this.phraseService.storePhrase(agentName, prompt);
+      audioUrl = await this.phraseService.storePhrase(prompt);
     }
 
     return audioUrl;

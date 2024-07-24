@@ -16,7 +16,7 @@ export async function deleteOldFilesAndCachedData() {
     const oldFiles = files[0].filter((file) => {
       const fileDate = dayjs(file.metadata.timeCreated);
       const today = dayjs();
-      const diff = today.diff(fileDate, "days");
+      const diff = today.diff(fileDate, "minute");
       return diff > days;
     });
 

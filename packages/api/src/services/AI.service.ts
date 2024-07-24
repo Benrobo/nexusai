@@ -923,7 +923,7 @@ export default class AIService {
       const template = `A call was made recently, click the link below to get more information. ${env.CLIENT_URL}/call-logs`;
       await sendSMS(calleePhone, template);
 
-      const exp = 5 * 60;
+      const exp = 20 * 60; // 20min
       await redis.set(`${callerPhone}_sms_sent`, "true");
       await redis.expire(`${callerPhone}_sms_sent`, exp);
     } else {

@@ -5,9 +5,9 @@ import { storage } from "../config/firebase.js";
 
 export default class PhraseService {
   ttsService = new TTSService();
-  async storePhrase(agentName, text: string) {
+  async storePhrase(text: string) {
     const textHash = createHash("md5").update(text).digest("hex");
-    const cacheKey = `${agentName}:${textHash}`;
+    const cacheKey = `voice:${textHash}`;
 
     // Check if the phrase is already cached
     const cachedUrl = await redis.get(cacheKey);
@@ -21,7 +21,7 @@ export default class PhraseService {
     const storageUrl =
       "https://firebasestorage.googleapis.com/v0/b/nexusai-9f410.appspot.com/o";
 
-    const filename = `${agentName}-${textHash}.mp3`;
+    const filename = `voice:${textHash}.mp3`;
     const metadata = {
       metadata: {
         firebaseStorageDownloadTokens: cacheKey,
