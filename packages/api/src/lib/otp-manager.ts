@@ -1,6 +1,7 @@
 import redis from "../config/redis.js";
 import HttpException from "./exception.js";
 import { RESPONSE_CODE } from "../types/index.js";
+import { sendSMS } from "../helpers/twilio.helper.js";
 
 interface IStoredOTP {
   otp: number;
@@ -21,7 +22,6 @@ export default class OTPManager {
       return false;
     }
 
-    //1. store OTP in redis for 5 mins
     const otp = this.generateOTP();
     const ttl = 60 * 5; // 5 mins
     await redis.set(
@@ -35,10 +35,9 @@ export default class OTPManager {
 
     console.log(`\nOTP sent to phone: ${phone} is ${otp}\n`);
 
-    //2. send OTP to phone number
-    // IMPLEMENT TWILLIO FOR SENDING SMS
+    const message = `Your Nexus verification code is ${otp}.`;
+    await sendSMS(phone, message);
 
-    //3. return success response
     return true;
   }
 

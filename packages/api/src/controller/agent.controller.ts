@@ -76,10 +76,6 @@ export default class AgentController extends BaseController {
       );
     }
 
-    // rate limit send OTP route to 1 request per minute
-    // the rateLimit middleware would have access to this key, only if
-    // otp was sent successfully
-
     const ip = req.ip;
     const key = `rate-limit:${ip}`;
 

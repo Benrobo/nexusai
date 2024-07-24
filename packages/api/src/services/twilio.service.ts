@@ -19,7 +19,6 @@ import type {
 } from "../types/twilio-service.types.js";
 import { defaultAgentName } from "../data/agent/config.js";
 import defaultAgentVoices from "../data/agent/voice.js";
-import TTSService from "./tts.service.js";
 import PhraseService from "./phrase.service.js";
 
 dotenv.config();
@@ -390,21 +389,6 @@ export class TwilioService {
     } catch (e: any) {
       logger.error(`Error fetching call duration: ${e.message}`);
       console.log(e);
-      return null;
-    }
-  }
-
-  async sendSMS(to: string, body: string) {
-    try {
-      const msg = await this.prod_tw_client.messages.create({
-        body,
-        to,
-        from: env.TWILIO.PHONE_NUMBER,
-      });
-
-      return msg;
-    } catch (error) {
-      console.log("error", error);
       return null;
     }
   }

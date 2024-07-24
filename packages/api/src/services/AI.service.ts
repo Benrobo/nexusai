@@ -18,8 +18,8 @@ import redis from "../config/redis.js";
 import { getSentimentVariations } from "../data/agent/sentiment.js";
 import IntegrationService from "./integration.service.js";
 import TelegramHelper from "../helpers/telegram.helper.js";
-import { TwilioService } from "./twilio.service.js";
 import env from "../config/env.js";
+import { sendSMS } from "../helpers/twilio.helper.js";
 
 type IHandleConversationProps = {
   user_input: string;
@@ -58,8 +58,6 @@ export default class AIService {
   private geminiService = new GeminiService();
   private callLogService = new CallLogsService();
   private integrationService = new IntegrationService();
-  private twService = new TwilioService();
-  constructor() {}
 
   public async determineCallIntent(msg: string, call_history?: string) {
     const intentCallResp = await this.geminiService.functionCall({
@@ -923,7 +921,7 @@ export default class AIService {
 
     if (!smsSent) {
       const template = `A call was made recently, click the link below to get more information. ${env.CLIENT_URL}/call-logs`;
-      await this.twService.sendSMS(calleePhone, template);
+      await sendSMS(calleePhone, template);
 
       const exp = 5 * 60;
       await redis.set(`${callerPhone}_sms_sent`, "true");

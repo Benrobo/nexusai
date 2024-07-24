@@ -15,7 +15,7 @@ export default async () => {
   try {
     // TEST ALL SERVICES METHOD
     // const twService = new TwilioService();
-    const twService = new TwilioService();
+    // const twService = new TwilioService();
     const phraseService = new PhraseService();
     const tts = new TTSService();
 
