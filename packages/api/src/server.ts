@@ -9,6 +9,7 @@ import internalTest from "./test.js";
 import SubscriptionRoute from "./routes/subscription.route.js";
 import CallLogsRoute from "./routes/call-logs.route.js";
 import ConversationRoute from "./routes/conversation.route.js";
+import CronJobRoute from "./routes/cronjob.routes.js";
 
 const server = new App();
 
@@ -22,6 +23,7 @@ server.initializedRoutes([
   new SubscriptionRoute(),
   new CallLogsRoute(),
   new ConversationRoute(),
+  new CronJobRoute(),
 ]);
 server.listen();
 
