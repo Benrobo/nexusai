@@ -56,10 +56,10 @@ pre {
   height: 100%;
   position: absolute;
   /* z-index: 1; */
-  /* background-color: #1c1c1c; */
+  background-color: #1c1c1c;
   /* background-image: url("/assets/patterns/graph-paper.svg"); */
   background-image: url("/assets/patterns/topography.svg");
-  opacity: 0.2;
+  opacity: 0.5;
   object-fit: cover;
   /* increase the pattern */
   background-size: 50%;
