@@ -3,7 +3,6 @@ import Home from "@/pages";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthRootLayout from "./pages/auth/layout";
 import AuthPage from "./pages/auth/page";
-import useTheme from "./hooks/useTheme";
 import { Toaster } from "react-hot-toast";
 import DataContextProvider from "./context/DataContext";
 import "@styles/global.css";
@@ -18,8 +17,6 @@ import CallLogsPage from "./pages/call-logs/page";
 const queryClient = new QueryClient();
 
 function App() {
-  useTheme();
-
   return (
     <div className="h-screen hideScrollBar2 scroll-smooth bg-white-100">
       <QueryClientProvider client={queryClient}>
