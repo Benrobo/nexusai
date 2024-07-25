@@ -172,7 +172,9 @@ export class TwilioService {
         action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
         method: "POST",
         timeout: 10,
-        speechTimeout: "10",
+        speechTimeout: "auto",
+        speechModel: "experimental_conversations",
+        enhanced: true,
       });
 
       sendXMLResponse(res, twiml.toString());
@@ -192,6 +194,8 @@ export class TwilioService {
         method: "POST",
         timeout: 5,
         speechTimeout: "auto",
+        speechModel: "experimental_conversations",
+        enhanced: true,
       });
 
       sendXMLResponse(res, twiml.toString());
