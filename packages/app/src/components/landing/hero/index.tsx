@@ -168,3 +168,44 @@ function Hero() {
 }
 
 export default Hero;
+
+export function Hero2() {
+  return (
+    <FlexColStart className="w-full h-full bg-dark-100 rounded-[20px] overflow-hidden relative">
+      <FlexColCenter className="w-full h-[300px] absolute top-0">
+        <div className="w-[250px] h-[250px] bg-white-100 blur-[150px] rounded-full -translate-y-[10em]" />
+      </FlexColCenter>
+
+      <FlexColCenter className="w-full h-auto mt-[3em] z-[10]">
+        <FlexColCenter className="w-full max-w-[45%] text-center">
+          <FlexRowCenter className="mb-8 border-[2px] border-white-300/30 rounded-full text-xs font-ppReg bg-white-300/20 px-3 py-1 text-white-100">
+            AI Driven Communication Platform
+          </FlexRowCenter>
+          <h1 className="text-3xl md:text-5xl font-ppB text-wrap text-white-100 whitespace-nowrap mb-3">
+            Redefine Efficient and Secure Communication with Nexus
+          </h1>
+          <p className="text-sm font-ppL text-white-300">
+            Nexus enables businesses to transform communication by boosting
+            sales with intelligent AI assistants, securing calls from scammers,
+            and offering 24/7 support via chatbots.
+          </p>
+        </FlexColCenter>
+        <FlexRowCenter className="mt-[1em] gap-9">
+          <button className="w-auto px-5 bg-white-100 font-ppReg py-3 rounded-2xl scale-[.90] enableBounceEffect">
+            Get Started
+          </button>
+          <button className="w-auto px-5 border-[1px] border-white-300/30 bg-brown-100 font-ppReg py-3 rounded-2xl text-white-100 scale-[.90] enableBounceEffect">
+            How it Works
+          </button>
+        </FlexRowCenter>
+        <FlexColCenter className="mt-[3em] max-w-[80%]">
+          <img
+            src={`/assets/images/header/illus-4.svg`}
+            alt="hero"
+            className="w-full h-full object-left object-cover"
+          />
+        </FlexColCenter>
+      </FlexColCenter>
+    </FlexColStart>
+  );
+}
