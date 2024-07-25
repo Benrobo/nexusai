@@ -1,22 +1,10 @@
 "use client";
-import {
-  FlexColStart,
-  FlexRowCenter,
-  FlexRowEnd,
-  FlexRowEndCenter,
-  FlexRowStartBtw,
-  FlexRowStartCenter,
-} from "@/components/Flex";
-// import { LANDING_TOP_BAR_NAV } from "@/data/landing/navigation";
-import useTheme from "@/hooks/useTheme";
+import { FlexRowStartCenter } from "@/components/Flex";
 import { cn } from "@/lib/utils";
-import { ChevronRight, Menu, Moon, SunMoon, X } from "@/components/icons";
 import { Link } from "react-router-dom";
 import React from "react";
-// import useAuthUser from "@/hooks/useAuthUser";
 
 function TopBar() {
-  const { theme, toggleTheme } = useTheme();
   const [showSlideBar, setShowSlideBar] = React.useState(false);
   const [scrollY, setScrollY] = React.useState(0);
   const [isScrolledPast, setIsScrolledPast] = React.useState(false);
@@ -49,17 +37,17 @@ function TopBar() {
   }, []);
 
   return (
-    <div className="w-full fixed top-0 z-[800] bg-none ">
+    <div className="w-full fixed top-0 z-[800] bg-transparent ">
       <FlexRowStartCenter
         className={cn(
-          "w-full h-auto py-4 px-5 bg-dark-100 justify-between",
-          isScrolledPast ? "backdrop-blur-md" : "backdrop-blur-md"
+          "w-full h-auto py-4 px-5 justify-between bg-transparent",
+          isScrolledPast ? "backdrop-blur-md" : "backdrop-blur-xs"
         )}
       >
         <Link to="/">
           <FlexRowStartCenter className="w-fit gap-1">
             <img
-              src="/assets/logo/nexus-logo.svg"
+              src="/assets/logo/nexus-logo-dark.svg"
               width={40}
               height={0}
               alt="logo"
