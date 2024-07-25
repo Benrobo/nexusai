@@ -8,7 +8,13 @@ import {
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Arrow17 } from "@/components/HandyArrows";
-import { CheckCheck, OctagonX, ShieldAlert, X } from "@/components/icons";
+import {
+  CheckCheck,
+  OctagonX,
+  ShieldAlert,
+  SquareArrowOutUpRight,
+  X,
+} from "@/components/icons";
 
 const phrases = {
   goodbye: ["Scam Calls", "Sales Delays", "Restricted Support"],
@@ -39,9 +45,18 @@ function Hero() {
   return (
     <FlexColStart className="w-full h-full min-h-[600px] text-center relative">
       <div className="pattern-bg" />
-      <FlexColStartCenter className="w-full h-full px-9 transition-all z-[10] scale-[.] lg:scale-[1]">
-        <FlexRowStartCenter className="w-auto px-9 mt-[4em]">
-          <h1 className="text-[4em] font-ppB text-white-100 whitespace-nowrap">
+      <FlexColStartCenter className="w-full h-full px-9 py-[10em] transition-all z-[10] scale-[.] lg:scale-[1] gap-0">
+        <div className="flex-center relative w-[60px] h-[60px] mt-[3em] mb-[2em]">
+          <img
+            src="/assets/logo/nexus-logo-dark.svg"
+            width={60}
+            height={0}
+            alt="logo"
+            className="z-[3]"
+          />
+        </div>
+        <FlexRowStartCenter className="w-auto px-9">
+          <h1 className="text-[4em] font-ppEB text-white-100 whitespace-nowrap">
             Say goodbye to{" "}
           </h1>
           <div className="relative w-[400px] h-[3em]">
@@ -54,7 +69,7 @@ function Hero() {
                 transition={{ duration: 0.5 }}
                 className="absolute inset-0 flex items-center justify-start"
               >
-                <span className="text-[3.5em] font-ppB text-red-305 whitespace-nowrap relative">
+                <span className="text-[3.5em] font-ppEB text-red-305 whitespace-nowrap relative">
                   {phrases.goodbye[goodbyeIndex]}
                   <span className="text-sm w-[30px] h-[30px] flex-center absolute -top-3 -right-[4em] bg-red-200/10 rounded-full">
                     {phrases.goodbye[goodbyeIndex] === "Scam Calls" ? (
@@ -69,7 +84,7 @@ function Hero() {
           </div>
         </FlexRowStartCenter>
         <FlexRowStartCenter className="w-auto">
-          <h1 className="text-[4em] font-ppB text-white-100 whitespace-nowrap">
+          <h1 className="text-[4em] font-ppEB text-white-100 whitespace-nowrap">
             Hello to{" "}
           </h1>
           <div className="relative inline-block w-[400px] h-[4em]">
@@ -82,7 +97,7 @@ function Hero() {
                 transition={{ duration: 0.5 }}
                 className="absolute inset-0 flex items-center justify-start"
               >
-                <span className="text-[3.5em] font-ppB text-green-100 whitespace-nowrap relative">
+                <span className="text-[3.5em] font-ppEB text-green-100 whitespace-nowrap relative">
                   {phrases.hello[helloIndex]}
                   <span className="text-sm w-[30px] h-[30px] flex-center absolute -top-3 -right-[3em] bg-green-200 rounded-full">
                     {phrases.hello[helloIndex] === "Protected Calls" ? (
@@ -104,6 +119,16 @@ function Hero() {
             </AnimatePresence>
           </div>
         </FlexRowStartCenter>
+
+        {/* auth button */}
+        <FlexColCenter className="w-full">
+          <button className="w-[200px] h-auto py-3 bg-dark-103 border-[3px] border-brown-100 rounded-full flex-center mt-[2em] text-white-100 stroke-white-100 gap-4 font-ppM enableBounceEffect">
+            Get Started
+            <SquareArrowOutUpRight size={15} className="ml-2" />
+          </button>
+        </FlexColCenter>
+
+        {/* img preview */}
       </FlexColStartCenter>
     </FlexColStart>
   );
