@@ -488,21 +488,16 @@ export default class AgentController extends BaseController {
 
       await this.forwardedNumberExists(agentId);
 
-      const knowledgeBase = await prisma.knowledgeBase.findFirst({
+      const linkedKB = await prisma.linkedKnowledgeBase.findFirst({
         where: {
-          userId: user.id,
+          agentId,
         },
         select: {
-          linked_knowledge_base: true,
+          kb: true,
         },
       });
 
-      if (
-        knowledgeBase?.linked_knowledge_base.length === 0 ||
-        !knowledgeBase?.linked_knowledge_base
-          .map((d) => d.agentId)
-          .includes(agentId)
-      ) {
+      if (!linkedKB || linkedKB.kb.userId !== user.id) {
         throw new HttpException(
           RESPONSE_CODE.BAD_REQUEST,
           "Link or Add at least one knowledge base",
@@ -561,21 +556,16 @@ export default class AgentController extends BaseController {
       );
     }
     if (agent.type === "CHATBOT") {
-      const knowledgeBase = await prisma.knowledgeBase.findFirst({
+      const linkedKB = await prisma.linkedKnowledgeBase.findFirst({
         where: {
-          userId: user.id,
+          agentId,
         },
         select: {
-          linked_knowledge_base: true,
+          kb: true,
         },
       });
 
-      if (
-        knowledgeBase?.linked_knowledge_base.length === 0 ||
-        !knowledgeBase?.linked_knowledge_base
-          .map((d) => d.agentId)
-          .includes(agentId)
-      ) {
+      if (!linkedKB || linkedKB.kb.userId !== user.id) {
         throw new HttpException(
           RESPONSE_CODE.BAD_REQUEST,
           "Link or Add at least one knowledge base",
