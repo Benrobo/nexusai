@@ -799,7 +799,9 @@ export default class ConversationController {
       const linked_kb = kb.linked_knowledge_base.find(
         (d) => d.agentId === agent.id
       );
-      data_source_ids.push(linked_kb.kb_id);
+      if (linked_kb) {
+        data_source_ids.push(linked_kb?.kb_id);
+      }
     }
 
     const similarities = await this.aiService.vectorSimilaritySearch({
