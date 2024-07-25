@@ -6,7 +6,7 @@ import TopBar from "@/components/landing/navigations/TopBar";
 
 export default function Home() {
   return (
-    <FlexColStart className="w-full h-screen hideScrollBar overflow-auto overflow-x-hidden mt-[4.5em] scroll-smooth bg-brown-103 ">
+    <FlexColStart className="w-full h-screen hideScrollBar overflow-auto overflow-x-hidden scroll-smooth bg-dark-105 ">
       {/* navigation section */}
       <TopBar />
 
