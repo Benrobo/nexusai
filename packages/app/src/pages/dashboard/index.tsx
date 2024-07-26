@@ -33,6 +33,7 @@ import {
   getTotalAgents,
   getTotalAIMessagesMetrics,
   getTotalConversations,
+  getTotalKnowledgeBase,
 } from "@/http/requests";
 import toast from "react-hot-toast";
 import type { AgentType, KBType, ResponseData } from "@/types";
@@ -105,7 +106,7 @@ export default function Dashboard() {
     },
   });
   const getTotalKBMut = useMutation({
-    mutationFn: async () => await getTotalConversations(),
+    mutationFn: async () => await getTotalKnowledgeBase(),
     onSuccess: (data) => {
       const resp = data as ResponseData;
       setMetrics((prev) => ({

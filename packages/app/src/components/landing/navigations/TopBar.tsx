@@ -1,91 +1,68 @@
-"use client";
-import { FlexRowStartCenter } from "@/components/Flex";
+import {
+  FlexRowCenter,
+  FlexRowStartBtw,
+  FlexRowStartCenter,
+} from "@/components/Flex";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import React from "react";
 
-function TopBar() {
-  const [showSlideBar, setShowSlideBar] = React.useState(false);
-  const [scrollY, setScrollY] = React.useState(0);
-  const [isScrolledPast, setIsScrolledPast] = React.useState(false);
+const navigations = [
+  {
+    link: "#features",
+    title: "Features",
+  },
+  {
+    link: "#why-nexus",
+    title: "Why Nexus",
+  },
+  {
+    link: "#get-started",
+    title: "Get Started",
+  },
+];
 
-  React.useEffect(() => {
-    function onScroll() {
-      setScrollY(window.scrollY);
-    }
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  React.useEffect(() => {
-    if (scrollY > 30) {
-      setIsScrolledPast(true);
-    } else {
-      setIsScrolledPast(false);
-    }
-  }, [scrollY]);
-
-  //track when screen size changes
-  React.useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth > 768) {
-        setShowSlideBar(false);
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  return (
-    <div className="w-full top-0 z-[800] bg-white-100 ">
-      <FlexRowStartCenter
-        className={cn(
-          "w-full h-auto py-4 px-5 justify-between bg-transparent",
-          isScrolledPast ? "backdrop-blur-md" : "backdrop-blur-xs"
-        )}
-      >
-        <Link to="/">
-          <FlexRowStartCenter className="w-fit gap-1">
-            <img
-              src="/assets/logo/nexus-logo-dark.svg"
-              width={40}
-              height={0}
-              alt="logo"
-              className=""
-            />
-            <span className="text-white-100 font-jb font-extrabold text-lg ml-2">
-              Nexus
-            </span>
-          </FlexRowStartCenter>
-        </Link>
-      </FlexRowStartCenter>
-    </div>
-  );
-}
-
-export default TopBar;
-
-export function TopBar2() {
+export default function TopBar() {
   return (
     <div className="w-full bg-white-100 rounded-[20px] ">
-      <FlexRowStartCenter
+      <FlexRowStartBtw
         className={cn("w-full h-auto py-4 px-5 justify-between bg-transparent")}
       >
-        <Link to="/">
-          <FlexRowStartCenter className="w-fit gap-1">
-            <img
-              src="/assets/logo/nexus-logo-dark.svg"
-              width={40}
-              height={0}
-              alt="logo"
-              className=""
-            />
-            <span className="text-dark-100 font-ppB font-extrabold text-lg ml-2">
-              Nexus
-            </span>
-          </FlexRowStartCenter>
-        </Link>
-      </FlexRowStartCenter>
+        <FlexRowStartCenter className="w-auto">
+          <Link to="/">
+            <FlexRowStartCenter className="w-fit gap-1">
+              <img
+                src="/assets/logo/nexus-logo-dark.svg"
+                width={40}
+                height={0}
+                alt="logo"
+                className=""
+              />
+              <span className="text-dark-100 font-ppB font-extrabold text-lg ml-2">
+                Nexus
+              </span>
+            </FlexRowStartCenter>
+          </Link>
+
+          <FlexRowCenter className="gap-10 ml-10">
+            {navigations.map((nav) => (
+              <a href={nav.link} key={nav.title}>
+                <span className="text-white-400 font-ppM text-sm hover:text-dark-105 transition-all">
+                  {nav.title}
+                </span>
+              </a>
+            ))}
+          </FlexRowCenter>
+        </FlexRowStartCenter>
+
+        <FlexRowCenter className="gap-9">
+          <button className="w-auto px-5 text-xs bg-white-100 font-ppReg py-3 rounded-2xl enableBounceEffect border-[1px] border-white-400/30">
+            Sign in
+          </button>
+          <button className="w-auto text-xs px-5 border-[1px] border-white-300/30 bg-brown-103 font-ppReg py-3 rounded-2xl text-white-100 enableBounceEffect">
+            Get Started
+          </button>
+        </FlexRowCenter>
+      </FlexRowStartBtw>
     </div>
   );
 }

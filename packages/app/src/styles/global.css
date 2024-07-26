@@ -3,7 +3,7 @@
 }
 
 body {
-  scroll-behavior: smooth;
+  scroll-behavior: smooth !important;
 }
 
 #loading-spinner {
@@ -55,16 +55,14 @@ pre {
   width: 100%;
   height: 100%;
   position: absolute;
-  /* z-index: 1; */
   background-color: #1c1c1c;
-  /* background-image: url("/assets/patterns/graph-paper.svg"); */
-  background-image: url("/assets/patterns/topography.svg");
-  opacity: 0.5;
-  object-fit: cover;
-  /* increase the pattern */
-  background-size: 50%;
-  /* reduce the pattern border */
-  /* background-repeat: no-repeat; */
+  background-image: url("/assets/patterns/graph-paper.svg");
+  /* background-image: url("/assets/patterns/4-point-stars.svg"); */
+  opacity: 0.07;
+  object-fit: contain;
+  background-size: 10%;
+  background-position: bottom;
+  filter: grayscale(100%);
 }
 
 .hero-button {
