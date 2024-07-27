@@ -6,13 +6,6 @@ import {
   FlexRowStartCenter,
 } from "./Flex";
 
-const legalData = [
-  {
-    title: "Privacy and Policy",
-    url: "https://www.privacyboard.co/company/veloz?tab=privacy-policy",
-  },
-];
-
 function Footer() {
   return (
     <FlexColStart className="w-full h-auto py-9 pb-9 bg-white-100 rounded-2xl border-t-solid border-t-[1px] border-t-gray-100/20 ">
