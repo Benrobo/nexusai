@@ -11,7 +11,7 @@
     "build": "npx rimraf ./dist && npx tsc --build --force tsconfig.json",
     "dbPush": "prisma db push",
     "migrate": "prisma migrate dev",
-    "start": "node -r tsconfig-paths/register ./dist/server.js",
+    "start": "npm run dbPush && node -r tsconfig-paths/register ./dist/server.js",
     "watch": "tsc --watch",
     "format": "npx prettier --write .",
     "db:studio": "npx prisma studio",
