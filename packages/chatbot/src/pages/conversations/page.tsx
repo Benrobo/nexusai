@@ -93,7 +93,7 @@ function Conversations() {
             No conversations found.
           </h1>
           <button
-            className="w-[200px] px-5 py-3 rounded-full flex-center gap-3 font-ppReg text-xs text-white-100 bg-dark-100 enableBounceEffect disabled:opacity-5 disabled:cursor-not-allowed"
+            className="w-[200px] px-5 py-3 rounded-full flex-center gap-3 font-ppReg text-xs text-white-100 bg-dark-100 enableBounceEffect disabled:opacity-[.5] disabled:cursor-not-allowed"
             onClick={() => startNewConversationMut.mutate(agent_id!)}
             disabled={startNewConversationMut.isPending}
           >
