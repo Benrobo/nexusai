@@ -94,10 +94,12 @@ function Messages() {
     onSuccess: (data) => {
       const resp = data as ResponseData;
       const aiResponse = resp.data["agent"];
-      setConvMessages((prev) => ({
-        ...prev!,
-        messages: [...prev!.messages, aiResponse],
-      }));
+      if (aiResponse) {
+        setConvMessages((prev) => ({
+          ...prev!,
+          messages: [...prev!.messages, aiResponse],
+        }));
+      }
       setInitProcessingLastQuery(false);
       scrollToBottom();
     },
