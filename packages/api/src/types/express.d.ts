@@ -1,10 +1,11 @@
-import * as express from "express";
+import { Request } from "express";
+import { Multer } from "multer";
 
 declare global {
   namespace Express {
     export interface Request {
       rawBody: any;
-      file?: Express.Multer.File;
+      file?: Multer.File;
     }
   }
 }
