@@ -62,11 +62,5 @@ export default class WebhookRoute {
       `${this.path}/tw-phone/subscription`,
       this.lsWebhookHandler.twilioPhoneSubscription.bind(this.lsWebhookHandler)
     );
-
-    // Telegram webhook handler
-    // this.router.post(
-    //   `${this.path}/telegram-bot`,
-    //   this.tgWebhookHandler.initTgBotService.bind(this.tgWebhookHandler)
-    // );
   }
 }
