@@ -1,8 +1,3 @@
-// LOCAL
-// const API_URL = "http://localhost:4001/api";
-// const CLIENT_URL = "http://localhost:3010";
-
-// PROD
 const API_URL = "https://nexusai-ecow3.ondigitalocean.app/api";
 const CLIENT_URL = "https://nexusai-chatbot.vercel.app";
 

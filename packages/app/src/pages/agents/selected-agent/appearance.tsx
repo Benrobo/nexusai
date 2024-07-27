@@ -161,7 +161,7 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
     );
   }
 
-  const codeNippet = `<script src="./nexus.js" id="${agent_id}"></script>`;
+  const codeNippet = `<script src="https://cdn.jsdelivr.net/npm/nexusai-embed/nexus.js" id="${agent_id}"></script>`;
 
   return (
     <FlexRowStart className="w-full h-screen gap-0">

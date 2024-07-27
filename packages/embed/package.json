@@ -1,12 +1,13 @@
 {
-  "name": "embed",
-  "version": "1.0.0",
-  "description": "",
+  "name": "nexusai-embed",
+  "version": "1.0.1",
+  "description": "Nexus enables businesses to transform communication by boosting sales with intelligent AI assistants, securing calls from scammers, and offering 24/7 support via chatbots.",
   "main": "nexus.js",
-  "scripts": {
-    "test": ""
-  },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "nexusai",
+    "embed",
+    "chatbot"
+  ],
+  "author": "benrobo",
   "license": "ISC"
 }
