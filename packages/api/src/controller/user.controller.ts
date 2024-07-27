@@ -20,7 +20,7 @@ import { SentimentAnalysisService } from "../services/sentiment.service.js";
 import type { KnowledgeBaseType } from "@prisma/client";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
-import sendMail from "helpers/sendMail.js";
+import sendMail from "../helpers/sendMail.js";
 
 dayjs.extend(relativeTime);
 
