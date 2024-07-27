@@ -1,4 +1,4 @@
-import { Route, Routes, useParams, useSearchParams } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import Home from "@/pages/home";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";

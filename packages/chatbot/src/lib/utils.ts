@@ -2,7 +2,6 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import WIDGET_CONFIG from "@/config/widget";
 
 dayjs.extend(relativeTime);
 

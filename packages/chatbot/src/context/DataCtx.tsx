@@ -1,5 +1,5 @@
 import MessageEventHandlers from "@/helpers/eventHandlers";
-import type { AccountInfo, ChatBotAgentConfig } from "@/types";
+import type { AccountInfo } from "@/types";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useMatch } from "react-router-dom";
 

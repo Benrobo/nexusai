@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { FlexColCenter } from "./Flex";
 import Button from "./ui/button";
 

@@ -79,6 +79,7 @@ const Button: React.FC<ButtonProps> = ({
 
   if (href) {
     return (
+      // @ts-ignore
       <Link to={href} className={cn(classNames, childrenClass)} {...props}>
         {leftIcon && leftIcon}
         {children}

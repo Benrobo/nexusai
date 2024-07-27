@@ -213,7 +213,6 @@ function SignUp({ switchTab, closeModal, isOpen }: AuthTab) {
 function SignIn({ switchTab, closeModal, isOpen }: AuthTab) {
   const [otpRequested, setOtpRequested] = useState(false);
   const [email, setEmail] = useState("");
-  const { location } = useLocation();
   const signInMut = useMutation({
     mutationFn: async (data: any) => await signInUser(data),
     onSuccess: (data) => {

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { FlexColCenter, FlexRowCenter, FlexRowCenterBtw } from "../Flex";
+import { FlexColCenter, FlexRowCenter } from "../Flex";
 import { Home, MessagesSquare, User } from "../icons";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";

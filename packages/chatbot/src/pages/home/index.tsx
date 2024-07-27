@@ -1,8 +1,4 @@
-import {
-  FlexColCenter,
-  FlexColStart,
-  FlexColStartCenter,
-} from "@/components/Flex";
+import { FlexColCenter, FlexColStart } from "@/components/Flex";
 import ProtectPage from "@/components/ProtectPage";
 
 function HomePage() {
