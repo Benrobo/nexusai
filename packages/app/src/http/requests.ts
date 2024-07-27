@@ -193,7 +193,9 @@ export const deleteCallLog = async (id: string) => {
 
 // CONVERSATION
 export const getConversations = async (page?: number, limit?: number) => {
-  const req = await $axios.get(`/conversations/admin`);
+  const req = await $axios.get(
+    `/conversations/admin?page=${page}&limit=${limit}`
+  );
   return req.data;
 };
 

@@ -34,7 +34,6 @@ export default function Integrations() {
   const params = useParams();
   const agentId = params.id;
   const [integrations, setIntegrations] = useState<Integration[]>([]);
-  const [pageLoading, setPageLoading] = useState(true);
   const [selectedIntegration, setSelectedIntegration] = useState<{
     agent_id: string;
     int_id: string;
@@ -46,7 +45,6 @@ export default function Integrations() {
       const resp = data as ResponseData;
       console.log(resp);
       setIntegrations(resp.data);
-      setPageLoading(false);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;

@@ -3,7 +3,6 @@ import {
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "@/components/Flex";
-import useAuthUser from "@/hooks/useAuthUser";
 import useSession from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";

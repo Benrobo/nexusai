@@ -1,5 +1,4 @@
 import { FlexColStart } from "@/components/Flex";
-import React from "react";
 
 export default function GeneralPage() {
   return (

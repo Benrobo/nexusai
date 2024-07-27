@@ -32,7 +32,6 @@ import {
   getCustomerGrowthStats,
   getTotalAgents,
   getTotalAIMessagesMetrics,
-  getTotalConversations,
   getTotalKnowledgeBase,
 } from "@/http/requests";
 import toast from "react-hot-toast";

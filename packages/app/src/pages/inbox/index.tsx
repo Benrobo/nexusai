@@ -246,11 +246,7 @@ export default function InboxPage() {
       <FlexColStart className="w-full h-screen max-w-[350px] gap-0 bg-white-300">
         {/* header */}
         <FlexRowStartBtw className="w-full h-[90px] px-3 py-4 bg-white-300">
-          <Select
-            onValueChange={(val) => {
-              // handleFormChange("handover_condition", val);
-            }}
-          >
+          <Select>
             <SelectTrigger className="w-auto min-w-[120px]">
               <SelectValue placeholder={"All Agents"} />
             </SelectTrigger>
