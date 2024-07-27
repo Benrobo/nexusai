@@ -6,6 +6,7 @@ const technologies = [
   { name: "firebase", path: "/assets/images/logo/firebase.png" },
   { name: "twilio", path: "/assets/images/logo/twilio.png" },
   { name: "xilab", path: "/assets/images/logo/xilab.png" },
+  { name: "neon", path: "/assets/images/logo/neon.svg" },
 ];
 
 export default function BuiltWith() {
