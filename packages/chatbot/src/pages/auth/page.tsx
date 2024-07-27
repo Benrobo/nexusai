@@ -258,7 +258,6 @@ function SignIn({ switchTab, closeModal, isOpen }: AuthTab) {
             onClick={() => {
               closeModal();
               setOtpRequested(false);
-              //   addIntegrationMut.reset();
             }}
           >
             <X size={15} color="#000" />
@@ -296,6 +295,10 @@ function SignIn({ switchTab, closeModal, isOpen }: AuthTab) {
                     otp,
                   });
                 }}
+                resendOtp={() => {
+                  signInMut.mutate({ email });
+                }}
+                loading={signInMut.isPending}
                 disabled={verifyEmailMut.isPending}
               />
             )}
@@ -329,9 +332,11 @@ function SignIn({ switchTab, closeModal, isOpen }: AuthTab) {
 interface VerifyOTPProps {
   verify: (otp: string) => void;
   disabled?: boolean;
+  loading?: boolean;
+  resendOtp?: () => void;
 }
 
-function VerifyOTP({ verify, disabled }: VerifyOTPProps) {
+function VerifyOTP({ verify, disabled, loading, resendOtp }: VerifyOTPProps) {
   const [timer, setTimer] = React.useState(20);
   const [startTimer, setStartTimer] = React.useState(false);
   const otp = useRef<string>("");
@@ -392,8 +397,14 @@ function VerifyOTP({ verify, disabled }: VerifyOTPProps) {
               <p className="text-xs font-ppReg text-dark-100">{timer}s</p>
             </>
           ) : (
-            <button className="text-dark-100 text-xs font-ppReg underline flex-center gap-2">
-              {false && <Spinner size={15} color="#000" />}
+            <button
+              className="text-dark-100 text-xs font-ppReg underline flex-center gap-2"
+              onClick={() => {
+                resendOtp && resendOtp();
+                setStartTimer(true);
+              }}
+            >
+              {loading && <Spinner size={15} color="#000" />}
               Resend OTP
             </button>
           )}
