@@ -23,12 +23,12 @@ const TwilioSubPlanInfo = {
     name: "Local",
     description: "Local phone numbers are specific to a city or region.",
     product: {
-      test_id: 292219, // IN DEV MODE
-      prod_id: 292219,
+      test_id: 318984, // IN DEV MODE
+      prod_id: 318978, // PROD MODE
     },
     variant: {
-      test_id: 417672, // IN DEV MODE
-      prod_id: 417672,
+      test_id: 463694, // IN DEV MODE
+      prod_id: 463687, // IN PROD MODE
     },
   },
 } as TwilioSubPlanInfo;

@@ -8,6 +8,7 @@ import shortUUID from "short-uuid";
 import { createHash } from "crypto";
 import PhraseService from "./services/phrase.service.js";
 import redis from "./config/redis.js";
+import LemonsqueezyServices from "./services/LS.service.js";
 
 // Test all services without writing test scripts
 
@@ -18,8 +19,10 @@ export default async () => {
     // const twService = new TwilioService();
     const phraseService = new PhraseService();
     const tts = new TTSService();
+    const LS = new LemonsqueezyServices();
 
     try {
+      // console.log(await LS.getStoreInfo());
       // const resp = await tts.xiLabTTS(
       //   "Hello, this is a test. How are you today? I hope you're doing well."
       // );
