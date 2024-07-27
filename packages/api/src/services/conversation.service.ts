@@ -1,4 +1,4 @@
-import shortUUID from "short-uuid";
+import prisma from "../prisma/prisma.js";
 
 export default class ConversationService {
   constructor() {}
