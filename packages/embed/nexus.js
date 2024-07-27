@@ -31,12 +31,12 @@ class NexusWidget {
       text_color: "#fff",
     };
 
-    self = this;
+    this.init();
   }
 
   // init
-  init(agentId) {
-    this.agentId = agentId;
+  init() {
+    this.agentId = this.getAgentId();
     this.injectCss();
     this.initializeIframe();
     this.mountIframe();
@@ -46,14 +46,21 @@ class NexusWidget {
     window.addEventListener("resize", this.handleResponsiveness, false);
     window.addEventListener(
       "DOMContentLoaded",
-      this.handleResponsiveness.bind(self),
+      this.handleResponsiveness.bind(this),
       false
     );
   }
 
+  getAgentId() {
+    const script = document.querySelector('script[src*="nexus.js"]');
+    const agentId = script.getAttribute("id");
+    this.agentId = agentId;
+    return agentId;
+  }
+
   mountIframe() {
     if (!document.getElementById(IFRAME_ID)) {
-      window.addEventListener("message", this.receiveMessage.bind(self), false);
+      window.addEventListener("message", this.receiveMessage.bind(this), false);
 
       const wrapper = document.createElement("div");
       wrapper.id = NEXUS_WRAPPER_ID;
@@ -67,7 +74,7 @@ class NexusWidget {
   }
 
   initializeIframe() {
-    if (!this.agentId) {
+    if (!this.getAgentId()) {
       throw new Error("Agent ID is required");
     }
     this.iframe = document.createElement("iframe");

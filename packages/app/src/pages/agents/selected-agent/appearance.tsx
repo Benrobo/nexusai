@@ -7,7 +7,7 @@ import {
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "@/components/Flex";
-import { SendHorizontal } from "@/components/icons";
+import { CheckCheck, Copy, SendHorizontal } from "@/components/icons";
 import { Spinner } from "@/components/Spinner";
 import Button from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,7 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
   const [newBotConfig, setNewBotConfig] = useState<NewBotConfigData>(
     {} as NewBotConfigData
   );
+  const [isCopied, setIsCopied] = useState<string | null>(null);
   const [activeBrandIdentity, setActiveBrandIdentity] = useState<
     "brand_color" | "text_color" | null
   >(null);
@@ -144,6 +145,12 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
     updateBotConfigMut.mutate(payload);
   };
 
+  useEffect(() => {
+    setTimeout(() => {
+      setIsCopied(null);
+    }, 1000);
+  }, [isCopied]);
+
   if (type !== "CHATBOT") return null;
 
   if (getBotConfigMut.isPending || pageLoading) {
@@ -153,6 +160,8 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
       </FlexColCenter>
     );
   }
+
+  const codeNippet = `<script src="./nexus.js" id="${agent_id}"></script>`;
 
   return (
     <FlexRowStart className="w-full h-screen gap-0">
@@ -259,28 +268,62 @@ export default function Appearance({ agent_id, type }: AppearanceProps) {
         </FlexColStart>
 
         {/* suggested questions */}
+        {/* disable for now */}
+        {false && (
+          <FlexColStart className="w-full gap-1 mt-7">
+            <p className="text-sm font-ppM text-dark-100">
+              Suggested questions (optional)
+            </p>
+            <label className="text-xs font-ppReg text-white-400">
+              Questions separated by comma (,)
+            </label>
+            <Input
+              className=""
+              placeholder="Question 1? Question 2? Question 3?"
+              value={
+                newBotConfig?.suggested_questions ??
+                botConfig?.suggested_questions ??
+                ""
+              }
+              onChange={(e) => {
+                const value = e.target.value;
+                const questions = value.split(",").filter((q) => q.length > 0);
+                if (questions.length > 5) return;
+                handleBotConfigChange("suggested_questions", value);
+              }}
+            />
+          </FlexColStart>
+        )}
+
+        {/* embed section */}
         <FlexColStart className="w-full gap-1 mt-7">
-          <p className="text-sm font-ppM text-dark-100">
-            Suggested questions (optional)
+          <FlexRowStartCenter className="w-full">
+            <p className="text-sm font-ppM text-dark-100">Embed Code</p>
+            <button
+              className="rounded-md bg-transparent cursor-pointer flex-center disabled:opacity-[.5] disabled:cursor-not-allowed sclae-[.50] enableBounceEffect"
+              onClick={() => {
+                navigator.clipboard.writeText(codeNippet);
+                toast.success("Copied to clipboard");
+                setIsCopied("tg-auth-token-implementation");
+              }}
+            >
+              {isCopied === "tg-auth-token-implementation" ? (
+                <CheckCheck size={15} className="stroke-dark-100" />
+              ) : (
+                <Copy size={15} className="stroke-dark-100" />
+              )}
+            </button>
+          </FlexRowStartCenter>
+          <p className="font-ppReg text-xs flex-cencter gap-3 text-white-400">
+            Copy and paste the code below before the closing{" "}
+            <span className="font-jb font-medium px-[2px] py-[2px] mt-1 leading-3 bg-dark-300 rounded-md text-white-100 text-xs">
+              {"</body>"}
+            </span>{" "}
+            tag in your website.
           </p>
-          <label className="text-xs font-ppReg text-white-400">
-            Questions separated by comma (,)
-          </label>
-          <Input
-            className=""
-            placeholder="Question 1? Question 2? Question 3?"
-            value={
-              newBotConfig?.suggested_questions ??
-              botConfig?.suggested_questions ??
-              ""
-            }
-            onChange={(e) => {
-              const value = e.target.value;
-              const questions = value.split(",").filter((q) => q.length > 0);
-              if (questions.length > 5) return;
-              handleBotConfigChange("suggested_questions", value);
-            }}
-          />
+          <span className="font-jb font-medium px-1 py-1 bg-white-300 rounded-md text-orange-100 text-xs border-white-400/30 border-[.5px] mt-3">
+            {`<script src="...." id="${agent_id}"></script>`}
+          </span>
         </FlexColStart>
 
         {/* controls */}
