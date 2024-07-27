@@ -33,6 +33,7 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dayjs": "^1.11.12",
+    "dotenv": "^16.4.5",
     "elevenlabs": "^0.10.0",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
@@ -46,7 +47,6 @@
     "multer": "^1.4.5-lts.1",
     "pdfjs-dist": "^4.3.136",
     "puppeteer": "^22.11.2",
-    "resend": "^3.4.0",
     "sentiment": "^5.0.2",
     "sharp": "^0.33.3",
     "short-uuid": "^5.2.0",
@@ -55,8 +55,7 @@
     "turndown": "^7.2.0",
     "twilio": "^5.1.0",
     "winston": "^3.13.0",
-    "zod": "^3.23.8",
-    "dotenv": "^16.4.5"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@swc/cli": "^0.3.12",

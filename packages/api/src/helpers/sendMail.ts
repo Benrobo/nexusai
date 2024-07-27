@@ -1,5 +1,40 @@
+import axios from "axios";
 import env from "../config/env.js";
-import { Resend } from "resend";
+
+class Resend {
+  private apiKey: string;
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
+  }
+
+  async send(props: {
+    from: string;
+    to: string | string[];
+    subject: string;
+    html: string;
+  }) {
+    const { from, to, subject, html } = props;
+    const api = "https://api.resend.com/emails";
+    const res = await axios.post(
+      api,
+      {
+        from,
+        to,
+        subject,
+        html,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          ContentType: "application/json",
+        },
+      }
+    );
+
+    const data = res.data;
+    return data;
+  }
+}
 
 const resend = new Resend(env.RESEND_API_KEY);
 
@@ -16,7 +51,7 @@ export default async function sendMail(props: {
   html: string;
 }) {
   try {
-    const mailSent = await resend.emails.send({
+    const mailSent = await resend.send({
       from: env.MAIL_FROM,
       to: props.to,
       subject: props.subject,
@@ -29,7 +64,7 @@ export default async function sendMail(props: {
     }
     console.log("Mail sent successfully: ", props.to);
   } catch (error) {
-    console.error("Error sending mail", error);
+    console.error("Error sending mail", error?.response?.data);
     throw new Error("Error sending mail");
   }
 }
