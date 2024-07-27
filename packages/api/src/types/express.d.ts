@@ -1,10 +1,9 @@
-import { Request } from "express";
 import { Multer } from "multer";
 
 declare global {
   namespace Express {
     export interface Request {
-      rawBody: any;
+      rawBody: string;
       file?: Multer.File;
     }
   }
