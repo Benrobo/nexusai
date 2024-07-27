@@ -1,6 +1,12 @@
+// LOCAL
 const API_URL = "http://localhost:4001/api";
 const CLIENT_URL = "http://localhost:3010";
-const API_VERSION = "";
+
+// PROD
+// const API_URL = "https://nexusai-ecow3.ondigitalocean.app/api";
+// const CLIENT_URL = "https://nexusai-chatbot.vercel.app";
+
+const API_VERSION = "1.0.0";
 const IFRAME_ID = "nexus-embed-iframe";
 const NEXUS_WRAPPER_ID = "nexus-embed-wrapper";
 const NEXUS_CHATBUBBLE_ID = "nexus-chatbubble-button";

@@ -1,12 +1,12 @@
 import { getUser } from "@/http/requests";
 import type { UserInfo } from "@/types";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Status = "authenticated" | "unauthorised";
 
 export default function useSession() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
   const [user, setUser] = useState<UserInfo | null>(null);
   const userMutation = useMutation({
@@ -26,23 +26,21 @@ export default function useSession() {
     },
   });
 
-  useEffect(() => {
-    if (status === "authenticated" || user) return;
-
-    if (!loading || status === "unauthorised" || !status) {
-      fetcher();
+  const fetchUser = useCallback(() => {
+    if (!user) {
+      setLoading(true);
+      userMutation.mutate();
     }
-  }, []);
+  }, [user]);
 
-  const fetcher = async () => {
-    setLoading(true);
-    userMutation.mutate();
-  };
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   return {
     status,
     loading,
     user,
-    refetch: fetcher,
+    refetch: fetchUser,
   };
 }
