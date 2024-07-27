@@ -59,9 +59,12 @@ export default function TopBar() {
         <FlexRowCenter className="gap-9">
           {!loading && !user ? (
             <>
-              <button className="w-auto px-5 text-xs bg-white-100 font-ppReg py-3 rounded-2xl enableBounceEffect border-[1px] border-white-400/30">
+              <Link
+                to="/auth"
+                className="w-auto px-5 text-xs bg-white-100 font-ppReg py-3 rounded-2xl enableBounceEffect border-[1px] border-white-400/30"
+              >
                 Sign in
-              </button>
+              </Link>
               <button className="w-auto text-xs px-5 border-[1px] border-white-300/30 bg-brown-103 font-ppReg py-3 rounded-2xl text-white-100 enableBounceEffect">
                 Get Started
               </button>
