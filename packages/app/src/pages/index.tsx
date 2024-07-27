@@ -1,5 +1,6 @@
 "use client";
 import { FlexColStart } from "@/components/Flex";
+import Footer from "@/components/Footer";
 import { Features, Hero } from "@/components/landing";
 import BuiltWith from "@/components/landing/built-with";
 import GetStarted from "@/components/landing/get-started";
@@ -17,6 +18,7 @@ export default function Home() {
         <Features />
         <WhyNexus />
         <GetStarted />
+        <Footer />
       </FlexColStart>
     </AnimatePresence>
   );

@@ -10,7 +10,7 @@ import { X } from "../icons";
 import { useMutation } from "@tanstack/react-query";
 import { verifyPhone } from "@/http/requests";
 import toast from "react-hot-toast";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 interface IVerifyPhoneProps {
   closeModal: () => void;

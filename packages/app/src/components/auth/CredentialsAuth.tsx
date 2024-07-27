@@ -3,12 +3,12 @@ import { FlexColStart, FlexRowCenter, FlexRowStart } from "@/components/Flex";
 import Button from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { login, signInUser } from "@/http/requests";
-import { ResponseData } from "@snapx/shared/types";
 import { useMutation } from "@tanstack/react-query";
 import { ChevronLeft } from "@/components/icons";
 import useSession from "@/hooks/useSession";
 import React, { useEffect } from "react";
 import toast from "react-hot-toast";
+import type { ResponseData } from "@/types";
 
 function CredentialsAuth() {
   const [activeTab, setActiveTab] = React.useState<"signin" | "otp-input">(
