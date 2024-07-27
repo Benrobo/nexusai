@@ -83,7 +83,7 @@ const getIpAddress = async () => {
 
 const getLocation = async (ip: string) => {
   try {
-    const url = `https://ip-api.com/json/${ip}?fields=status,country,countryCode,region,regionName,city`;
+    const url = `https://api.ipgeolocation.io/ipgeo?apiKey=fabd20edf6994540a02509e7fcd41243&ip=${ip}`;
     const req = await fetch(url);
     const resp = await req.json();
 
@@ -92,9 +92,9 @@ const getLocation = async (ip: string) => {
     }
 
     return {
-      country: resp.country,
-      countryCode: resp.countryCode,
-      state: resp.regionName,
+      country: resp.country_name,
+      countryCode: resp.country_code2,
+      state: resp.state_prov,
       city: resp.city,
     } as LocationResp;
   } catch (e: any) {
