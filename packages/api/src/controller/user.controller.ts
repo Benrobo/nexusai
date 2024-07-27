@@ -519,7 +519,7 @@ export class ChatWidgetUserController {
 
         <p>Use the OTP code below to sign in to your account</p>
 
-        <p>Your OTP code is: <b>${otp}</b></p>
+        <h2>Your OTP code is: <b>${otp}</b></h2>
       `;
 
       await sendMail({
