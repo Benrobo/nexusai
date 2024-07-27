@@ -56,7 +56,8 @@
     "turndown": "^7.2.0",
     "twilio": "^5.1.0",
     "winston": "^3.13.0",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@swc/cli": "^0.3.12",
@@ -75,7 +76,6 @@
     "@types/pdfjs-dist": "^2.10.378",
     "@types/sentiment": "^5.0.4",
     "@types/turndown": "^5.0.4",
-    "dotenv": "^16.4.5",
     "nodemon": "^3.1.0",
     "prisma": "^5.13.0",
     "swc-loader": "^0.2.6",
