@@ -68,7 +68,7 @@ const Modal = ({
   return (
     <div
       className={cn(
-        "w-full hideScrollBar h-[100vh] top-0 left-0 py-5 ",
+        "w-full hideScrollBar h-[100vh] top-0 left-0 py-5 z-[9999999]",
         includeBg ? "bg-dark-100/40" : "",
         fixed ? "fixed z-[1000]" : "absolute",
         isBlurBg ? "backdrop-blur-sm bg-opacity-85" : "",

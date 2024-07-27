@@ -5,7 +5,7 @@ export default function Hero() {
   const visible = { opacity: 1, y: 0, transition: { duration: 0.5 } };
 
   return (
-    <FlexColStart className="w-full h-auto bg-dark-100 rounded-[20px] overflow-hidden relative">
+    <FlexColStart className="w-full h-full bg-dark-100 rounded-[20px] overflow-hidden relative">
       <div className="pattern-bg absolute inset-0 z-0" />
 
       <FlexColCenter className="w-full h-[300px] absolute top-0">
