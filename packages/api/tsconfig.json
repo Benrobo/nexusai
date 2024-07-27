@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "es6",
     "lib": ["es2017", "esnext.asynciterable", "DOM"],
-    "typeRoots": ["node_modules/@types"],
+    "typeRoots": ["./node_modules/@types"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "moduleResolution": "node",
