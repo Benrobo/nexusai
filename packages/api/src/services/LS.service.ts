@@ -106,4 +106,32 @@ export default class LemonsqueezyServices {
     }
     return null;
   }
+
+  async getStoreInfo() {
+    const api = `https://api.lemonsqueezy.com/v1/stores`;
+    try {
+      const res = await axios.get(api, {
+        headers: {
+          Authorization: `Bearer ${env.LS.API_KEY}`,
+        },
+      });
+
+      const data = res.data;
+
+      if (data?.data) {
+        const stores = data?.data;
+        const _stores = stores.map((s: any) => {
+          return {
+            id: s.id,
+            name: s.attributes.name,
+          };
+        });
+        return _stores;
+      }
+      return [];
+    } catch (e: any) {
+      console.log("Error fetching store info");
+      console.log(e?.response?.data);
+    }
+  }
 }
