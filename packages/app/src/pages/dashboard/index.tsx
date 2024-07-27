@@ -164,7 +164,7 @@ export default function Dashboard() {
 
   return (
     <FlexColStart className="w-full h-screen relative bg-white-300">
-      <FlexColStart className="w-full h-screen md:w-full xl:max-w-[90%] mx-auto">
+      <FlexColStart className="w-full h-screen md:w-full xl:max-w-[95%] mx-auto">
         {/* header */}
         <FlexColStart className="w-full h-auto px-4 lg:px-8 py-7">
           <FlexColStart className="w-full gap-0 mb-4 mt-3">

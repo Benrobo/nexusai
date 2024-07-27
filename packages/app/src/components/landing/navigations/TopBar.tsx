@@ -3,6 +3,8 @@ import {
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "@/components/Flex";
+import useAuthUser from "@/hooks/useAuthUser";
+import useSession from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
@@ -22,6 +24,7 @@ const navigations = [
 ];
 
 export default function TopBar() {
+  const { loading, user } = useSession();
   return (
     <div className="w-full bg-white-100 rounded-[20px] ">
       <FlexRowStartBtw
@@ -55,12 +58,23 @@ export default function TopBar() {
         </FlexRowStartCenter>
 
         <FlexRowCenter className="gap-9">
-          <button className="w-auto px-5 text-xs bg-white-100 font-ppReg py-3 rounded-2xl enableBounceEffect border-[1px] border-white-400/30">
-            Sign in
-          </button>
-          <button className="w-auto text-xs px-5 border-[1px] border-white-300/30 bg-brown-103 font-ppReg py-3 rounded-2xl text-white-100 enableBounceEffect">
-            Get Started
-          </button>
+          {!loading && !user ? (
+            <>
+              <button className="w-auto px-5 text-xs bg-white-100 font-ppReg py-3 rounded-2xl enableBounceEffect border-[1px] border-white-400/30">
+                Sign in
+              </button>
+              <button className="w-auto text-xs px-5 border-[1px] border-white-300/30 bg-brown-103 font-ppReg py-3 rounded-2xl text-white-100 enableBounceEffect">
+                Get Started
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/dashboard"
+              className="w-auto text-xs px-5 border-[1px] border-white-300/30 bg-brown-103 font-ppReg py-3 rounded-2xl text-white-100 enableBounceEffect"
+            >
+              Dashboard
+            </Link>
+          )}
         </FlexRowCenter>
       </FlexRowStartBtw>
     </div>

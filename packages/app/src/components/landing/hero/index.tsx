@@ -1,8 +1,11 @@
 import { FlexColCenter, FlexColStart, FlexRowCenter } from "@/components/Flex";
+import useSession from "@/hooks/useSession";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function Hero() {
   const visible = { opacity: 1, y: 0, transition: { duration: 0.5 } };
+  const { loading, user } = useSession();
 
   return (
     <FlexColStart className="w-full h-full bg-dark-100 rounded-[20px] overflow-hidden relative">
@@ -51,9 +54,12 @@ export default function Hero() {
             }}
           >
             <FlexRowCenter className="mt-[1em] gap-9">
-              <button className="w-auto px-5 bg-white-100 font-ppReg py-3 rounded-2xl scale-[.90] enableBounceEffect">
+              <Link
+                to={!loading && !user ? "/auth" : "/dashboard"}
+                className="w-auto px-5 bg-white-100 font-ppReg py-3 rounded-2xl scale-[.90] enableBounceEffect"
+              >
                 Get Started
-              </button>
+              </Link>
               <button className="w-auto px-5 border-[1px] border-white-300/30 bg-brown-100 font-ppReg py-3 rounded-2xl text-white-100 scale-[.90] enableBounceEffect">
                 How it Works
               </button>

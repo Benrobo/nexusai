@@ -81,6 +81,12 @@ function Features() {
           />
         ))}
       </div>
+      <br />
+      <FlexColCenter className="w-full mt-10">
+        <p className="text-white-400 font-ppM text-md">
+          And many more features.
+        </p>
+      </FlexColCenter>
     </FlexColStart>
   );
 }
