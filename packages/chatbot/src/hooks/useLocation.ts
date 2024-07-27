@@ -83,7 +83,7 @@ const getIpAddress = async () => {
 
 const getLocation = async (ip: string) => {
   try {
-    const url = `http://ip-api.com/json/${ip}?fields=status,country,countryCode,region,regionName,city`;
+    const url = `https://ip-api.com/json/${ip}?fields=status,country,countryCode,region,regionName,city`;
     const req = await fetch(url);
     const resp = await req.json();
 
