@@ -69,14 +69,14 @@ export default function TopBar() {
                 Get Started
               </button>
             </>
-          ) : (
+          ) : !loading && user ? (
             <Link
               to="/dashboard"
               className="w-auto text-xs px-5 border-[1px] border-white-300/30 bg-brown-103 font-ppReg py-3 rounded-2xl text-white-100 enableBounceEffect"
             >
               Dashboard
             </Link>
-          )}
+          ) : null}
         </FlexRowCenter>
       </FlexRowStartBtw>
     </div>
