@@ -174,7 +174,7 @@ It should start the CHATBOT server on `http://localhost:3010` successfully.
 
 In order to view the chatbot widget, start up the embed client located at `/packages/embed/index.html` using `vscode-live-server` or any other server of your choice.
 
-- Update the `index.html` with initialized value of your agent id.
+- Create a `CHATBOT` agent then Update the `index.html` with initialized value of your agent id.
 - Update the `CLIENT_URL` and `API_URL` found in `/nexus.js` file with the appropriate values.
 
 ```js
