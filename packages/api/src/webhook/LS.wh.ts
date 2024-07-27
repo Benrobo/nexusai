@@ -84,6 +84,21 @@ export default class LSWebhookHandler {
         // Update
         logger.info("Subscription Created");
 
+        const agentExists = await prisma.agents.findFirst({
+          where: {
+            userId: user_id,
+            id: custom_data.agent_id,
+          },
+        });
+
+        if (!agentExists) {
+          const msg = `Agent with id ${custom_data.agent_id} not found for user ${user_email}`;
+          console.log(`❌ ${msg}`);
+          status === "active" &&
+            (await this.notifyUserSubResumption(user, product_name));
+          return;
+        }
+
         // Check if subscription exists
         const subscriptionExists = await prisma.subscriptions.findFirst({
           where: {
@@ -164,8 +179,8 @@ export default class LSWebhookHandler {
         await this.SubscriptionUpdated(data as LS_Subscription, custom_data);
       }
     } catch (e: any) {
+      console.log(` ❌ Error handling subscription: ${e.message}`);
       console.log(e);
-      throw new HttpException(RESPONSE_CODE.ERROR, e.message, 400);
     }
   }
 
@@ -194,29 +209,7 @@ export default class LSWebhookHandler {
             ends_at,
           },
         });
-
-        const subscriptionGracePeriodNotif = `
-          <p>Dear ${user.fullname},</p>
-
-          <p>Your subscription to <b>${product_name} (NexusAI)</b> has been cancelled.</p>
-          <p>You have a grace period of <b>24 hours</b> to renew your subscription before your phone number is removed from the system.</p>
-          <p>Kindly renew your subscription to continue using your phone number.</p>
-
-          <p>Thank you for using NexusAI.</p>
-          `;
-
-        await retry({
-          fn: sendMail,
-          args: [
-            {
-              to: user.email,
-              subject: "🚨 Subscription Cancellation Notification",
-              html: subscriptionGracePeriodNotif,
-            },
-          ],
-          functionName: "sendMail - Subscription Cancellation Notification",
-          retries: 5,
-        });
+        await this.notifyUserSubCancellation(user, product_name);
       }
       if (status === "active") {
         const agent = await prisma.agents.findFirst({
@@ -227,29 +220,7 @@ export default class LSWebhookHandler {
         });
 
         if (!agent) {
-          // send user a mail that their subscription was resumed but no agent was found for the subscription
-          const mailTemplate = `
-          <p>Dear ${user.fullname},</p>
-
-          <p>Your subscription to <b>${product_name} (NexusAI)</b> has been resumed.</p>
-          <p>However, we could not find an agent for your subscription. Kindly contact support to resolve this issue or cancel your subscription, if this was not intentional.</p>
-
-          <p>Thank you for using NexusAI.</p>
-        `;
-
-          await retry({
-            fn: sendMail,
-            args: [
-              {
-                to: user.email,
-                subject: "🚨 Subscription Resumed Notification",
-                html: mailTemplate,
-              },
-            ],
-            functionName: "sendMail - Subscription Resumed Notification",
-            retries: 5,
-          });
-          console.log(`❌ Subscription Resumed but no agent found`);
+          await this.notifyUserSubResumption(user, product_name);
           return;
         }
         await prisma.subscriptions.update({
@@ -269,6 +240,66 @@ export default class LSWebhookHandler {
       console.log(` ❌ Error updating subscription: ${e.message}`);
       console.log(e);
     }
+  }
+
+  private async notifyUserSubResumption(
+    user: { fullname: string; email: string },
+    product_name: string
+  ) {
+    // send user a mail that their subscription was resumed but no agent was found for the subscription
+    const mailTemplate = `
+          <p>Dear ${user.fullname},</p>
+
+          <p>Your subscription to <b>${product_name} (NexusAI)</b> has been resumed.</p>
+          <p>However, we could not find an agent for your subscription. Kindly contact support to resolve this issue or cancel your subscription, if this was not intentional.</p>
+
+          <p>Thank you for using NexusAI.</p>
+        `;
+
+    await retry({
+      fn: sendMail,
+      args: [
+        {
+          to: user.email,
+          subject: "🚨 Subscription Resumed Notification",
+          html: mailTemplate,
+        },
+      ],
+      functionName: "sendMail - Subscription Resumed Notification",
+      retries: 5,
+    });
+    console.log(`❌ Subscription Resumed but no agent found`);
+    return;
+  }
+
+  private async notifyUserSubCancellation(
+    user: { fullname: string; email: string },
+    product_name: string
+  ) {
+    const subscriptionGracePeriodNotif = `
+    <p>Dear ${user.fullname},</p>
+
+    <p>Your subscription to <b>${product_name} (NexusAI)</b> has been cancelled.</p>
+    <p>You have a grace period of <b>24 hours</b> to renew your subscription before your phone number is removed from the system.</p>
+    <p>Kindly renew your subscription to continue using your phone number.</p>
+
+    <p>Thank you for using NexusAI.</p>
+    `;
+
+    await retry({
+      fn: sendMail,
+      args: [
+        {
+          to: user.email,
+          subject: "🚨 Subscription Cancellation Notification",
+          html: subscriptionGracePeriodNotif,
+        },
+      ],
+      functionName: "sendMail - Subscription Cancellation Notification",
+      retries: 5,
+    });
+    console.log(`❌ Subscription Cancelled but no agent found`);
+    return;
   }
 
   private async verifyWebhook(req: Request, res: Response) {
