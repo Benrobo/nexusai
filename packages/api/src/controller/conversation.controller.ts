@@ -845,35 +845,38 @@ export default class ConversationController {
     });
 
     const aiMsg = aiResp.data;
+    let response = {};
 
-    // agent
-    const aiMsgStored = await this.storeChatMessage({
-      conv_id: conversationId,
-      role: "agent",
-      content: aiMsg,
-      agent_id: agent.id,
-      is_admin_read: true,
-      is_customer_read: true,
-    });
+    if (aiMsg && aiMsg !== null) {
+      // agent
+      const aiMsgStored = await this.storeChatMessage({
+        conv_id: conversationId,
+        role: "agent",
+        content: aiMsg,
+        agent_id: agent.id,
+        is_admin_read: true,
+        is_customer_read: true,
+      });
+
+      response["agent"] = {
+        id: aiMsgStored.id,
+        message: aiMsgStored.content,
+        date: aiMsgStored.created_at,
+        agent_id: agent.id,
+        sender: {
+          id: agent.id,
+          name: agent.name,
+          role: "agent",
+        },
+      };
+    }
 
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
       "Conversation processed successfully",
       200,
-      {
-        agent: {
-          id: aiMsgStored.id,
-          message: aiMsgStored.content,
-          date: aiMsgStored.created_at,
-          agent_id: agent.id,
-          sender: {
-            id: agent.id,
-            name: agent.name,
-            role: "agent",
-          },
-        },
-      }
+      response
     );
   }
 
