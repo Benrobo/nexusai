@@ -32,7 +32,7 @@ const usePathname = () => {
         setPath(dyPath);
       }
     }
-  });
+  }, [window.location.pathname]);
 
   return { pathname, path, formattedPathname };
 };

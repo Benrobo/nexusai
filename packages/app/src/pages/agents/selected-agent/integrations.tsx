@@ -2,6 +2,7 @@ import AddIntegration from "@/components/agents/integration/add-integration";
 import {
   FlexColCenter,
   FlexColStart,
+  FlexColStartBtw,
   FlexRowEnd,
   FlexRowStart,
   FlexRowStartBtw,
@@ -104,9 +105,9 @@ export default function Integrations() {
                 (i) => i.name === int.type
               );
               return (
-                <FlexColStart
+                <FlexColStartBtw
                   className={cn(
-                    "w-full max-w-[350px] bg-white-100 rounded-md px-4 py-4 border-2",
+                    "w-full max-w-[350px] h-[120px] bg-white-100 rounded-md px-4 py-4 border-2",
                     "border-white-400/30 "
                   )}
                   key={idx}
@@ -151,10 +152,10 @@ export default function Integrations() {
                       </button>
                     </FlexRowEnd>
                   </FlexRowStartBtw>
-                  <p className="text-sm font-ppReg text-gray-500 text-start">
+                  <p className="text-[13px] font-ppReg text-gray-500 text-start">
                     {supported?.description}
                   </p>
-                </FlexColStart>
+                </FlexColStartBtw>
               );
             })
           ) : (

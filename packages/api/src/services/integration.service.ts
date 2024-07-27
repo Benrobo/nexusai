@@ -8,6 +8,13 @@ export default class IntegrationService {
       where: {
         agent_id: agent_id,
       },
+      include: {
+        agents: {
+          select: {
+            integrations: true,
+          },
+        },
+      },
     });
 
     return integrations;

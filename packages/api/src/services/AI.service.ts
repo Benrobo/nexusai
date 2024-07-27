@@ -643,15 +643,13 @@ export default class AIService {
               Potential Red Flags:
               2. Caller avoids saying who they are or how they got the number
               3. Unexpected offers for business or money
-              4. Rushing to make decisions
               5. Asking for personal details or bank information
               6. Caller's story doesn't add up or changes
               7. Trying to make you feel guilty, scared, or too excited
 
               Indicators of Normal Calls:
-              1. Caller readily provides identification when asked
-              2. Clear, consistent reason for the call
-              3. No pressure for immediate action
+              1. Caller readily provides identification when asked either (their name, or why they called)
+              2. Clear, consistent reason for the call.
               4. Willingness to be called back or provide additional verification
               5. Call relates to expected business or personal matters
 
@@ -736,13 +734,8 @@ export default class AIService {
               3. Customer expresses a desire to book an appointment or follow up
               4. Caller seems satisfied with the information provided
               5. The conversation flows smoothly with good engagement
-
-              Potential Challenges / Red Flags:
-              1. Customer seems disinterested or rushes to end the call
-              2. Caller expresses frustration or dissatisfaction
-              3. Customer is vague or evasive in their responses
-              4. The conversation is difficult to maintain or feels forced
-              5. Caller declines any form of follow-up or further interaction
+              6. Customer expresses interest in making a purchase or booking a service
+              7. Caller provides contact information for follow-up
 
               Instructions:
               1. Carefully read the entire transcript.
@@ -1278,7 +1271,7 @@ export default class AIService {
     const tgHelper = new TelegramHelper();
     const agent = await prisma.agents.findFirst({
       where: { id: agentId },
-      select: { name: true, userId: true, id: true },
+      select: { name: true, userId: true, id: true, integrations: true },
     });
 
     if (!agent) {
@@ -1329,12 +1322,19 @@ export default class AIService {
       .map((d) => d.content)
       .join("\n");
 
+    const agentIntegration = agent.integrations;
+    const bookingIntegration = agentIntegration.find(
+      (i) => i.type === "google_calendar"
+    );
     const history = await tgHelper.getTelegramGroupHistoryText(groupId!);
     const systemInstruction = generalCustomerSupportTemplatePrompt({
       agentName,
       context: closestMatch.trim(),
       query: data.userMessage,
       history,
+      integration: {
+        booking_page: bookingIntegration?.url,
+      },
     });
 
     const aiResp = await this.geminiService.callAI({

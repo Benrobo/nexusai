@@ -82,7 +82,7 @@ export default function AddIntegration({
         fixed={false}
         className=""
       >
-        <FlexColStart className="w-full max-h-[600px] min-w-[500px] h-full bg-white-300 rounded-[22px] p-1">
+        <FlexColStart className="w-full max-h-[600px] min-w-[550px] h-full bg-white-300 rounded-[22px] p-1">
           <FlexColStart className="w-full h-auto bg-white-100 rounded-[20px] relative">
             <button
               className="w-[30px] h-[30px] rounded-full border-none outline-none flex flex-col items-center justify-center absolute top-3 right-3 bg-white-400/20 scale-[.85] active:scale-[.95] transition-all"
@@ -127,7 +127,7 @@ export default function AddIntegration({
                   >
                     <FlexColStart
                       className={cn(
-                        "w-full max-w-[250px] bg-white-100 rounded-md px-4 py-2 border-2",
+                        "w-full max-w-[250px] h- bg-white-100 rounded-md px-4 py-2 border-2",
                         selectedIntegration === int.name
                           ? "border-dark-100"
                           : "border-white-400/30 "

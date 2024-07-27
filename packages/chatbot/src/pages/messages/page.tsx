@@ -442,6 +442,8 @@ function MessageListItem({
       allLinks.forEach((link) => {
         link.setAttribute("target", "_blank");
         link.setAttribute("rel", "noopener noreferrer");
+        link.onclick = () =>
+          window.open(link.href, "_blank", "noopener noreferrer");
       });
     }
   });

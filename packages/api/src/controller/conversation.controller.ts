@@ -724,6 +724,7 @@ export default class ConversationController {
             type: true,
             userId: true,
             name: true,
+            integrations: true,
           },
         },
       },
@@ -824,11 +825,18 @@ export default class ConversationController {
       chatHistoryTxt += `[${h.role}]: ${h.message}\n`;
     });
 
+    const agentIntegration = agent.integrations;
+    const bookingIntegration = agentIntegration.find(
+      (i) => i.type === "google_calendar"
+    );
     const systemInstruction = chatbotTemplatePrompt({
       agentName: agent.name,
       context: closestMatch.trim(),
       history: chatHistoryTxt,
       query: customerLastMessage.content,
+      integration: {
+        booking_page: bookingIntegration?.url,
+      },
     });
 
     const aiResp = await this.geminiService.callAI({

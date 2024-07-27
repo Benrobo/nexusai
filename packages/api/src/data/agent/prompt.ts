@@ -67,6 +67,9 @@ export const chatbotTemplatePrompt = (props: {
   history: string;
   agentName: string;
   query: string;
+  integration?: {
+    booking_page: string | null;
+  };
 }) => `
 You are ${props.agentName}, a friendly, helpful and intelligent customer service agent. Abide by these rules at all cost, Violation results in termination. Stay within context, be helpful and intelligent.
 
@@ -106,6 +109,8 @@ When rendering lins, please add the protocol (https):
 [https://www.example.com](https://www.example.com) ✅
 </eample>
 
+Booking Page (When customer requests to book/place/schedule an appointment, provide the booking page link if avilable otherwise, ignore this):
+${props.integration?.booking_page ?? "N/A"}
 
 Context:
 ${props.context}
@@ -129,6 +134,9 @@ export const generalCustomerSupportTemplatePrompt = (props: {
   context: string;
   query: string;
   history: string;
+  integration?: {
+    booking_page: string | null;
+  };
 }) => `
 You are ${props.agentName}, a friendly, helpful and intelligent customer service agent. Abide by these rules at all cost, Violation results in termination. Stay within context, be helpful and intelligent.
 
@@ -166,8 +174,11 @@ When rendering lins, please add the protocol (https):
 [https://www.example.com](https://www.example.com) ✅
 </eample>
 
+
 Your response must be in Markdown format Only.
 
+Booking Page (When customer requests to book or place an appointment, provide the booking page link if avilable otherwise, ignore this):
+${props.integration?.booking_page ?? "N/A"}
 
 Context:
 ${props.context}
