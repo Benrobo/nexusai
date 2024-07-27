@@ -12,6 +12,7 @@ import Inbox from "./pages/inbox";
 import Agents from "./pages/agents/page";
 import SelectedAgent from "./pages/agents/selected-agent/page";
 import CallLogsPage from "./pages/call-logs/page";
+import NotFound from "./pages/notfound";
 
 // tanstack reqct query
 const queryClient = new QueryClient();
@@ -35,6 +36,9 @@ function App() {
               <Route path="/agents" element={<Agents />} />
               <Route path="/agents/:id" element={<SelectedAgent />} />
             </Route>
+
+            {/* not found route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
         </DataContextProvider>
