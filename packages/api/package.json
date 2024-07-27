@@ -10,7 +10,7 @@
     "build": "rimraf ./dist && tsc",
     "dbPush": "prisma db push",
     "migrate": "prisma migrate dev",
-    "start": "node ./dist/server.js",
+    "start": "node --no-warnings=ExperimentalWarning ./dist/server.js",
     "watch": "tsc --watch",
     "format": "npx prettier --write .",
     "db:studio": "npx prisma studio",
