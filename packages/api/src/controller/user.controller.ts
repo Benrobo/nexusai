@@ -20,6 +20,7 @@ import { SentimentAnalysisService } from "../services/sentiment.service.js";
 import type { KnowledgeBaseType } from "@prisma/client";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
+import sendMail from "helpers/sendMail.js";
 
 dayjs.extend(relativeTime);
 
@@ -513,7 +514,19 @@ export class ChatWidgetUserController {
       );
       await redis.expire(key, exp);
 
-      //! send otp code to email
+      const template = `
+        <h1> OTP Code </h1>
+
+        <p>Use the OTP code below to sign in to your account</p>
+
+        <p>Your OTP code is: <b>${otp}</b></p>
+      `;
+
+      await sendMail({
+        to: acct.email,
+        subject: "OTP Code",
+        html: template,
+      });
 
       return sendResponse.success(
         res,
