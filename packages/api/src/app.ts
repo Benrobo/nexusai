@@ -8,7 +8,6 @@ import HandleErrors from "./middlewares/error.js";
 import { Routes } from "./types";
 import cookieParser from "cookie-parser";
 import session from "express-session";
-import { inngestServe } from "./inngest/serve.js";
 import env from "./config/env.js";
 // import "./services/telegram.service.js";
 import TelegramBotService from "./services/telegram.service.js";
@@ -71,8 +70,6 @@ export default class App {
         },
       })
     );
-    // inngest route
-    this.app.use("/api/inngest", inngestServe);
   }
 
   listen() {

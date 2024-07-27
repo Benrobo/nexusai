@@ -18,9 +18,6 @@ type TwilioSubPlanInfo = {
   };
 };
 
-// 3 days grace period max to resubscribe if payment fails
-export const GRACE_PERIOD_DAYS = 3;
-
 const TwilioSubPlanInfo = {
   local: {
     name: "Local",
