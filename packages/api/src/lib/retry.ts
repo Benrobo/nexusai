@@ -1,4 +1,6 @@
+import prisma from "prisma/prisma.js";
 import logger from "../config/logger.js";
+import sendMail from "../helpers/sendMail.js";
 
 interface RetryParams<F extends (...args: any[]) => Promise<any>> {
   fn: F;
@@ -25,6 +27,24 @@ export default async function retry<
     } catch (error) {
       attempt++;
       if (attempt >= retries) {
+        if (functionName === "ProvisionPhoneNumber") {
+          // send an email to the
+          const user = await prisma.users.findFirst({
+            where: { uId: args[0].user_id },
+          });
+          if (user) {
+            const mailTemplate = `
+              <p>Hi ${user.email},</p>
+              <p>Provisioning of phone number for your subscription failed after ${retries} attempts. Please contact support at alumonabenaiah71@gmail.com for assistance.</p>
+              <p>Thank you.</p>
+            `;
+            await sendMail({
+              to: user.email,
+              subject: "🚨 Provisioning of Phone Number Failed",
+              html: mailTemplate,
+            });
+          }
+        }
         logger.error(
           `Function "${functionName}" failed after ${retries} attempts: ${error}`
         );
