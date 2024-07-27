@@ -77,6 +77,16 @@ AS $$
 $$;
 ```
 
+Then run the following command to create the necessary tables and seed data.
+
+```bash
+# npm
+npm run migrate
+
+# yarn
+yarn migrate
+```
+
 #### Lemonsqueezy
 
 5. Update the `Lemonsqueezy` subscription plan in `/packages/api/src/data/twilio/sub-plan.ts` file, this values can be gotten from your lemonsqueezy store account.

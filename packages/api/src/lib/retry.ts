@@ -1,4 +1,4 @@
-import prisma from "prisma/prisma.js";
+import prisma from "../prisma/prisma.js";
 import logger from "../config/logger.js";
 import sendMail from "../helpers/sendMail.js";
 
