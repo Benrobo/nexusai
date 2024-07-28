@@ -1,5 +1,5 @@
-const API_URL = "https://nexusai-ecow3.ondigitalocean.app/api";
-const CLIENT_URL = "https://nexusai-chatbot.vercel.app";
+const API_URL = "https://api.trynexusai.xyz/api";
+const CLIENT_URL = "https://trynexusai.xyz";
 
 const API_VERSION = "1.0.0";
 const IFRAME_ID = "nexus-embed-iframe";
