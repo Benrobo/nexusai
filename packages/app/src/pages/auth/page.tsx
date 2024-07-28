@@ -1,8 +1,7 @@
-"use client";
 import { FlexColCenter, FlexColStart } from "@/components/Flex";
 import { withoutAuth } from "@/lib/auth-helpers/withoutAuth";
 import { useLocation } from "react-router-dom";
-import React from "react";
+import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import OAuth from "@/components/auth/OAuth";
 
@@ -14,20 +13,19 @@ const errorCode = {
 
 function AuthPage() {
   let searchParams = new URLSearchParams(useLocation().search).get("error");
+  const toastShown = useRef(false);
 
-  React.useEffect(() => {
-    if (searchParams) {
+  useEffect(() => {
+    if (searchParams && !toastShown.current) {
       // @ts-ignore
       toast.error(errorCode[searchParams]);
+      toastShown.current = true;
     }
   }, [searchParams]);
-
-  console.log(searchParams);
 
   return (
     <FlexColCenter className="w-full h-screen">
       <FlexColStart className="w-full min-w-[350px] max-w-[500px] scale-[.90] md:scale-[1] ">
-        {/* Replace your prefer auth component */}
         <OAuth />
       </FlexColStart>
     </FlexColCenter>
