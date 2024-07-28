@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --exec node -r tsconfig-paths/register --no-warnings=ExperimentalWarning --loader ts-node/esm ./src/server.ts",
     "generate": "prisma generate",
