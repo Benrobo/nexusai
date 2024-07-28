@@ -1,5 +1,5 @@
 const API_URL = "https://api.trynexusai.xyz/api";
-const CLIENT_URL = "https://trynexusai.xyz";
+const CLIENT_URL = "https://chatbot.trynexusai.xyz";
 
 const API_VERSION = "1.0.0";
 const IFRAME_ID = "nexus-embed-iframe";
