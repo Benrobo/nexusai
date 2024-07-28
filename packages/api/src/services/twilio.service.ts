@@ -59,11 +59,9 @@ export class TwilioService {
     if (!calledPhone) {
       logger.error(`Phone number ${To ?? ""} not found in database`);
 
-      const prompt = twimlPrompt.find(
-        (p) => p.type === "CALLED_PHONE_NOT_FOUND"
+      twiml.play(
+        defaultAgentVoices.find((v) => v.type === "number-notfound").path
       );
-
-      twiml.say(prompt.msg);
       twiml.hangup();
 
       const xml = twiml.toString();
@@ -76,10 +74,9 @@ export class TwilioService {
     if (!calledPhone.users?.agents || calledPhone.users?.agents.length === 0) {
       logger.error(`User ${calledPhone.users?.uId} has no agents`);
 
-      // return twiml response
-      const prompt = twimlPrompt.find((p) => p.type === "NO_AGENT_AVAILABLE");
-
-      twiml.say(prompt.msg);
+      twiml.play(
+        defaultAgentVoices.find((v) => v.type === "error-occurred").path
+      );
       twiml.hangup();
 
       const xml = twiml.toString();
@@ -96,10 +93,9 @@ export class TwilioService {
         `User ${calledPhone.users?.uId} has no active agents [INACTIVE_AGENT]`
       );
 
-      // return twiml response
-      const prompt = twimlPrompt.find((p) => p.type === "INACTIVE_AGENT");
-
-      twiml.say(prompt.msg);
+      twiml.play(
+        defaultAgentVoices.find((v) => v.type === "error-occurred").path
+      );
       twiml.hangup();
 
       const xml = twiml.toString();
@@ -122,10 +118,9 @@ export class TwilioService {
     if (!agentLinked) {
       logger.error(`Phone number ${To} not linked to an agent`);
 
-      // return twiml response
-      const prompt = twimlPrompt.find((p) => p.type === "AGENT_NOT_LINKED");
-
-      twiml.say(prompt.msg);
+      twiml.play(
+        defaultAgentVoices.find((v) => v.type === "unable-to-assist").path
+      );
       twiml.hangup();
 
       const xml = twiml.toString();
