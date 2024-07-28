@@ -75,7 +75,7 @@ export class TwilioService {
       logger.error(`User ${calledPhone.users?.uId} has no agents`);
 
       twiml.play(
-        defaultAgentVoices.find((v) => v.type === "error-occurred").path
+        defaultAgentVoices.find((v) => v.type === "unable-to-assist").path
       );
       twiml.hangup();
 
@@ -94,7 +94,7 @@ export class TwilioService {
       );
 
       twiml.play(
-        defaultAgentVoices.find((v) => v.type === "error-occurred").path
+        defaultAgentVoices.find((v) => v.type === "unable-to-assist").path
       );
       twiml.hangup();
 
