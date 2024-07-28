@@ -151,7 +151,7 @@ function Messages() {
           agent_id: params.agent_id!,
           convId: params.conversation_id!,
         });
-      }, 5000);
+      }, 10000);
 
       return () => clearInterval(interval);
     }
