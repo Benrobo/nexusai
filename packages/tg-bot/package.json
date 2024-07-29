@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon ./src/server.js",
     "start": "node ./src/server.js",
-    "postinstall": "prisma generate",
+    "postinstall": "npm install dotenv && prisma generate",
     "db:gen": "prisma generate"
   },
   "keywords": [],
