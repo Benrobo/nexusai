@@ -38,7 +38,7 @@ export default class TelegramHelper {
       });
 
       await redis.set(`tg-history:${groupId}`, JSON.stringify(history));
-      await redis.expire(`tg-history:${groupId}`, 60 * 24); // 24 hours
+      await redis.expire(`tg-history:${groupId}`, 60 * 4); // 4 hours
       return history.group_content;
     } else {
       const hId = shortUUID.generate();
