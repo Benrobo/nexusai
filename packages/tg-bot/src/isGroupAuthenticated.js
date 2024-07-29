@@ -1,15 +1,5 @@
-import type { MessageContext, MiddlewareContext } from "./types/telegram.type";
-
-export function isGroupAuthenticated(fn: Function) {
-  return async (
-    ctx: MessageContext & {
-      nexusAgentConfig: {
-        groupId: string;
-        integrationId: string;
-        agentId: string;
-      };
-    }
-  ) => {
+export function isGroupAuthenticated(fn) {
+  return async (ctx) => {
     try {
       const groupId = ctx.chat?.id;
       if (ctx.chat?.type !== "group") {
@@ -46,7 +36,7 @@ export function isGroupAuthenticated(fn: Function) {
       };
 
       return await fn(ctx);
-    } catch (e: any) {
+    } catch (e) {
       console.error("[isGroupAuthenticated]: Error authenticating group", e);
       ctx.reply("Error authenticating group");
     }

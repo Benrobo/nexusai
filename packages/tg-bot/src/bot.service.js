@@ -4,26 +4,20 @@ import { isGroupAuthenticated } from "./isGroupAuthenticated.js";
 import logger from "./config/logger.js";
 import prisma from "./prisma/prisma.js";
 import shortUUID from "short-uuid";
-import type {
-  LeftChatMemberMessageType,
-  MessageContext,
-} from "./types/telegram.type.js";
-import type { Update } from "telegraf/typings/core/types/typegram.js";
 import retry from "async-retry";
-import type { AIReqProps } from "./types/telegram.type.js";
 import { getAIResponse } from "./api/index.js";
 import { message } from "telegraf/filters";
 
 const botCommands = [
   {
     command: "start",
-    handler: (ctx: Context) => {
+    handler: (ctx) => {
       ctx.reply("Welcome to Nexusai Bot");
     },
   },
   {
     command: "auth",
-    handler: async (ctx: MessageContext, bot: Telegraf<Context<Update>>) => {
+    handler: async (ctx, bot) => {
       if (ctx.chat.type !== "group") {
         sendTgMessage(
           ctx,
@@ -107,7 +101,7 @@ const botCommands = [
           ctx.chat.id
         );
         sendTgMessage(ctx, "🎉", false);
-      } catch (e: any) {
+      } catch (e) {
         console.error("Error authenticating bot", e);
         await editTgMessage(
           ctx,
@@ -121,13 +115,13 @@ const botCommands = [
 ];
 
 export default class TelegramBotService {
-  bot: Telegraf<Context<Update>>;
+  bot;
 
   constructor() {
     this.initBot();
   }
 
-  public async initBot() {
+  async initBot() {
     try {
       await retry(
         async () => {
@@ -155,7 +149,7 @@ export default class TelegramBotService {
     }
   }
 
-  private init() {
+  init() {
     this.bot.start((ctx) => {
       ctx.reply(
         "🎉 *Welcome to the Bot!* 🚀\n\n" +
@@ -169,7 +163,7 @@ export default class TelegramBotService {
 
     this.bot.on(message("text"), (ctx) => {
       console.log("Received text message:", ctx.message.text);
-      this.handleTextMessages(ctx as any);
+      this.handleTextMessages(ctx);
     });
 
     // this.bot.on("sticker", (ctx) => {
@@ -179,13 +173,11 @@ export default class TelegramBotService {
     // });
 
     this.bot.on(message("left_chat_member"), (ctx) =>
-      this.botKickedFromGroup(ctx as any)
+      this.botKickedFromGroup(ctx)
     );
   }
 
-  private async botKickedFromGroup(
-    ctx: MessageContext & LeftChatMemberMessageType
-  ) {
+  async botKickedFromGroup(ctx) {
     if (ctx.message.left_chat_member.id === ctx.botInfo.id) {
       const groupId = ctx.chat.id;
       try {
@@ -204,21 +196,13 @@ export default class TelegramBotService {
           });
           logger.info(`[Bot_Kicked]: Bot removed from group ${groupId}`);
         }
-      } catch (e: any) {
+      } catch (e) {
         console.error("[Bot_Kicked]: Error removing bot from group", e);
       }
     }
   }
 
-  private async handleTextMessages(
-    ctx: MessageContext & {
-      nexusAgentConfig: {
-        groupId: string;
-        integrationId: string;
-        agentId: string;
-      };
-    }
-  ) {
+  async handleTextMessages(ctx) {
     const messageText = ctx.message.text.toLowerCase();
     const botUsername = this.bot.botInfo?.username;
 
@@ -232,15 +216,7 @@ export default class TelegramBotService {
     }
   }
 
-  private async handleBotMentions(
-    ctx: MessageContext & {
-      nexusAgentConfig: {
-        groupId: string;
-        integrationId: string;
-        agentId: string;
-      };
-    }
-  ) {
+  async handleBotMentions(ctx) {
     const { agentId, groupId } = ctx.nexusAgentConfig;
     const chatId = ctx.chat.id;
     const messageId = ctx.message.message_id;
@@ -285,7 +261,7 @@ export default class TelegramBotService {
         (await loadingMessage).message_id,
         chatId
       );
-    } catch (e: any) {
+    } catch (e) {
       console.log("");
       console.error(
         "[Gemini Bot Mention]: Error handling bot mentions with gemini",
@@ -301,12 +277,8 @@ export default class TelegramBotService {
   }
 }
 
-async function handleTelegramCustomerSupportRequest(props: AIReqProps) {
-  let _resp: {
-    error: null | string;
-    success: string | null;
-    data: string | null;
-  } = {
+async function handleTelegramCustomerSupportRequest(props) {
+  let _resp = {
     error: null,
     success: null,
     data: null,
@@ -320,7 +292,7 @@ async function handleTelegramCustomerSupportRequest(props: AIReqProps) {
     }
 
     _resp.data = data;
-  } catch (e: any) {
+  } catch (e) {
     console.error(
       "[handleTelegramCustomerSupportRequest]: Error handling customer support request",
       e
@@ -331,11 +303,7 @@ async function handleTelegramCustomerSupportRequest(props: AIReqProps) {
   return _resp;
 }
 
-function sendTgMessage(
-  ctx: MessageContext,
-  message: string,
-  shouldReply = true
-) {
+function sendTgMessage(ctx, message, shouldReply = true) {
   const chatId = ctx.chat.id;
   const messageId = ctx.message.message_id;
 
@@ -361,12 +329,7 @@ function sendTgMessage(
   }
 }
 
-async function editTgMessage(
-  ctx: MessageContext,
-  message: string,
-  messageId: number,
-  chatId: number
-) {
+async function editTgMessage(ctx, message, messageId, chatId) {
   if (message.length === 0) {
     throw new Error("Message cannot be empty");
   }
