@@ -37,110 +37,224 @@ export class TwilioService {
   constructor() {}
 
   // INCOMING CALLS
+  // async handleIncomingCall(body: IncomingCallParams, res: Response) {
+  //   const { To, Caller, CallSid } = body;
+  //   const twiml = new VoiceResponse();
+
+  //   // check if "TO" phone is in db.
+  //   const calledPhone = await prisma.purchasedPhoneNumbers.findFirst({
+  //     where: {
+  //       phone: To,
+  //     },
+  //     include: {
+  //       users: {
+  //         select: {
+  //           uId: true,
+  //           agents: true,
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   if (!calledPhone) {
+  //     logger.error(`Phone number ${To ?? ""} not found in database`);
+
+  //     twiml.play(
+  //       defaultAgentVoices.find((v) => v.type === "number-notfound").path
+  //     );
+  //     twiml.hangup();
+
+  //     const xml = twiml.toString();
+
+  //     sendXMLResponse(res, xml);
+  //     return;
+  //   }
+
+  //   // check if user has agents
+  //   if (!calledPhone.users?.agents || calledPhone.users?.agents.length === 0) {
+  //     logger.error(`User ${calledPhone.users?.uId} has no agents`);
+
+  //     twiml.play(
+  //       defaultAgentVoices.find((v) => v.type === "unable-to-assist").path
+  //     );
+  //     twiml.hangup();
+
+  //     const xml = twiml.toString();
+
+  //     sendXMLResponse(res, xml);
+  //     return;
+  //   }
+
+  //   // check if agent is activated
+  //   const activeAgents = calledPhone.users?.agents.filter((a) => a.activated);
+
+  //   if (!activeAgents || activeAgents.length === 0) {
+  //     logger.error(
+  //       `User ${calledPhone.users?.uId} has no active agents [INACTIVE_AGENT]`
+  //     );
+
+  //     twiml.play(
+  //       defaultAgentVoices.find((v) => v.type === "unable-to-assist").path
+  //     );
+  //     twiml.hangup();
+
+  //     const xml = twiml.toString();
+
+  //     sendXMLResponse(res, xml);
+  //     return;
+  //   }
+
+  //   // check if phone is linked to an agent
+  //   const agentLinked = await prisma.usedPhoneNumbers.findFirst({
+  //     where: {
+  //       phone: To,
+  //     },
+  //     select: {
+  //       agentId: true,
+  //       id: true,
+  //     },
+  //   });
+
+  //   if (!agentLinked) {
+  //     logger.error(`Phone number ${To} not linked to an agent`);
+
+  //     twiml.play(
+  //       defaultAgentVoices.find((v) => v.type === "unable-to-assist").path
+  //     );
+  //     twiml.hangup();
+
+  //     const xml = twiml.toString();
+
+  //     sendXMLResponse(res, xml);
+  //     return;
+  //   }
+
+  //   // check if agent has knowledge base
+  //   const agent = calledPhone.users?.agents.find(
+  //     (a) => a.id === agentLinked.agentId
+  //   );
+
+  //   await this.initConversation(res, {
+  //     agent_type: agent.type,
+  //     agent_id: agent.id,
+  //     user_id: calledPhone.users?.uId,
+  //     caller: Caller,
+  //     callSid: CallSid,
+  //   });
+  // }
+
   async handleIncomingCall(body: IncomingCallParams, res: Response) {
     const { To, Caller, CallSid } = body;
     const twiml = new VoiceResponse();
 
-    // check if "TO" phone is in db.
-    const calledPhone = await prisma.purchasedPhoneNumbers.findFirst({
-      where: {
-        phone: To,
-      },
-      include: {
-        users: {
-          select: {
-            uId: true,
-            agents: true,
+    try {
+      // Combine database queries and use caching
+      const [calledPhone, agentLinked] = await Promise.all([
+        this.getCachedPhoneInfo(To),
+        this.getCachedAgentLink(To),
+      ]);
+
+      if (!calledPhone) {
+        return this.sendErrorResponse(res, twiml, "number-notfound");
+      }
+
+      if (!calledPhone.users?.agents || calledPhone.users.agents.length === 0) {
+        return this.sendErrorResponse(res, twiml, "unable-to-assist");
+      }
+
+      const activeAgents = calledPhone.users.agents.filter((a) => a.activated);
+      if (activeAgents.length === 0) {
+        return this.sendErrorResponse(res, twiml, "unable-to-assist");
+      }
+
+      if (!agentLinked) {
+        return this.sendErrorResponse(res, twiml, "unable-to-assist");
+      }
+
+      const agent = activeAgents.find((a) => a.id === agentLinked.agentId);
+      if (!agent) {
+        return this.sendErrorResponse(res, twiml, "unable-to-assist");
+      }
+
+      await this.initConversation(res, {
+        agent_type: agent?.type as any,
+        agent_id: agent.id,
+        user_id: calledPhone.users?.uId,
+        caller: Caller,
+        callSid: CallSid,
+      });
+    } catch (error) {
+      logger.error("Error in handleIncomingCall:", error);
+      return this.sendErrorResponse(res, twiml, "error-occurred");
+    }
+  }
+
+  private async getCachedPhoneInfo(phone: string) {
+    const cacheKey = `phone_info_${phone}`;
+    let phoneInfo: {
+      phone: string;
+      users: {
+        uId: string;
+        agents: {
+          id: string;
+          type: string;
+          activated: boolean;
+        }[];
+      };
+    } | null = JSON.parse(await redis.get(cacheKey));
+
+    if (!phoneInfo) {
+      phoneInfo = await prisma.purchasedPhoneNumbers.findFirst({
+        where: { phone },
+        include: {
+          users: {
+            select: {
+              uId: true,
+              agents: true,
+            },
           },
         },
-      },
-    });
-
-    if (!calledPhone) {
-      logger.error(`Phone number ${To ?? ""} not found in database`);
-
-      twiml.play(
-        defaultAgentVoices.find((v) => v.type === "number-notfound").path
-      );
-      twiml.hangup();
-
-      const xml = twiml.toString();
-
-      sendXMLResponse(res, xml);
-      return;
+      });
+      if (phoneInfo) {
+        await redis.set(cacheKey, JSON.stringify(phoneInfo), "EX", 3600); // Cache for 1 hour
+      }
+    } else {
+      phoneInfo = phoneInfo;
     }
 
-    // check if user has agents
-    if (!calledPhone.users?.agents || calledPhone.users?.agents.length === 0) {
-      logger.error(`User ${calledPhone.users?.uId} has no agents`);
+    return phoneInfo;
+  }
 
-      twiml.play(
-        defaultAgentVoices.find((v) => v.type === "unable-to-assist").path
-      );
-      twiml.hangup();
+  private async getCachedAgentLink(phone: string) {
+    const cacheKey = `agent_link_${phone}`;
+    let agentLink = JSON.parse(await redis.get(cacheKey));
 
-      const xml = twiml.toString();
-
-      sendXMLResponse(res, xml);
-      return;
+    if (!agentLink) {
+      agentLink = await prisma.usedPhoneNumbers.findFirst({
+        where: { phone },
+        select: {
+          agentId: true,
+          id: true,
+        },
+      });
+      if (agentLink) {
+        await redis.set(cacheKey, JSON.stringify(agentLink), "EX", 3600); // Cache for 1 hour
+      }
+    } else {
+      agentLink = JSON.parse(agentLink);
     }
 
-    // check if agent is activated
-    const activeAgents = calledPhone.users?.agents.filter((a) => a.activated);
+    return agentLink;
+  }
 
-    if (!activeAgents || activeAgents.length === 0) {
-      logger.error(
-        `User ${calledPhone.users?.uId} has no active agents [INACTIVE_AGENT]`
-      );
-
-      twiml.play(
-        defaultAgentVoices.find((v) => v.type === "unable-to-assist").path
-      );
-      twiml.hangup();
-
-      const xml = twiml.toString();
-
-      sendXMLResponse(res, xml);
-      return;
-    }
-
-    // check if phone is linked to an agent
-    const agentLinked = await prisma.usedPhoneNumbers.findFirst({
-      where: {
-        phone: To,
-      },
-      select: {
-        agentId: true,
-        id: true,
-      },
-    });
-
-    if (!agentLinked) {
-      logger.error(`Phone number ${To} not linked to an agent`);
-
-      twiml.play(
-        defaultAgentVoices.find((v) => v.type === "unable-to-assist").path
-      );
-      twiml.hangup();
-
-      const xml = twiml.toString();
-
-      sendXMLResponse(res, xml);
-      return;
-    }
-
-    // check if agent has knowledge base
-    const agent = calledPhone.users?.agents.find(
-      (a) => a.id === agentLinked.agentId
-    );
-
-    await this.initConversation(res, {
-      agent_type: agent.type,
-      agent_id: agent.id,
-      user_id: calledPhone.users?.uId,
-      caller: Caller,
-      callSid: CallSid,
-    });
+  private sendErrorResponse(
+    res: Response,
+    twiml: VoiceResponse,
+    errorType: string
+  ) {
+    twiml.play(defaultAgentVoices.find((v) => v.type === errorType).path);
+    twiml.hangup();
+    return sendXMLResponse(res, twiml.toString());
   }
 
   /**
@@ -166,8 +280,8 @@ export class TwilioService {
         input: ["speech"],
         action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
         method: "POST",
-        timeout: 10,
-        speechTimeout: "auto",
+        timeout: 5,
+        speechTimeout: "5",
         speechModel: "experimental_conversations",
         enhanced: true,
       });
@@ -188,7 +302,7 @@ export class TwilioService {
         action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
         method: "POST",
         timeout: 5,
-        speechTimeout: "auto",
+        speechTimeout: "5",
         speechModel: "experimental_conversations",
         enhanced: true,
       });
@@ -268,8 +382,8 @@ export class TwilioService {
             input: ["speech"],
             action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
             method: "POST",
-            timeout: 10,
-            speechTimeout: "10",
+            timeout: 5,
+            speechTimeout: "5",
           })
           .play(audioUrl);
       }
