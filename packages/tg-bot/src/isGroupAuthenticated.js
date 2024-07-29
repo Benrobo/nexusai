@@ -1,3 +1,5 @@
+import prisma from "./prisma/prisma.js";
+
 export function isGroupAuthenticated(fn) {
   return async (ctx) => {
     try {
