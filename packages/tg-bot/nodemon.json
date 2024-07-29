@@ -1,0 +1,7 @@
+{
+  "watch": ["src", ".env", "./src/prisma/schema.prisma"],
+  "ext": "ts,json,tsx,jsx,js",
+  "ignore": ["src/**/*.spec.ts"],
+  "exec": "ts-node/esm ./src/server",
+  "restartable": "rs"
+}

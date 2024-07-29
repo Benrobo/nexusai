@@ -915,136 +915,6 @@ export default class AIService {
     return { msg: genAiResp.data };
   }
 
-  // private async processAntiTheftRequest(
-  //   props: IHandleConversationProps
-  // ): Promise<ProcessAIRequestResponse> {
-  //   const { user_input, agent_info, cached_conv_info } = props;
-
-  // // Combine database queries into a single operation
-  // const [callLogEntry, forwardedNum] = await Promise.all([
-  //   this.callLogService.getCallLogEntry({
-  //     refId: cached_conv_info.callRefId,
-  //   }),
-  //   this.getAgentForwardedNumber(agent_info.agent_id),
-  // ]);
-
-  // const { callerName, callReason, referral, message } = callLogEntry || {};
-
-  //   // Start notification in the background
-  //   const notificationPromise = this.notifyCallee(
-  //     cached_conv_info.callerPhone,
-  //     forwardedNum ?? cached_conv_info.calledPhone,
-  //     cached_conv_info.calledPhone
-  //   );
-
-  //   // Combine all AI calls into a single operation
-  //   const aiResponses = await this.combinedAICall(
-  //     user_input,
-  //     callerName,
-  //     callReason
-  //   );
-
-  //   const updates = {};
-  //   let responseMsg = "";
-
-  //   // Process AI responses
-  //   for (const [key, response] of Object.entries(aiResponses)) {
-  //     if (
-  //       response &&
-  //       // @ts-ignore
-  //       !["null", "unknown", "undefined"].includes(response.value)
-  //     ) {
-  //       // @ts-ignore
-  //       updates[key] = response.value;
-  //       // @ts-ignore
-  //       responseMsg = response.followUp;
-  //     }
-  //   }
-
-  //   console.log(aiResponses, updates);
-
-  //   // If we have updates, process them in parallel
-  //   if (Object.keys(updates).length > 0) {
-  //     await Promise.all([
-  //       this.callLogService.addCallLogEntry({
-  //         refId: cached_conv_info.callRefId,
-  //         ...updates,
-  //       }),
-  //       this.processCallLog(
-  //         cached_conv_info,
-  //         agent_info,
-  //         user_input,
-  //         responseMsg
-  //       ),
-  //     ]);
-
-  //     // Wait for notification to complete before returning
-  //     await notificationPromise;
-  //     return { msg: responseMsg, ended: "referral" in updates };
-  //   }
-
-  //   // If no updates, fall back to general AI response
-  //   const genAiResp = await this.geminiService.callAI({
-  //     user_prompt: user_input,
-  //     instruction: antiTheftInstructionPrompt,
-  //   });
-
-  //   await Promise.all([
-  //     this.processCallLog(
-  //       cached_conv_info,
-  //       agent_info,
-  //       user_input,
-  //       genAiResp.data
-  //     ),
-  //     notificationPromise,
-  //   ]);
-
-  //   return { msg: genAiResp.data };
-  // }
-
-  private async combinedAICall(
-    user_input: string,
-    callerName: string | null,
-    callReason: string | null
-  ) {
-    const prompts = [
-      { key: "callerName", func: this.getCallerName, args: [user_input] },
-      {
-        key: "message",
-        func: this.getCallerMessage,
-        args: [user_input, callerName],
-      },
-      {
-        key: "callReason",
-        func: this.getCallReason,
-        args: [user_input, callerName],
-      },
-      {
-        key: "referral",
-        func: this.getCallReferral,
-        args: [user_input, callerName, callReason],
-      },
-    ];
-
-    const results = await Promise.all(
-      prompts.map(async ({ key, func, args }) => {
-        if (key === "callerName" && callerName) return null;
-        if (key === "callReason" && callReason) return null;
-        const resp = await func.apply(this, args);
-        return {
-          key,
-          value: resp[0]?.args?.[key],
-          followUp: resp[0]?.args?.follow_up,
-        };
-      })
-    );
-
-    return results.reduce((acc, result) => {
-      if (result) acc[result.key] = result;
-      return acc;
-    }, {});
-  }
-
   private async processSalesAssistantRequest(
     props: IHandleConversationProps
   ): Promise<ProcessAIRequestResponse> {
@@ -1209,7 +1079,6 @@ export default class AIService {
     }
 
     const agentName = agent.name;
-    const agentUserId = agent.userId;
 
     const knowledgebase = await prisma.knowledgeBase.findMany({
       where: {
@@ -1231,20 +1100,21 @@ export default class AIService {
       const linked_kb = kb.linked_knowledge_base.find(
         (d) => d.agentId === agent.id
       );
-      data_source_ids.push(linked_kb.kb_id);
+      if (linked_kb) data_source_ids.push(linked_kb.kb_id);
     }
 
-    await tgHelper.storeTelegramGroupHistory({
-      groupId,
-      content: data.userMessage,
-      role: "user",
-    });
-
-    const similarities = await this.vectorSimilaritySearch({
-      user_input: data.userMessage,
-      data_source_ids,
-      agent_id: data.agentId,
-    });
+    const [_, similarities] = await Promise.all([
+      tgHelper.storeTelegramGroupHistory({
+        groupId,
+        content: data.userMessage,
+        role: "user",
+      }),
+      this.vectorSimilaritySearch({
+        user_input: data.userMessage,
+        data_source_ids,
+        agent_id: data.agentId,
+      }),
+    ]);
 
     const closestMatch = similarities
       .slice(0, 2)

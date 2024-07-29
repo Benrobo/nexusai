@@ -1,3 +1,6 @@
+// A COPY OF THE MAIN NEXUSAI SERVER SCHEMA FILE
+// USED HERE TO PREVENT CREATING EXTRA API ROUTES FOR SERVING THE TELEGRAM
+
 datasource db {
     provider          = "postgresql"
     url               = env("DATABASE_URL")

@@ -1,15 +1,10 @@
-// telegram helper methods
 import shortUUID from "short-uuid";
-import prisma from "../prisma/prisma.js";
+import redis from "../config/redis.js";
 
 export default class TelegramHelper {
   public async getTelegramGroupHistory(groupId: string) {
-    const history = await prisma.telegramGroupHistory.findFirst({
-      where: { group_id: groupId },
-      include: { group_content: true },
-    });
-
-    return history;
+    const history = await redis.get(`tg-history:${groupId}`);
+    return history ? JSON.parse(history) : null;
   }
 
   public async getTelegramGroupHistoryText(groupId: string) {
@@ -32,35 +27,35 @@ export default class TelegramHelper {
   }) {
     const { groupId, content, role } = data;
     const historyExists = await this.getTelegramGroupHistory(groupId);
-
     if (historyExists) {
-      const historyContent = await prisma.telegramGroupHistoryContent.create({
-        data: {
-          id: shortUUID.generate(),
-          groupHistoryId: historyExists.id,
-          content,
-          role,
-        },
+      const history = historyExists;
+      history.id = shortUUID.generate();
+      history.groupId = groupId;
+      history.group_content.push({
+        id: shortUUID.generate(),
+        content,
+        role,
       });
 
-      return historyContent;
+      await redis.set(`tg-history:${groupId}`, JSON.stringify(history));
+      await redis.expire(`tg-history:${groupId}`, 60 * 24); // 24 hours
+      return history.group_content;
     } else {
       const hId = shortUUID.generate();
-      const history = await prisma.telegramGroupHistory.create({
-        data: {
-          id: hId,
-          group_id: groupId,
-          group_content: {
-            create: {
-              id: shortUUID.generate(),
-              content,
-              role,
-            },
+      const history = {
+        id: hId,
+        groupId,
+        group_content: [
+          {
+            id: shortUUID.generate(),
+            content,
+            role,
           },
-        },
-      });
+        ],
+      };
 
-      return history;
+      await redis.set(`tg-history:${groupId}`, JSON.stringify(history));
+      await redis.expire(`tg-history:${groupId}`, 60 * 24); // 24 hours
     }
   }
 }

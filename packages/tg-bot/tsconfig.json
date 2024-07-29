@@ -1,0 +1,38 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["es2017", "esnext.asynciterable", "DOM"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    "importHelpers": true,
+    "composite": true,
+    "pretty": true,
+    "resolveJsonModule": true,
+    "module": "es6",
+    "allowSyntheticDefaultImports": true,
+    // "module": "ES2022", // "ES2022" etc
+    // "moduleResolution": "Node16", // "Node", "Node16"
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["./**/*", "./src/**/*", "./src/types/**/*.d.ts"],
+  "exclude": ["./node_modules", "./dist/**/*"],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"],
+    // enable typescript to compile faster
+    "swc": true,
+    "esm": true
+  }
+}

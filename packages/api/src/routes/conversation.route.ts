@@ -6,10 +6,12 @@ import {
   isAuthenticated,
   isWidgetAccountAuthenticated,
 } from "../middlewares/auth.js";
+import TelegramService from "../services/telegram.service.js";
 
 export default class ConversationRoute {
   router = express.Router();
   conversationController = new ConversationController();
+  tgService = new TelegramService();
   path = "/conversation";
 
   constructor() {
@@ -156,6 +158,12 @@ export default class ConversationRoute {
           )
         )
       )
+    );
+
+    // process telegram bot messages
+    this.router.post(
+      `${this.path}/process/integration/tg-bot`,
+      useCatchErrors(this.tgService.handleAIResponse.bind(this.tgService))
     );
   }
 }
