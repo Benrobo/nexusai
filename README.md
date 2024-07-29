@@ -180,6 +180,48 @@ yarn dev
 
 It should start the CHATBOT server on `http://localhost:3010` successfully.
 
+### Telegram Bot Server
+
+The telegram bot server can be found in the `/packages/tg-bot` directory. To start the server, run the following commands:
+
+```bash
+# npm
+cd packages/tg-bot && npm install
+
+# yarn
+cd packages/tg-bot && yarn
+```
+
+Then create a `.env` file in the root directory and add the following environment variables:
+
+```bash
+NODE_ENV="development"
+
+TG_BOT_TOKEN="xxxxxxxxxxxxxxxxxx"
+
+API_URL="http://localhost:4001/api"
+
+DATABASE_URL="postgres://postgres:12345@localhost:5432/nexusai"
+```
+
+Replace the `TG_BOT_TOKEN` with your telegram bot token gotten from the [@BotFather](https://core.telegram.org/bots#6-botfather).
+
+Then start the server using the following command:
+
+```bash
+# npm
+npm run dev
+
+# yarn
+yarn dev
+```
+
+It should start the telegram bot server on `http://localhost:4005` successfully with the following message printed in the console:
+
+```bash
+2024-07-29 18:22:14 PM [info] : ✅ Telegram Bot launched successfully
+```
+
 ### Embed
 
 In order to view the chatbot widget, start up the embed client located at `/packages/embed/index.html` using `vscode-live-server` or any other server of your choice.
