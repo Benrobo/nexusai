@@ -108,22 +108,13 @@ export default class AIService {
             Input: "I want to know if John is available."
             Reason: "inquiring about John's availability"
             Follow-up: "Could you clarify how you know John, ${callerName}?"
-
-            Input: "I need to reschedule my appointment."
-            Reason: "rescheduling an appointment"
-            Follow-up: "I see, ${callerName}. How did you get this contact number?"
-
-            Input: "Just calling to say hi."
-            Reason: null
-            Follow-up: "Hello ${callerName}. Is there a specific reason for your call today?"
           </examples>
-          
+
           <input>
             <CallerName>${callerName}</CallerName>
             <UserMessage>${msg}</UserMessage>
           </input>
-          
-          
+
           Analyze the message and provide:
           1. Reason: [extracted reason or "null" if unclear]
           2. Follow-up: [question to clarify the call's purpose if needed]
@@ -164,9 +155,9 @@ export default class AIService {
           description: `
           <instruction>
           - Extract the referral for the call from the user's message. Do your very best to understand the user's message.
-          - You must be able to tell when a message denotes a referral or where the recipient number was gotten from (this is very important). 
+          - You must be able to tell when a message denotes a referral or where the recipient number was gotten from (this is very important).
           - Be smart in your response, if the message doesn't sound like a referral or where the recipient number was gotten from or sounds like it fishy, construct a follow-up message to clarify the call's purpose.
-          - It must be short, concise and straignt to the point. 
+          - It must be short, concise and straignt to the point.
           - Use ${callerName} when addressing the caller. Adjust the reason provided to fit the follow up message.
           - If the caller dont clearly state where they got the recipient number from, politely redirect their focus on where they got the number from.
           </instruction>
@@ -184,14 +175,13 @@ export default class AIService {
 
             Do not use the examples above. Construct your response based on the user's message.
           </examples>
-          
+
           <input>
             <CallerName>${callerName}</CallerName>
             <CallReason>${reason}</CallReason>
             <UserMessage>${msg}</UserMessage>
           </input>
-          
-          
+
           Analyze the message and provide:
           1. Referral: [extracted referral or "null" if unclear]
           2. Follow-up: [question to clarify the call's purpose if needed]
@@ -298,7 +288,7 @@ export default class AIService {
           follow_up_response: I'm great, thanks for asking. Could you please tell me your fullname?
 
           If you can't get the caller's name, set the caller_name to null but construct a follow up response by redirecting the user back to the question: 'Could you please tell me your fullname? or construct a better response with that question in mind.
-          
+
           <UserMessage>${msg}</UserMessage>,
           `,
           parameters: {
@@ -324,48 +314,6 @@ export default class AIService {
     return callerName.data as IFunctionCallResp[];
   }
 
-  public async constructFollowUpMessage(msg: string) {
-    const requestExtraction = await this.geminiService.functionCall({
-      prompt: msg,
-      tools: [
-        {
-          func_name: "construct_follow_up_message",
-          description: `Construct a follow-up response from users message.
-
-          for eg (follow up message):
-          input: 'I just want to let {username} know i miss him.'
-          output: 'Ok, I would pass that to the recipient. Do you have any other request?'
-
-          Note: Replace {username} with the name of the user you're sending the message to if one exists or re-construct or answer user request.
-          
-          <UserMessage>${msg}</UserMessage>,
-          `,
-          parameters: {
-            type: "object",
-            properties: {
-              // @ts-ignore
-              //   request_type: {
-              //     type: "string",
-              //     description: `The user request gotten from the prompt. The request must be returned in one word or joined with an underscored`,
-              //   },
-              // @ts-ignore
-              follow_up_message: {
-                type: "string",
-                description: `The follow-up message constructed from the extracted request. The follow-up message must contain the extracted request in the message.`,
-              },
-            },
-          },
-          required: [
-            // "request_type",
-            "follow_up_message",
-          ],
-        },
-      ],
-    });
-
-    return requestExtraction.data as IFunctionCallResp[];
-  }
-
   // determine if the user needs further requests based on follow-up message
   public async determineFurtherRequest(msg: string) {
     const furtherRequest = await this.geminiService.functionCall({
@@ -373,23 +321,18 @@ export default class AIService {
       tools: [
         {
           func_name: "determine_further_request",
-          description: `Determine if the user needs further requests based on the follow-up message. The follow-up message must contain the extracted request in the message.
-          
-          for eg: 
-          input: 'Ok, I would pass that to the recipient. Do you have any other request?'
-          output: 'yes'
+          description: `
+        Determine if the user needs further requests. Return 'yes' or 'no'.
 
-          Note: The output must be 'yes' or 'no' to indicate if the user has further requests or not.
-          
-          <UserPrompt>${msg}</UserPrompt>,
-          `,
+        User Prompt: ${msg}
+        `,
           parameters: {
             type: "object",
             properties: {
               // @ts-ignore
               further_request: {
                 type: "string",
-                description: `Yes or No only and nothing else.`,
+                description: "Yes or No only.",
               },
             },
           },
@@ -407,36 +350,26 @@ export default class AIService {
       tools: [
         {
           func_name: "determine_call_intent",
-          description: `Determine call intent from the prompt. Return action in ONE_WORD, ALL_CAPS, UNDERSCORED format.
+          description: `
+        Determine the call intent in ONE_WORD, ALL_CAPS, UNDERSCORED format.
 
-          <Context>
-          Previous conversations (if relevant):
-          ${call_history ?? "N/A"}
-          </Context>
+        Context: Previous conversations: ${call_history ?? "N/A"}
+        Allowed Actions: ${DEFAULT_SA_CALL_INTENTS.join(", ")}
+        User Prompt: ${user_msg}
 
-          <AllowedActions>
-          ${DEFAULT_SA_CALL_INTENTS.join(", ")}
-          </AllowedActions>
-
-          <UserPrompt>${user_msg}</UserPrompt>
-
-          Instructions:
-          1. Analyze the user's prompt and context.
-          2. Choose ONE action from AllowedActions.
-          3. Return ONLY the action word, formatted as specified.
-          4. Based on the last conversation, determine the user's intent as well if necessary.
-          5. Make sure you understand the user's request before choosing an action, otherwise set it to ENQUIRY.
-          6. As for HANDOVER or ESCALATION, do your best to understand the user's request and make sure it aligns to either handover or escalation before setting it to that action.
-          `,
+        Instructions:
+        1. Choose ONE action from Allowed Actions.
+        2. Return ONLY the action word.
+        3. If unsure, set to ENQUIRY.
+        4. For HANDOVER or ESCALATION, ensure the request aligns with the action.
+        `,
           parameters: {
             type: "object",
             properties: {
-              // @ts-expect-error
+              // @ts-ignore
               action: {
                 type: "string",
-                description: `supported actions/intents are ${DEFAULT_SA_CALL_INTENTS.join(
-                  ""
-                )}`,
+                description: `Supported actions: ${DEFAULT_SA_CALL_INTENTS.join(", ")}`,
               },
             },
           },
@@ -500,52 +433,39 @@ export default class AIService {
   public async vectorSimilaritySearch(props: VectorSimilaritySearchProps) {
     const { data_source_ids, user_input } = props;
 
-    let userMsgEmbedding:
-      | {
-          embedding: number[];
-          content: string;
-        }[]
-      | null = null;
-
+    let userMsgEmbedding: { embedding: number[]; content: string }[] | null =
+      null;
     const cachedEmbedding = await redis.get(user_input);
 
     if (!cachedEmbedding) {
       userMsgEmbedding = await this.geminiService.generateEmbedding(user_input);
-
-      await redis.set(user_input, JSON.stringify(userMsgEmbedding));
-      await redis.expire(user_input, 60 * 5); // expire in 5mins
+      await redis.set(
+        user_input,
+        JSON.stringify(userMsgEmbedding),
+        "EX",
+        60 * 5
+      );
     } else {
       userMsgEmbedding = JSON.parse(cachedEmbedding);
     }
 
-    const embeddingsString = `[${userMsgEmbedding[0].embedding}]`;
-
-    // convert data_source_ids to supported Postgresql array literal string
+    const embeddingsString = JSON.stringify(userMsgEmbedding[0].embedding);
     const kbIdsArrayLiteral = `{${data_source_ids.map((id) => `"${id}"`).join(",")}}`;
 
-    const similarities = (await prisma.$queryRaw`
-      SELECT match_embeddings(
-        ${embeddingsString},
-        0.2,
-        5,
-        ${kbIdsArrayLiteral}::text[]
-      )::json;
-    `) satisfies SimilaritiesResult[];
-    const _similarities: {
-      content: string[];
-      similarity: number;
-      metadata: string;
-    }[] = [];
+    const similarities = await prisma.$queryRaw<SimilaritiesResult[]>`
+    SELECT match_embeddings(
+      ${embeddingsString},
+      0.2,
+      5,
+      ${kbIdsArrayLiteral}::text[]
+    )::json;
+  `;
 
-    for (const sim of similarities) {
-      _similarities.push({
-        content: sim.match_embeddings.content,
-        similarity: sim.match_embeddings.similarity,
-        metadata: sim.match_embeddings.metadata,
-      });
-    }
-
-    return _similarities;
+    return similarities.map((sim) => ({
+      content: sim.match_embeddings.content,
+      similarity: sim.match_embeddings.similarity,
+      metadata: sim.match_embeddings.metadata,
+    }));
   }
 
   public async handleConversation(props: IHandleConversationProps) {
@@ -797,109 +717,6 @@ export default class AIService {
     return analysis.data;
   }
 
-  // Process ANTI-THEFT request
-  private async processAntiTheftRequestV1(props: IHandleConversationProps) {
-    const { user_input, agent_info, cached_conv_info } = props;
-    let resp = { msg: "", ended: false };
-
-    const mainHistory = await this.getCallLogHistory(
-      cached_conv_info.callRefId,
-      user_input
-    );
-
-    const callIntent = (
-      await this.determineCallIntent(user_input, mainHistory)
-    ).find((f) => f.name === "determine_call_intent");
-
-    logger.info(callIntent.args.action);
-
-    if (["GREETINGS"].includes(callIntent.args.action)) {
-      const genAiResp = await this.geminiService.callAI({
-        user_prompt: user_input,
-        instruction: antiTheftInstructionPrompt,
-      });
-
-      console.log(genAiResp);
-
-      await this.processCallLog(
-        cached_conv_info,
-        agent_info,
-        user_input,
-        genAiResp.data
-      );
-      resp.msg = genAiResp.data;
-      return resp;
-    }
-    if (callIntent.args.action === "REQUEST") {
-      const followUp = (await this.constructFollowUpMessage(user_input)).find(
-        (f) => f.name === "construct_follow_up_message"
-      );
-      const followUpMsg = followUp.args["follow_up_message"];
-
-      // save data
-      await this.processCallLog(
-        cached_conv_info,
-        agent_info,
-        user_input,
-        followUpMsg
-      );
-
-      resp.msg = followUpMsg;
-      return resp;
-    }
-    if (callIntent.args.action === "FURTHER_REQUEST") {
-      const furtherRequest = (
-        await this.determineFurtherRequest(user_input)
-      ).find((f) => f.name === "determine_further_request");
-
-      if (furtherRequest.args["further_request"]?.toLowerCase() === "yes") {
-        const aiResp = `How may i further assist you?`;
-        await this.processCallLog(
-          cached_conv_info,
-          agent_info,
-          user_input,
-          aiResp
-        );
-
-        //   return { msg: aiResp };
-        resp.msg = aiResp;
-        return resp;
-      } else {
-        const aiResp = `Ok, great. Thanks for reaching out. Your message has been received and will be addressed promptly.`;
-        await this.processCallLog(
-          cached_conv_info,
-          agent_info,
-          user_input,
-          aiResp
-        );
-
-        resp.ended = true;
-        resp.msg = aiResp;
-        return resp;
-      }
-    }
-    if (callIntent.args.action === "GOODBYE") {
-      const aiResp = `Ok, great. Thanks for reaching out. Your message has been received and will be addressed promptly.`;
-      await this.processCallLog(
-        cached_conv_info,
-        agent_info,
-        user_input,
-        aiResp
-      );
-
-      resp.ended = true;
-      resp.msg = aiResp;
-      return resp;
-    }
-    if (
-      ["HANDOVER", "CALL_ESCALATION", "EMERGENCY"].includes(
-        callIntent.args.action
-      )
-    ) {
-      //! work on this next
-    }
-  }
-
   private async getAgentForwardedNumber(agent_id: string) {
     const userFowardedNum = await prisma.forwardingNumber.findFirst({
       where: {
@@ -910,14 +727,18 @@ export default class AIService {
     return userFowardedNum?.phone ?? null;
   }
 
-  private async notifyCallee(callerPhone: string, calleePhone: string) {
+  private async notifyCallee(
+    callerPhone: string,
+    calleePhone: string,
+    purchasedNumber: string
+  ) {
     await sleep(5000);
 
     const smsSent = await redis.get(`${callerPhone}_sms_sent`);
 
     if (!smsSent) {
       const template = `A call was made recently, click the link below to get more information. ${env.CLIENT_URL}/call-logs`;
-      await sendSMS(calleePhone, template);
+      await sendSMS(purchasedNumber, calleePhone, template);
 
       const exp = 20 * 60; // 20min
       await redis.set(`${callerPhone}_sms_sent`, "true");
@@ -944,7 +765,8 @@ export default class AIService {
     );
     await this.notifyCallee(
       cached_conv_info.callerPhone,
-      forwardedNum ?? cached_conv_info.calledPhone
+      forwardedNum ?? cached_conv_info.calledPhone,
+      cached_conv_info.calledPhone
     );
 
     if (!_callerName) {
@@ -1093,7 +915,6 @@ export default class AIService {
     return { msg: genAiResp.data };
   }
 
-  // process SALES-ASSISTANT request
   private async processSalesAssistantRequest(
     props: IHandleConversationProps
   ): Promise<ProcessAIRequestResponse> {
@@ -1104,37 +925,32 @@ export default class AIService {
       escallated: { number: null },
     };
 
-    const agent = await prisma.agents.findFirst({
-      where: { id: agent_info.agent_id, userId: agent_info.user_id },
-      select: { name: true },
-    });
+    const [agent, mainHistory, callIntent, similarities] = await Promise.all([
+      prisma.agents.findFirst({
+        where: { id: agent_info.agent_id, userId: agent_info.user_id },
+        select: { name: true },
+      }),
+      this.getCallLogHistory(cached_conv_info.callRefId, user_input, true),
+      this.determineSAIntent(user_input),
+      this.vectorSimilaritySearch({
+        agent_id: agent_info.agent_id,
+        data_source_ids: cached_conv_info.kb_ids,
+        user_input,
+      }),
+    ]);
 
     const agentName = agent.name;
-
-    const mainHistory = await this.getCallLogHistory(
-      cached_conv_info.callRefId,
-      user_input,
-      true
-    );
-
-    const similarities = await this.vectorSimilaritySearch({
-      agent_id: agent_info.agent_id,
-      data_source_ids: cached_conv_info.kb_ids, // knowleedge base id's
-      user_input,
-    });
-
     const closestMatch = similarities
       .slice(0, 2)
       .map((d) => d.content)
       .join("\n");
-
     const systemInstruction = salesAssistantInstructionPrompt({
       agent_name: agentName,
       data_source: closestMatch.trim(),
       user_input,
       history: mainHistory,
     });
-    const callIntent = await this.determineSAIntent(user_input);
+
     const aiResp = await this.geminiService.callAI({
       instruction: systemInstruction,
       user_prompt: user_input,
@@ -1155,97 +971,80 @@ export default class AIService {
       );
       await this.notifyCallee(
         cached_conv_info.callerPhone,
-        forwardedNum ?? cached_conv_info.calledPhone
+        forwardedNum ?? cached_conv_info.calledPhone,
+        cached_conv_info.calledPhone
       );
 
-      // check if any appointment was previously requested
-      if (intent === "GREETINGS") {
-        await this.processCallLog(
-          cached_conv_info,
-          agent_info,
-          user_input,
-          aiMsg
-        );
+      await this.processCallLog(
+        cached_conv_info,
+        agent_info,
+        user_input,
+        aiMsg
+      );
 
-        resp.msg = aiMsg;
-        return resp;
-      }
-      if (intent === "ENQUIRY") {
-        await this.processCallLog(
-          cached_conv_info,
-          agent_info,
-          user_input,
-          aiMsg
-        );
-
-        resp.msg = aiMsg;
-        return resp;
-      }
-      if (intent === "APPOINTMENT") {
-        const integration =
-          await this.integrationService.getIntegrationByAgentId(
-            agent_info.agent_id
-          );
-        const bookingIntegration = integration.find(
-          (i) => i.type == "google_calendar"
-        );
-
-        if (integration.length === 0 || !bookingIntegration) {
-          resp.msg =
-            "I'm sorry, I'm unable to book an appointment at the moment. Please try again later.";
+      switch (intent) {
+        case "GREETINGS":
+        case "ENQUIRY":
+          resp.msg = aiMsg;
           return resp;
-        }
 
-        const followUp = `Got it, a link would be sent to this number shortly. Any other request?`;
+        case "APPOINTMENT":
+          const integration =
+            await this.integrationService.getIntegrationByAgentId(
+              agent_info.agent_id
+            );
+          const bookingIntegration = integration.find(
+            (i) => i.type == "google_calendar"
+          );
 
-        //! invoke the function to book an appointment
+          if (integration.length === 0 || !bookingIntegration) {
+            resp.msg =
+              "I'm sorry, I'm unable to book an appointment at the moment. Please try again later.";
+            return resp;
+          }
 
-        await this.processCallLog(
-          cached_conv_info,
-          agent_info,
-          user_input,
-          followUp
-        );
+          const followUp = `Got it, a link would be sent to this number shortly. Any other request?`;
+          await this.processCallLog(
+            cached_conv_info,
+            agent_info,
+            user_input,
+            followUp
+          );
+          resp.msg = followUp;
+          return resp;
 
-        resp.msg = followUp;
-        return resp;
+        case "CALL_ESCALATION":
+        case "HANDOVER":
+          const agent = await prisma.agents.findFirst({
+            where: { id: agent_info.agent_id },
+            select: { forwarding_number: true },
+          });
+
+          if (!agent.forwarding_number) {
+            resp.msg = `I'm sorry, I'm unable to transfer your call at the moment. How may I assist you further?`;
+          } else {
+            resp.msg = "Noted, your call would be transferred shortly.";
+            resp.escallated.number = agent.forwarding_number.phone;
+          }
+
+          await this.processCallLog(
+            cached_conv_info,
+            agent_info,
+            user_input,
+            resp.msg
+          );
+          return resp;
+
+        case "GOODBYE":
+          resp.ended = true;
+          resp.msg = aiMsg;
+          return resp;
+
+        default:
+          resp.msg =
+            "I'm sorry, I couldn't find any information on that. Please try again.";
+          return resp;
       }
-      if (["CALL_ESCALATION", "HANDOVER"].includes(intent)) {
-        const agent = await prisma.agents.findFirst({
-          where: { id: agent_info.agent_id },
-          select: { forwarding_number: true },
-        });
-
-        if (!agent.forwarding_number) {
-          resp.msg = `I'm sorry, I'm unable to transfer your call at the moment. How may I assist you further?`;
-        } else {
-          resp.msg = "Noted, your call would be transferred shortly.";
-          resp.escallated.number = agent.forwarding_number.phone;
-        }
-
-        await this.processCallLog(
-          cached_conv_info,
-          agent_info,
-          user_input,
-          resp.msg
-        );
-
-        return resp;
-      }
-      if (intent === "GOODBYE") {
-        await this.processCallLog(
-          cached_conv_info,
-          agent_info,
-          user_input,
-          aiMsg
-        );
-
-        resp.ended = true;
-        resp.msg = aiMsg;
-        return resp;
-      }
-
-      return resp;
     } else {
       resp.msg =
         "I'm sorry, I couldn't find any information on that. Please try again.";

@@ -21,15 +21,16 @@ export const sendXMLResponse = (res: Response, data: string) => {
  Why? cause AIService has TwilioService initialized, and TwilioService has AIService initialized in turn causing a circular dependency. In other to use this specific method without actually instantiating the TwilioService class, it was moved here.
 
 */
-export async function sendSMS(to: string, body: string) {
+export async function sendSMS(from: string, to: string, body: string) {
   try {
+    console.log({ from, to, body });
     const msg = await twClient(
       env.TWILIO.ACCT_SID,
       env.TWILIO.AUTH_TOKEN
     ).messages.create({
       body,
       to,
-      from: env.TWILIO.DEFAULT_PHONE_NUMBER1,
+      from: from ?? env.TWILIO.DEFAULT_PHONE_NUMBER1,
     });
 
     return msg;

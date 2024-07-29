@@ -16,7 +16,11 @@ export default class OTPManager {
   }
 
   // send otp to phone number
-  public async sendOTP(phone: string, userId: string) {
+  public async sendOTP(
+    phone: string,
+    userId: string,
+    userPurchasedNumber?: string | null | undefined
+  ) {
     if (!phone || phone.length === 0) {
       console.log(`Invalid phone number: ${phone}`);
       return false;
@@ -36,7 +40,7 @@ export default class OTPManager {
     console.log(`\nOTP sent to phone: ${phone} is ${otp}\n`);
 
     const message = `Your Nexus verification code is ${otp}.`;
-    await sendSMS(phone, message);
+    await sendSMS(userPurchasedNumber, phone, message);
 
     return true;
   }
