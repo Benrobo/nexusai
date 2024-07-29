@@ -302,15 +302,17 @@ function SignIn({ switchTab, closeModal, isOpen }: AuthTab) {
                 disabled={verifyEmailMut.isPending}
               />
             )}
-            <Button
-              intent={"dark"}
-              className="w-full px-4 py-3 bg-dark-100 rounded-md text-xs font-ppReg text-white-100 enableBounceEffect hover:bg-brown-100"
-              disabled={signInMut.isPending}
-              isLoading={signInMut.isPending}
-              onClick={handleSignin}
-            >
-              Sign In
-            </Button>
+            {!otpRequested && (
+              <Button
+                intent={"dark"}
+                className="w-full px-4 py-3 bg-dark-100 rounded-md text-xs font-ppReg text-white-100 enableBounceEffect hover:bg-brown-100"
+                disabled={signInMut.isPending}
+                isLoading={signInMut.isPending}
+                onClick={handleSignin}
+              >
+                Sign In
+              </Button>
+            )}
             <FlexRowCenter className="w-full">
               <p className="text-center text-xs text-white-400 font-ppReg">
                 Don't have an account?{" "}
@@ -337,23 +339,7 @@ interface VerifyOTPProps {
 }
 
 function VerifyOTP({ verify, disabled, loading, resendOtp }: VerifyOTPProps) {
-  const [timer, setTimer] = React.useState(20);
-  const [startTimer, setStartTimer] = React.useState(false);
   const otp = useRef<string>("");
-
-  useEffect(() => {
-    if (startTimer) {
-      const interval = setInterval(() => {
-        if (timer <= 0) {
-          setStartTimer(false);
-          setTimer(20);
-          return;
-        }
-        setTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [startTimer]);
 
   return (
     <FlexColStartCenter className="w-full bg-white-100 rounded-[20px] px-10 py-8 gap-1">
@@ -391,23 +377,16 @@ function VerifyOTP({ verify, disabled, loading, resendOtp }: VerifyOTPProps) {
         </p>
 
         <FlexRowEnd className="w-auto">
-          {startTimer ? (
-            <>
-              <p className="text-xs font-ppReg text-white-400">Resend OTP in</p>
-              <p className="text-xs font-ppReg text-dark-100">{timer}s</p>
-            </>
-          ) : (
-            <button
-              className="text-dark-100 text-xs font-ppReg underline flex-center gap-2"
-              onClick={() => {
-                resendOtp && resendOtp();
-                setStartTimer(true);
-              }}
-            >
-              {loading && <Spinner size={15} color="#000" />}
-              Resend OTP
-            </button>
-          )}
+          <button
+            className="text-dark-100 text-xs font-ppReg underline flex-center gap-2"
+            onClick={() => {
+              resendOtp && resendOtp();
+            }}
+            disabled={loading}
+          >
+            {loading && <Spinner size={15} color="#000" />}
+            Resend OTP
+          </button>
         </FlexRowEnd>
       </FlexRowStartBtw>
     </FlexColStartCenter>
