@@ -1,5 +1,5 @@
 import env from "./config/env.js";
-import { Telegraf, Context } from "telegraf";
+import { Telegraf } from "telegraf";
 import { isGroupAuthenticated } from "./isGroupAuthenticated.js";
 import logger from "./config/logger.js";
 import prisma from "./prisma/prisma.js";
