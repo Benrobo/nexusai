@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --exec node -r tsconfig-paths/register --no-warnings=ExperimentalWarning --loader ts-node/esm ./src/server.ts",
-    "build": "rimraf ./dist && tsc",
+    "build": "CI=false rimraf ./dist && tsc",
     "start": "node ./dist/server.js",
     "db:gen": "prisma generate"
   },
