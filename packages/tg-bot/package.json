@@ -6,8 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon ./src/server.js",
-    "build": "rimraf ./dist && tsc",
-    "start": "node ./dist/server.js",
+    "start": "node ./src/server.js",
     "postinstall": "prisma generate",
     "db:gen": "prisma generate"
   },
