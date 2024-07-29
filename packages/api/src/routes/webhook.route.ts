@@ -5,14 +5,12 @@ import { isAuthenticated } from "../middlewares/auth.js";
 import { multerUpload } from "../config/multer.js";
 import TwilioWebhookHandler from "../webhook/twilio.wh.js";
 import LSWebhookHandler from "../webhook/LS.wh.js";
-import TelegramWebhookHandler from "../webhook/telegram.wh.js";
 
 export default class WebhookRoute {
   router = express.Router();
   path = "/webhook";
   twWebhookHandler = new TwilioWebhookHandler();
   lsWebhookHandler = new LSWebhookHandler();
-  tgWebhookHandler = new TelegramWebhookHandler();
 
   constructor() {
     this.initializeRoutes();
