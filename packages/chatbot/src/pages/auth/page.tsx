@@ -23,7 +23,7 @@ import { useLocation } from "@/hooks/useLocation";
 import { signInUser, signUpUser, verifyAccount } from "@/http/requests";
 import type { ResponseData } from "@/types";
 import { useMutation } from "@tanstack/react-query";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 
 type ActiveTabs = "signin" | "signup";
