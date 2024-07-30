@@ -942,6 +942,14 @@
   dependencies:
     "@types/node" "*"
 
+"@upstash/qstash@^2.6.2":
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/@upstash/qstash/-/qstash-2.6.2.tgz#ec5e75ac0f8c1e7c9526d399cf35f3f77065784b"
+  integrity sha512-aB/1yqMJTRyOt7Go2Db1ZIVnmTPpsc2KGY5jpLVcegNtjksaPTJF6fmITxos5HVvsQhS8IB3gvF/+gQfRQlPLQ==
+  dependencies:
+    crypto-js ">=4.2.0"
+    jose "^ 5.2.3"
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
@@ -1606,6 +1614,11 @@ cross-spawn@^7.0.3:
     path-key "^3.1.0"
     shebang-command "^2.0.0"
     which "^2.0.1"
+
+crypto-js@>=4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-4.2.0.tgz#4d931639ecdfd12ff80e8186dba6af2c2e856631"
+  integrity sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==
 
 css-select@^5.1.0:
   version "5.1.0"
@@ -2708,6 +2721,11 @@ isexe@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/isexe/-/isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10"
   integrity sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
+
+"jose@^ 5.2.3":
+  version "5.6.3"
+  resolved "https://registry.yarnpkg.com/jose/-/jose-5.6.3.tgz#415688bc84875461c86dfe271ea6029112a23e27"
+  integrity sha512-1Jh//hEEwMhNYPDDLwXHa2ePWgWiFNNUadVmguAAw2IJ6sj9mNxV5tGXJNqlMkJAybF6Lgw1mISDxTePP/187g==
 
 jose@^4.14.6:
   version "4.15.9"
