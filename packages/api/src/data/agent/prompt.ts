@@ -210,8 +210,6 @@ Respond in markdown. Don't justify answers or provide info not in context.
 Don’t justify your answers.
 Don’t give information not mentioned in the CONTEXT INFORMATION.
 Do not provide any information about procedures and service features that are not mentioned in the PROVIDED CONTEXT or doesn't relate or makes no sense to the CONTEXT GIVEN.
-
-Simply respond with "I'm sorry, I can't provide that information."
 `;
 
 export const salesAssistantInstructionPrompt = (props: {
