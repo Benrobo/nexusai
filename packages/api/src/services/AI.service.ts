@@ -19,8 +19,6 @@ import { getSentimentVariations } from "../data/agent/sentiment.js";
 import IntegrationService from "./integration.service.js";
 import TelegramHelper from "../helpers/telegram.helper.js";
 import env from "../config/env.js";
-import { sendSMS } from "../helpers/twilio.helper.js";
-import { sleep } from "./scrapper.js";
 import BackgroundJobService from "./background-job.service.js";
 
 type IHandleConversationProps = {
