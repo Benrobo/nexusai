@@ -10,6 +10,7 @@ import SubscriptionRoute from "./routes/subscription.route.js";
 import CallLogsRoute from "./routes/call-logs.route.js";
 import ConversationRoute from "./routes/conversation.route.js";
 import CronJobRoute from "./routes/cronjob.routes.js";
+import BgJobRoute from "./routes/bgJob.route.js";
 
 const server = new App();
 
@@ -24,6 +25,7 @@ server.initializedRoutes([
   new CallLogsRoute(),
   new ConversationRoute(),
   new CronJobRoute(),
+  new BgJobRoute(),
 ]);
 server.listen();
 
