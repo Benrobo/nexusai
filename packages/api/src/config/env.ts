@@ -61,6 +61,9 @@ const env = {
     MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID!,
   },
   NEXUS_CRON_TOKEN: process.env.NEXUS_CRON_TOKEN!,
+  QSTASH: {
+    TOKEN: process.env.QSTASH_TOKEN!,
+  },
 };
 
 export default env;
