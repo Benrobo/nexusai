@@ -36,6 +36,7 @@ export default class PhraseService {
     const finalUrl = `${storageUrl}/${filename}?alt=media&token=${cacheKey}`;
 
     await redis.set(cacheKey, finalUrl);
+    await redis.expire(cacheKey, 60 * 60 * 1); // 1 hour
 
     return finalUrl;
   }

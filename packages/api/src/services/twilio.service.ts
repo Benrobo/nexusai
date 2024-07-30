@@ -48,24 +48,29 @@ export class TwilioService {
       ]);
 
       if (!calledPhone) {
+        logger.error(`Phone number ${To} not found in database`);
         return this.sendErrorResponse(res, twiml, "number-notfound");
       }
 
       if (!calledPhone.users?.agents || calledPhone.users.agents.length === 0) {
+        logger.error(`No agents found for phone number ${To}`);
         return this.sendErrorResponse(res, twiml, "unable-to-assist");
       }
 
       const activeAgents = calledPhone.users.agents.filter((a) => a.activated);
       if (activeAgents.length === 0) {
+        logger.error(`No active agents found for phone number ${To}`);
         return this.sendErrorResponse(res, twiml, "unable-to-assist");
       }
 
       if (!agentLinked) {
+        logger.error(`Phone number ${To} not linked to any agent`);
         return this.sendErrorResponse(res, twiml, "unable-to-assist");
       }
 
       const agent = activeAgents.find((a) => a.id === agentLinked.agentId);
       if (!agent) {
+        logger.error(`Agent not found for phone number ${To}`);
         return this.sendErrorResponse(res, twiml, "unable-to-assist");
       }
 
@@ -112,7 +117,7 @@ export class TwilioService {
         await redis.set(cacheKey, JSON.stringify(phoneInfo), "EX", 3600); // Cache for 1 hour
       }
     } else {
-      phoneInfo = phoneInfo;
+      // phoneInfo = JSON.parse(phoneInfo);
     }
 
     return phoneInfo;
@@ -134,7 +139,7 @@ export class TwilioService {
         await redis.set(cacheKey, JSON.stringify(agentLink), "EX", 3600); // Cache for 1 hour
       }
     } else {
-      agentLink = JSON.parse(agentLink);
+      agentLink = agentLink;
     }
 
     return agentLink;
@@ -174,7 +179,7 @@ export class TwilioService {
         action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
         method: "POST",
         timeout: 5,
-        speechTimeout: "5",
+        speechTimeout: "3",
         speechModel: "experimental_conversations",
         enhanced: true,
       });
@@ -195,7 +200,7 @@ export class TwilioService {
         action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
         method: "POST",
         timeout: 5,
-        speechTimeout: "5",
+        speechTimeout: "3",
         speechModel: "experimental_conversations",
         enhanced: true,
       });
@@ -276,7 +281,7 @@ export class TwilioService {
             action: `${env.TWILIO.WH_VOICE_URL}/process/anti-theft`,
             method: "POST",
             timeout: 5,
-            speechTimeout: "5",
+            speechTimeout: "auto",
           })
           .play(audioUrl);
       }
@@ -366,13 +371,14 @@ export class TwilioService {
         twiml.play(audioUrl);
         twiml.dial(conv.escallated.number);
       } else {
+        console.log("gattering");
         twiml
           .gather({
             input: ["speech"],
             action: `${env.TWILIO.WH_VOICE_URL}/process/sales-assistant`,
             method: "POST",
             timeout: 5,
-            speechTimeout: "5",
+            speechTimeout: "auto",
           })
           .play(audioUrl!);
       }
