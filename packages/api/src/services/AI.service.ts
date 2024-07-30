@@ -21,6 +21,7 @@ import TelegramHelper from "../helpers/telegram.helper.js";
 import env from "../config/env.js";
 import { sendSMS } from "../helpers/twilio.helper.js";
 import { sleep } from "./scrapper.js";
+import BackgroundJobService from "./background-job.service.js";
 
 type IHandleConversationProps = {
   user_input: string;
@@ -59,6 +60,7 @@ export default class AIService {
   private geminiService = new GeminiService();
   private callLogService = new CallLogsService();
   private integrationService = new IntegrationService();
+  private bgJobService = new BackgroundJobService();
 
   public async determineCallIntent(msg: string, call_history?: string) {
     const intentCallResp = await this.geminiService.functionCall({
@@ -732,15 +734,18 @@ export default class AIService {
     calleePhone: string,
     purchasedNumber: string
   ) {
-    await sleep(5000);
-
     const smsSent = await redis.get(`${callerPhone}_sms_sent`);
-
     if (!smsSent) {
       const template = `A call was made recently, click the link below to get more information. ${env.CLIENT_URL}/call-logs`;
-      await sendSMS(purchasedNumber, calleePhone, template);
-
-      const exp = 20 * 60; // 20min
+      await this.bgJobService.publishJob({
+        type: "send-sms",
+        data: {
+          from: purchasedNumber,
+          to: calleePhone,
+          message: template,
+        },
+      });
+      const exp = 10 * 60; // 10min
       await redis.set(`${callerPhone}_sms_sent`, "true");
       await redis.expire(`${callerPhone}_sms_sent`, exp);
     } else {
@@ -938,6 +943,18 @@ export default class AIService {
         user_input,
       }),
     ]);
+
+    console.log({
+      agent,
+      mainHistory,
+      callIntent,
+      similarities: similarities.length,
+    });
+
+    if (!agent?.name || !callIntent || similarities.length === 0) {
+      resp.msg = `I'm sorry, I couldn't understand that, please try again.`;
+      return resp;
+    }
 
     const agentName = agent.name;
     const closestMatch = similarities
