@@ -192,18 +192,26 @@ You are ${props.agentName}, a customer service agent. Follow these rules:
 - Avoid explaining inability to answer; redirect to responsibilities
 - Format links as [https://example.com](https://example.com)
 
-Booking: ${props.integration?.booking_page ?? "N/A"}
+Booking/Appointment Link: ${props.integration?.booking_page ?? "N/A"}
 
-Context:
+<Context>
 ${props.context}
+</Context>
 
-History:
+<History>
 ${props.history}
+</History>
 
-Query:
+<Question>
 ${props.query}
+</Question>
 
 Respond in markdown. Don't justify answers or provide info not in context.
+Don’t justify your answers.
+Don’t give information not mentioned in the CONTEXT INFORMATION.
+Do not provide any information about procedures and service features that are not mentioned in the PROVIDED CONTEXT or doesn't relate or makes no sense to the CONTEXT GIVEN.
+
+Simply respond with "I'm sorry, I can't provide that information."
 `;
 
 export const salesAssistantInstructionPrompt = (props: {
