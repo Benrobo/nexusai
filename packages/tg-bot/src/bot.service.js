@@ -229,8 +229,6 @@ export default class TelegramBotService {
     const userQuery = modfiyMessage.slice(1).join(" ");
     const senderName = `@${ctx.message.from.username}`;
 
-    console.log(splittedMessage);
-
     const loadingMessage = ctx.telegram.sendMessage(
       ctx.chat.id,
       "🔄 Thinking...",
