@@ -13,7 +13,7 @@ export default class TelegramHelper {
 
     if (history) {
       history.group_content.slice(-10).forEach((content) => {
-        historyTxt += `[${content.role}]: ${content.content}\n`;
+        historyTxt += `[${content.sender}]: ${content.content}\n`;
       });
     }
 
@@ -23,9 +23,9 @@ export default class TelegramHelper {
   public async storeTelegramGroupHistory(data: {
     groupId: string;
     content: string;
-    role: "user" | "bot";
+    sender: "user" | "@bot" | string;
   }) {
-    const { groupId, content, role } = data;
+    const { groupId, content, sender } = data;
     const historyExists = await this.getTelegramGroupHistory(groupId);
     if (historyExists) {
       const history = historyExists;
@@ -34,7 +34,7 @@ export default class TelegramHelper {
       history.group_content.push({
         id: shortUUID.generate(),
         content,
-        role,
+        sender: sender,
       });
 
       await redis.set(`tg-history:${groupId}`, JSON.stringify(history));
@@ -49,7 +49,7 @@ export default class TelegramHelper {
           {
             id: shortUUID.generate(),
             content,
-            role,
+            sender: sender,
           },
         ],
       };

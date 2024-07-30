@@ -12,7 +12,7 @@ import sendResponse from "../lib/sendResponse.js";
 import prisma from "../prisma/prisma.js";
 import HttpException from "../lib/exception.js";
 import AIService from "../services/AI.service.js";
-import { chatbotTemplatePrompt } from "../data/agent/prompt.js";
+import { generalCustomerSupportTemplatePrompt } from "../data/agent/prompt.js";
 import GeminiService from "../services/gemini.service.js";
 import logger from "../config/logger.js";
 import env from "../config/env.js";
@@ -746,6 +746,11 @@ export default class ConversationController {
       );
     }
 
+    const chatWidgetAccount = await prisma.chatWidgetAccount.findFirst({
+      where: {
+        id: userId,
+      },
+    });
     const agent = conversation.agents;
 
     // check if agent is activated
@@ -829,11 +834,11 @@ export default class ConversationController {
     const bookingIntegration = agentIntegration.find(
       (i) => i.type === "google_calendar"
     );
-    const systemInstruction = chatbotTemplatePrompt({
+    const systemInstruction = generalCustomerSupportTemplatePrompt({
       agentName: agent.name,
       context: closestMatch.trim(),
       history: chatHistoryTxt,
-      query: customerLastMessage.content,
+      query: `${chatWidgetAccount.name}: ${customerLastMessage.content}`,
       integration: {
         booking_page: bookingIntegration?.url,
       },

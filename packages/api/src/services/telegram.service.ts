@@ -9,6 +9,7 @@ type Payload = {
   agentId: string;
   userQuery: string;
   groupId: string;
+  senderName: string;
 };
 
 export default class TelegramService {
@@ -16,6 +17,8 @@ export default class TelegramService {
   public async handleAIResponse(req: Request, res: Response) {
     // * handle AI response
     const payload: Payload = req.body;
+
+    console.log(payload);
 
     if (!payload.agentId || !payload.userQuery || !payload.groupId) {
       throw new HttpException(
@@ -73,6 +76,7 @@ export default class TelegramService {
       agentId: payload.agentId,
       userMessage: payload.userQuery,
       groupId: payload.groupId,
+      senderName: payload.senderName,
     });
 
     sendResponse.success(

@@ -1074,6 +1074,7 @@ export default class AIService {
     agentId: string;
     groupId?: string;
     userMessage: string;
+    senderName: string;
   }) {
     let response = { error: null, success: null, data: null } as {
       error: null | string;
@@ -1124,7 +1125,7 @@ export default class AIService {
       tgHelper.storeTelegramGroupHistory({
         groupId,
         content: data.userMessage,
-        role: "user",
+        sender: data?.senderName ?? "user",
       }),
       this.vectorSimilaritySearch({
         user_input: data.userMessage,
@@ -1146,7 +1147,7 @@ export default class AIService {
     const systemInstruction = generalCustomerSupportTemplatePrompt({
       agentName,
       context: closestMatch.trim(),
-      query: data.userMessage,
+      query: `${data.senderName ?? "user"}: ${data.userMessage}`,
       history,
       integration: {
         booking_page: bookingIntegration?.url,
@@ -1164,7 +1165,7 @@ export default class AIService {
     await tgHelper.storeTelegramGroupHistory({
       groupId,
       content: aiMsg,
-      role: "bot",
+      sender: "@agent",
     });
 
     response.success = "Request processed successfully";

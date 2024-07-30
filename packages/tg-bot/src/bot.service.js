@@ -227,6 +227,10 @@ export default class TelegramBotService {
       ...splittedMessage.filter((wrd) => wrd !== wrdWithMention),
     ];
     const userQuery = modfiyMessage.slice(1).join(" ");
+    const senderName = `@${ctx.message.from.username}`;
+
+    console.log(splittedMessage);
+
     const loadingMessage = ctx.telegram.sendMessage(
       ctx.chat.id,
       "🔄 Thinking...",
@@ -249,6 +253,7 @@ export default class TelegramBotService {
         agentId,
         userQuery,
         groupId,
+        senderName,
       });
 
       if (aiResponse?.error !== null) {
@@ -277,14 +282,24 @@ export default class TelegramBotService {
   }
 }
 
-async function handleTelegramCustomerSupportRequest(props) {
+async function handleTelegramCustomerSupportRequest({
+  agentId,
+  userQuery,
+  groupId,
+  senderName,
+}) {
   let _resp = {
     error: null,
     success: null,
     data: null,
   };
   try {
-    const resp = await getAIResponse(props);
+    const resp = await getAIResponse({
+      agentId,
+      userQuery,
+      groupId,
+      senderName,
+    });
     const data = resp?.data;
 
     if (!data) {

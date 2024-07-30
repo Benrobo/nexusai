@@ -13,11 +13,19 @@ const $axios = axios.create({
 
 export default $axios;
 
-export const getAIResponse = async (props) => {
+export const getAIResponse = async ({
+  agentId,
+  userQuery,
+  groupId,
+  senderName,
+}) => {
   const { data } = await $axios.post(
     "/conversation/process/integration/tg-bot",
     {
-      ...props,
+      agentId,
+      userQuery,
+      groupId,
+      senderName,
     }
   );
 
