@@ -220,15 +220,12 @@ export default class TelegramBotService {
     const { agentId, groupId } = ctx.nexusAgentConfig;
     const chatId = ctx.chat.id;
     const messageId = ctx.message.message_id;
-    const splittedMessage = ctx.message.text.split(" ");
-    const wrdWithMention = splittedMessage.find((wrd) => wrd.includes("@"));
-    const modfiyMessage = [
-      wrdWithMention,
-      ...splittedMessage.filter((wrd) => wrd !== wrdWithMention),
-    ];
-    const userQuery = modfiyMessage.slice(1).join(" ");
+    const tgMsg = ctx.message.text;
+    const wrdWithMention = tgMsg
+      .split(" ")
+      .find((wrd) => wrd.includes(`@${this.bot.botInfo.username}`));
+    const userQuery = tgMsg.replaceAll(wrdWithMention, `@agent`);
     const senderName = `@${ctx.message.from.username}`;
-
     const loadingMessage = ctx.telegram.sendMessage(
       ctx.chat.id,
       "🔄 Thinking...",
@@ -328,14 +325,12 @@ function sendTgMessage(ctx, message, shouldReply = true) {
     ctx.telegram.sendMessage(ctx.chat.id, message, {
       reply_markup: {
         selective: false,
-        // @ts-expect-error
         force_reply: false,
       },
       reply_parameters: {
         message_id: messageId,
         chat_id: chatId,
       },
-      parse_mode: "Markdown",
     });
   } else {
     ctx.telegram.sendMessage(ctx.chat.id, message);
@@ -347,7 +342,5 @@ async function editTgMessage(ctx, message, messageId, chatId) {
     throw new Error("Message cannot be empty");
   }
 
-  await ctx.telegram.editMessageText(chatId, messageId, null, message, {
-    parse_mode: "Markdown",
-  });
+  await ctx.telegram.editMessageText(chatId, messageId, null, message, {});
 }

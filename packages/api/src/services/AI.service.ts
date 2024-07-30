@@ -1157,7 +1157,12 @@ export default class AIService {
       user_prompt: data?.userMessage!,
     });
 
+    const telegramBotName = "@usenexusai_bot";
     const aiMsg = aiResp.data;
+
+    // replace any @agent word with the agent's name
+    const aiMsgWithBotName = aiMsg.replace(/@agent/, telegramBotName);
+    console.log({ aiMsgWithBotName });
 
     // save the conversation
     await tgHelper.storeTelegramGroupHistory({
@@ -1167,7 +1172,7 @@ export default class AIService {
     });
 
     response.success = "Request processed successfully";
-    response.data = { aiResp: aiMsg };
+    response.data = { aiResp: aiMsgWithBotName };
     return response;
   }
 }
