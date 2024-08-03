@@ -44,6 +44,8 @@ export default class BackgroundJobService {
     const body = req.body as JobPayload;
     const jobType = req.params["type"] as JobType;
 
+    console.log({ body });
+
     if (!jobType || !body.data) {
       throw new HttpException(
         RESPONSE_CODE.BAD_REQUEST,
@@ -78,7 +80,7 @@ export default class BackgroundJobService {
     try {
       await this.qstashClient.publishJSON({
         url: env.API_URL + "/bg-job/process/" + job.type,
-        payload: job,
+        body: job,
         delay: 60,
       });
 

@@ -10,6 +10,7 @@ import PhraseService from "./services/phrase.service.js";
 import redis from "./config/redis.js";
 import LemonsqueezyServices from "./services/LS.service.js";
 import sendMail from "./helpers/sendMail.js";
+import BackgroundJobService from "./services/background-job.service.js";
 
 // Test all services without writing test scripts
 
@@ -21,6 +22,16 @@ export default async () => {
     const phraseService = new PhraseService();
     const tts = new TTSService();
     const LS = new LemonsqueezyServices();
+    const job = new BackgroundJobService();
+
+    // await job.publishJob({
+    //   type: "send-sms",
+    //   data: {
+    //     from: "+18582074861",
+    //     to: "+13234808961",
+    //     message: "Hello, this is a test message",
+    //   },
+    // });
 
     // await sendMail({
     //   to: "alumonabenaiah71@gmail.com",

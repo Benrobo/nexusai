@@ -11,8 +11,8 @@ export default function GetStarted() {
 
       <a id="get-started"></a>
       <FlexColCenter className="w-full h-full mt-[3em] z-[10]">
-        <FlexColCenter className="w-full max-w-[45%] text-center">
-          <h1 className="text-3xl md:text-5xl font-ppB text-wrap text-white-100 whitespace-nowrap mb-3">
+        <FlexColCenter className="w-full px-10 md:max-w-[70%] text-center">
+          <h1 className="text-3xl md:text-5xl w-full lg:max-w-[50%] md:max-w-[70%] font-ppB text-wrap text-white-100 whitespace-nowrap mb-3">
             Maximize Safety, Maximize Profit
           </h1>
           <p className="text-sm font-ppL text-white-300">
