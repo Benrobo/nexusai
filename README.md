@@ -2,15 +2,34 @@
 
 ## Redefine Efficient and Secure Communication with Nexus
 
-> Built From Scratch with ❤️ by [me](https://github.com/benrobo)
+> Built From Scratch with ❤️ by [me](https://github.com/benrobo) | [Video Demo](https://youtu.be/kgVcDrm5Zr4?si=2y0nfz-Aikt1hDSz)
 
 Nexus enables businesses to transform communication by boosting sales with intelligent AI assistants, securing calls from scammers, and offering 24/7 support via chatbots.
 
 ![image](https://raw.githubusercontent.com/Benrobo/nexusai/main/screensahots/screenshot-1.png?raw=true)
 
+## Built With
+
+Nexusai was built from scratch with the following technologies:
+
+- [Gemini](https://gemini.google.com/)
+- [Twilio](https://www.twilio.com/)
+- [Lemonsqueezy](https://lemonsqueezy.com/)
+- [NeonDB](https://neondb.tech/)
+- [Postgresql](https://www.postgresql.org/)
+- [Elevenlab](https://elevenlabs.io/)
+- [Redis](https://redis.io/)
+- [Upstash Qstash](https://upstash.com/)
+- [Nodejs](https://nodejs.org/en/)
+- [React](https://reactjs.org/)
+- [Tailwindcss](https://tailwindcss.com/)
+- [Typescript](https://www.typescriptlang.org/)
+- [Prisma](https://www.prisma.io/)
+- [Telegram](https://core.telegram.org/bots)
+
 ## Getting Started
 
-Headover to [Nexus](https://nexusai.vercel.app) to get started.
+Headover to [trynexusai.xyz](https://trynexusai.xyz) to get started.
 
 ## Setting up the project locally.
 
@@ -20,6 +39,8 @@ Headover to [Nexus](https://nexusai.vercel.app) to get started.
 - Postgresql [install](https://www.postgresql.org/download/)
 - Redis (for caching) [install](https://redis.io/download) or [brew (macos)](https://formulae.brew.sh/formula/redis)
 - Ngrok (for exposing localhost to the internet) [install](https://ngrok.com/download)
+- Twilio Account [create](https://www.twilio.com/try-twilio)
+- Lemonsqueezy Account [create](https://lemonsqueezy.com/)
 
 ## Installation
 
@@ -79,6 +100,8 @@ AS $$
 $$;
 ```
 
+That should create the necessary function for matching embeddings.
+
 Then run the following command to create the necessary tables and seed data.
 
 ```bash
@@ -120,20 +143,19 @@ const TwilioSubPlanInfo = {
 } as TwilioSubPlanInfo;
 ```
 
-That should create the necessary function for matching embeddings.
-
 ##### Trying the Voice Call Feature.
 
 The voice call feature is powered by Twilio, to try it out, you would need to do the following:
 
 - Get a Twilio account [here](https://www.twilio.com/try-twilio)
+- Get a preium ($5) Elevenlab account [here](https://elevenlabs.io/)
 - Upgrade the account.
 - Purchase a twilio phone number.
 - Update the `.env` file
-  - Make sure `NODE_ENV` is set to `development` otherwise, when purchasing a phone number from Nexus, you would be charged from your twilio balance (even if you've used a test billing account).
+  - Make sure `NODE_ENV` is set to `development` otherwise, when purchasing a phone number from Nexus, you would be charged from your twilio balance (even if you've used a test credit card credentials).
   - Top up your account with atleast (min) `$20`.
-- On purchasing a specific number from nexus, two records would be updated in the db: `purchased_phone_numbers` and `used_phone_numbers`. With the original twilio number you purchased directly with your twilio balance, copy that number and update the `used_phone_numbers` table with the `twilio_number` and `phone_number` fields.
-- Headover to twilio and update the webhook URL for the phone number with `<ngrok>.ngrok-free.app/api/webhook/tw-phone/voice`. (You would only need to do this everytime your ngrok url get reset with a ramdom new sub-domain).
+- On purchasing a specific number from nexus, two records would be updated in the db: `purchased_phone_numbers` and `used_phone_numbers`. With the original twilio number you purchased directly with your twilio balance, copy that number and update the `used_phone_numbers` table with the `phone` fields.
+- Headover to twilio and update the webhook URL for the phone number with `<ngrok>.ngrok-free.app/api/webhook/tw-phone/voice`. (You would only need to do this everytime your ngrok url get reset with a random new sub-domain).
 - Now call that specific number linked to your agent.
 
 5. Start the API server
@@ -148,7 +170,7 @@ yarn dev
 
 It should start the API server on `http://localhost:4001` successfully.
 
-### APP (CLIENT)
+### WEB_APP (CLIENT)
 
 1. Install dependencies
 
@@ -160,7 +182,7 @@ cd packages/app && npm install
 cd packages/app && yarn
 ```
 
-2. Start the APP server
+2. Start the APP
 
 ```bash
 # npm
@@ -170,7 +192,7 @@ npm run dev
 yarn dev
 ```
 
-It should start the APP server on `http://localhost:4000` successfully.
+It should start the web app on `http://localhost:4000` successfully.
 
 ### CHATBOT (CLIENT)
 
@@ -246,11 +268,13 @@ In order to view the chatbot widget, start up the embed client located at `/pack
 - Update the `CLIENT_URL` and `API_URL` found in `/nexus.js` file with the appropriate values.
 
 ```js
-// Create a new instance of NexusAI
-// Replace <agent-id> with your agent id by creating an agent.
-nexusai.init("<agent-id>");
+<script src="./nexus.js" id="<your-agent-id>"></script>
 ```
 
 After that, you should be able to view the chatbot widget on `http://localhost:5500` successfully as seen below.
 
 ![image](https://raw.githubusercontent.com/Benrobo/nexusai/main/screensahots/screenshot-4.png?raw=true)
+
+## Disclaimer
+
+Considering the fact that this project was built within a short period of time (1.5 month), the codebas might not be as clean as expected. I would be working on refactoring the codebase and adding more features in the future (if time permits).
