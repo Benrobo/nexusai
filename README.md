@@ -2,6 +2,8 @@
 
 ## Redefine Efficient and Secure Communication with Nexus
 
+> Built From Scratch with ❤️ by [me](https://github.com/benrobo)
+
 Nexus enables businesses to transform communication by boosting sales with intelligent AI assistants, securing calls from scammers, and offering 24/7 support via chatbots.
 
 ![image](https://raw.githubusercontent.com/Benrobo/nexusai/main/screensahots/screenshot-1.png?raw=true)
