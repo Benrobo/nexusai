@@ -122,6 +122,20 @@ const TwilioSubPlanInfo = {
 
 That should create the necessary function for matching embeddings.
 
+##### Trying the Voice Call Feature.
+
+The voice call feature is powered by Twilio, to try it out, you would need to do the following:
+
+- Get a Twilio account [here](https://www.twilio.com/try-twilio)
+- Upgrade the account.
+- Purchase a twilio phone number.
+- Update the `.env` file
+  - Make sure `NODE_ENV` is set to `development` otherwise, when purchasing a phone number from Nexus, you would be charged from your twilio balance (even if you've used a test billing account).
+  - Top up your account with atleast (min) `$20`.
+- On purchasing a specific number from nexus, two records would be updated in the db: `purchased_phone_numbers` and `used_phone_numbers`. With the original twilio number you purchased directly with your twilio balance, copy that number and update the `used_phone_numbers` table with the `twilio_number` and `phone_number` fields.
+- Headover to twilio and update the webhook URL for the phone number with `<ngrok>.ngrok-free.app/api/webhook/tw-phone/voice`. (You would only need to do this everytime your ngrok url get reset with a ramdom new sub-domain).
+- Now call that specific number linked to your agent.
+
 5. Start the API server
 
 ```bash
