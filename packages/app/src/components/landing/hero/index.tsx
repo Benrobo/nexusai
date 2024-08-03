@@ -1,9 +1,12 @@
 import { FlexColCenter, FlexColStart, FlexRowCenter } from "@/components/Flex";
+import Modal from "@/components/Modal";
 import useSession from "@/hooks/useSession";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Hero() {
+  const [modalOpen, setModalOpen] = useState(false);
   const visible = { opacity: 1, y: 0, transition: { duration: 0.5 } };
   const { loading, user } = useSession();
 
@@ -60,7 +63,12 @@ export default function Hero() {
               >
                 Get Started
               </Link>
-              <button className="w-auto px-5 border-[1px] border-white-300/30 bg-brown-100 font-ppReg py-3 rounded-2xl text-white-100 scale-[.90] enableBounceEffect">
+              <button
+                className="w-auto px-5 border-[1px] border-white-300/30 bg-brown-100 font-ppReg py-3 rounded-2xl text-white-100 scale-[.90] enableBounceEffect"
+                onClick={() => {
+                  setModalOpen(true);
+                }}
+              >
                 How it Works
               </button>
             </FlexRowCenter>
@@ -81,6 +89,32 @@ export default function Hero() {
           </motion.div>
         </FlexColCenter>
       </motion.div>
+
+      {modalOpen && (
+        <Modal
+          fixed={modalOpen}
+          isBlurBg={true}
+          isOpen={true}
+          onClose={() => {
+            setModalOpen(false);
+          }}
+        >
+          <FlexColStart className="w-full h-full bg-white-300 rounded-[22px] px-2 py-2 gap-0">
+            <iframe
+              width="900"
+              height="600"
+              src="https://www.youtube.com/embed/kgVcDrm5Zr4?si=SC10PlteRAXH46h_"
+              title="YouTube video player"
+              // @ts-ignore
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+              className="rounded-[20px]"
+            ></iframe>
+          </FlexColStart>
+        </Modal>
+      )}
     </FlexColStart>
   );
 }
