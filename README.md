@@ -13,6 +13,7 @@ Nexus enables businesses to transform communication by boosting sales with intel
 Nexusai was built from scratch with the following technologies:
 
 - [Gemini](https://gemini.google.com/)
+- [Firebase](https://firebase.google.com/)
 - [Twilio](https://www.twilio.com/)
 - [Lemonsqueezy](https://lemonsqueezy.com/)
 - [NeonDB](https://neondb.tech/)
