@@ -157,7 +157,7 @@ The voice call feature is powered by Twilio, to try it out, you would need to do
   - Top up your account with atleast (min) `$20`.
 - On purchasing a specific number from nexus, two records would be updated in the db: `purchased_phone_numbers` and `used_phone_numbers`. With the original twilio number you purchased directly with your twilio balance, copy that number and update the `used_phone_numbers` table with the `phone` fields.
 
-> **Why?** When you purchase a number on nexusai, your original balance `($20)` isn't getting deducted from your twilio account since the number was purchased from nexusai in `DEVELOPMENT_MODE`. So, to make sure the number is linked to your account, you would need to update the `used_phone_numbers` table with the `phone` field with the number you purchased directly from twilio. your balance is only getting deducted when you either (1) puchased a number directly from twilio or (2) when you make a voice call or send sms.
+> **Why?** When you purchase a number on nexusai, your original balance `($20)` isn't getting deducted from your twilio account since the number was purchased from nexusai in `DEVELOPMENT_MODE`. So, to make sure the number is linked to your account, you would need to update the `used_phone_numbers` table with the `phone` field with the number you purchased directly from twilio. your balance is only getting deducted when you either (1) puchase a number directly from twilio or (2) when you make a voice call or send sms.
 
 - Headover to twilio and update the webhook URL for the phone number with `<ngrok>.ngrok-free.app/api/webhook/tw-phone/voice`. (You would only need to do this everytime your ngrok url get reset with a random new sub-domain).
 - Now call that specific number linked to your agent.
