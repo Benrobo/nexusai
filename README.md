@@ -65,7 +65,17 @@ cd nexusai && yarn
 
 3. Create a `.env` file in the root directory and add all the environment variables in the `.env.example` file. Update the values accordingly.
 
-4. Using pgAdmin or any database client of your choice, headover to `/packages/api/sql/function.sql` and run the sql file to create the necessary functions. Or copy the SQL content below:
+4. Then run the following command to create the necessary tables and seed data.
+
+```bash
+# npm
+npm run migrate
+
+# yarn
+yarn migrate
+```
+
+5. Using pgAdmin or any database client of your choice, headover to `/packages/api/sql/function.sql` and run the sql file to create the necessary functions. Or copy the SQL content below:
 
 ```sql
 -- Drop function
@@ -102,16 +112,6 @@ $$;
 ```
 
 That should create the necessary function for matching embeddings.
-
-Then run the following command to create the necessary tables and seed data.
-
-```bash
-# npm
-npm run migrate
-
-# yarn
-yarn migrate
-```
 
 #### Lemonsqueezy
 
