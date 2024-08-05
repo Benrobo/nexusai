@@ -210,7 +210,7 @@ cd packages/chatbot && npm install
 cd packages/chatbot && yarn
 ```
 
-2. Start the CHATBOT server
+2. Start the CHATBOT client
 
 ```bash
 # npm
