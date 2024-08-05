@@ -23,9 +23,10 @@ export default function Hero() {
         animate="visible"
         exit={{ opacity: 0, transition: { duration: 5 } }}
         variants={{ visible: { transition: { staggerChildren: 0.3 } } }}
+        className="w-full"
       >
         <FlexColCenter className="w-full h-auto mt-[3em] z-[10]">
-          <FlexColCenter className="w-full max-w-[45%] text-center z-[20]">
+          <FlexColCenter className="w-full mx-auto max-w-[45%] text-center z-[20]">
             <FlexRowCenter className="mb-8 border-[2px] border-white-300/30 rounded-full text-xs font-ppReg bg-white-300/20 px-3 py-1 text-white-100">
               AI Driven Communication Platform
             </FlexRowCenter>
@@ -79,7 +80,7 @@ export default function Hero() {
               visible,
             }}
           >
-            <FlexColCenter className="mt-[3em] max-w-[90%] translate-y-10">
+            <FlexColCenter className="mt-[3em] mx-auto max-w-[90%] translate-y-10">
               <img
                 src={`/assets/images/header/illus-4.svg`}
                 alt="hero"

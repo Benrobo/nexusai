@@ -47,7 +47,10 @@ export default function WhyNexus() {
 
       <FlexRowStartCenter className="w-full h-auto mt-[8em] gap-10">
         {whyNexus.map((feature) => (
-          <FlexColStartBtw className="w-[400px] h-auto rounded-[15px] border-[1px] border-white-400/20 p-8 grayscale transition-all hover:grayscale-0">
+          <FlexColStartBtw
+            key={feature.name}
+            className="w-[400px] h-auto rounded-[15px] border-[1px] border-white-400/20 p-8 grayscale transition-all hover:grayscale-0"
+          >
             <img src={feature.img} alt={feature.name} width={40} />
             <h1 className="text-[1.2em] font-ppSB font-extrabold text-brown-103">
               {feature.title}
@@ -61,16 +64,3 @@ export default function WhyNexus() {
     </FlexColStart>
   );
 }
-
-// function Rendericon(name: string){
-//     switch(name){
-//         case "call-protection":
-//         return <ShieldAlert size={15} />
-//         case "sales":
-//         return <SalesIcon />
-//         case "chatbot":
-//         return <ChatbotIcon />
-//         default:
-//         return <CallProtectionIcon />
-//     }
-// }
