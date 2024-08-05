@@ -220,7 +220,7 @@ npm run dev
 yarn dev
 ```
 
-It should start the CHATBOT server on `http://localhost:3010` successfully.
+It should start the CHATBOT client on `http://localhost:3010` successfully.
 
 ### Telegram Bot Server
 
