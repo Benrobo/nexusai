@@ -149,8 +149,8 @@ const TwilioSubPlanInfo = {
 The voice call feature is powered by Twilio, to try it out, you would need to do the following:
 
 - Get a Twilio account [here](https://www.twilio.com/try-twilio)
-- Get a preium ($5) Elevenlab account [here](https://elevenlabs.io/)
 - Upgrade the account.
+- Get a starter ($5) Elevenlab account [here](https://elevenlabs.io/)
 - Purchase a twilio phone number.
 - Update the `.env` file
   - Make sure `NODE_ENV` is set to `development` otherwise, when purchasing a phone number from Nexus, you would be charged from your twilio balance (even if you've used a test credit card credentials).
