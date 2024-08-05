@@ -270,14 +270,15 @@ It should start the telegram bot server on `http://localhost:4005` successfully 
 
 In order to view the chatbot widget, start up the embed client located at `/packages/embed/index.html` using `vscode-live-server` or any other server of your choice.
 
-- Create a `CHATBOT` agent then Update the `index.html` with initialized value of your agent id.
-- Update the `CLIENT_URL` and `API_URL` found in `/nexus.js` file with the appropriate values.
+- Update the `CLIENT_URL` and `API_URL` found in `/nexus.js` file with the local API_URL's i.e (Server) `http://localhost:4001/api` and (Chatbot)`http://localhost:3010` respectively.
+
+- Create a `CHATBOT` agent then Update the `index.html` `script` tag with your agent id.
 
 ```js
 <script src="./nexus.js" id="<your-agent-id>"></script>
 ```
 
-After that, you should be able to view the chatbot widget on `http://localhost:5500` successfully as seen below.
+After that, you should be able to view the chatbot widget on `http://localhost:5500` (when started with vscode liver server extension only) successfully as seen below.
 
 ![image](https://raw.githubusercontent.com/Benrobo/nexusai/main/screensahots/screenshot-4.png?raw=true)
 
