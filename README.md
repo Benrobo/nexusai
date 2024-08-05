@@ -234,6 +234,8 @@ cd packages/tg-bot && npm install
 cd packages/tg-bot && yarn
 ```
 
+Run `prisma generate` to generate the prisma client.
+
 Then create a `.env` file in the root directory and add the following environment variables:
 
 ```bash
