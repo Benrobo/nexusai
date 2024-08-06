@@ -83,7 +83,7 @@ export default function Hero() {
           >
             <FlexColCenter className="mt-[3em] mx-auto max-w-[90%] translate-y-10">
               <img
-                src={`/assets/images/header/illus-4.svg`}
+                src={`/assets/images/header/illus-4.svg?dpr=1`}
                 alt="hero"
                 className="w-full h-full object-left object-cover"
               />

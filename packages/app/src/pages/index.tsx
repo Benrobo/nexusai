@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <>
       <UnsupportedViewport />
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="wait">
         <div className="w-full h-screen hideScrollBar2 overflow-y-scroll overflow-x-hidden scroll-smooth bg-white-300 px-4 py-5 gap-10">
           <TopBar />
           <Hero />
