@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { FlexColCenter, FlexRowCenter } from "../Flex";
 
 export default function GetStarted() {
@@ -22,12 +23,17 @@ export default function GetStarted() {
           </p>
         </FlexColCenter>
         <FlexRowCenter className="mt-[1em] gap-9">
-          <button className="w-auto px-5 bg-white-100 font-ppReg py-3 rounded-2xl scale-[.90] enableBounceEffect">
-            Get Started
-          </button>
-          <button className="w-auto px-5 border-[1px] border-white-300/30 bg-brown-100 font-ppReg py-3 rounded-2xl text-white-100 scale-[.90] enableBounceEffect">
+          <Link
+            to="/#hero"
+            className="w-auto px-5 border-[1px] border-white-300/30 bg-brown-100 font-ppReg py-3 rounded-2xl text-white-100 scale-[.90] enableBounceEffect"
+            onClick={() => {
+              document.getElementById("hero")?.scrollIntoView({
+                behavior: "smooth",
+              });
+            }}
+          >
             How it Works
-          </button>
+          </Link>
         </FlexRowCenter>
       </FlexColCenter>
     </FlexColCenter>

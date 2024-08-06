@@ -5,41 +5,42 @@ import {
 } from "@/components/Flex";
 import { Boxes } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { useEffect, useRef } from "react";
 
 const features = [
   {
     name: "dashboard-analytics",
-    title: "Comprehensive Dashboard Analytics",
+    title: "Real-Time Insights and Performance Tracking",
     description:
-      "Gain actionable insights with our robust dashboard analytics. Visualize key metrics, track performance trends, and make data-driven decisions to optimize your business operations efficiently.",
+      "Unlock data-driven decision making with our advanced dashboard analytics. Visualize key performance indicators, monitor trends, and optimize your operations for maximum efficiency.",
     video: "/assets/videos/dashboard-prev.mp4",
   },
   {
-    name: "create-agent",
-    title: "Intelligent Agent Creation",
-    description:
-      "Streamline your business processes by deploying multiple AI-powered agents. These versatile assistants enhance lead generation, provide round-the-clock support, and employ advanced algorithms to detect and prevent fraudulent activities.",
-    video: "/assets/videos/create-agent-prev.mp4",
-  },
-  {
     name: "add-knowledge-base",
-    title: "Dynamic Knowledge Base Integration",
+    title: "Comprehensive Knowledge Base Integration",
     description:
-      "Empower your agents with a comprehensive, easily updatable knowledge base. This feature enables rapid, accurate responses to customer queries, ensuring consistent service quality even outside of business hours.",
+      "Empower your customer support with a dynamic, easily updatable knowledge base. Ensure consistent, accurate responses to customer inquiries, even outside of business hours.",
     video: "/assets/videos/add-kb-prev.mp4",
   },
   {
     name: "add-integration",
     title: "Seamless Third-Party Integrations",
     description:
-      "Enhance your operational efficiency by integrating with a wide array of industry-leading tools and services. Our flexible API allows for custom connections, creating a cohesive ecosystem tailored to your specific business needs.",
+      "Streamline your operations by integrating with a wide range of industry-leading tools and services. Our flexible API enables custom connections, creating a cohesive ecosystem tailored to your business needs.",
     video: "/assets/videos/add-int-prev.mp4",
   },
   {
-    name: "monitor-call-logs",
-    title: "Advanced Call Log Analytics",
+    name: "telegram-integration",
+    title: "Enhanced Customer Engagement with Telegram",
     description:
-      "Leverage detailed insights from agent-customer interactions through our sophisticated call log monitoring system. Analyze conversation patterns, identify areas for improvement, and refine your customer engagement strategies.",
+      "Expand your customer engagement channels with Telegram integration. Provide a seamless experience for your customers to interact with your business through Telegram.",
+    video: "/assets/videos/tg-int.mp4",
+  },
+  {
+    name: "monitor-call-logs",
+    title: "Advanced Call Log Analysis and Insights",
+    description:
+      "Gain valuable insights from agent-customer interactions with our sophisticated call log monitoring system. Analyze conversation patterns, identify areas for improvement, and refine your customer engagement strategies.",
     video: "/assets/videos/monitor-call-log-prev.mp4",
   },
   {
@@ -101,10 +102,20 @@ type FeatureCardProps = {
 };
 
 function FeatureCard({ title, description, video, name }: FeatureCardProps) {
+  // increase the video speed
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = 2; // Increase video speed by 50%
+    }
+  }, []);
+
   return (
     <FlexColStart className="w-full md:max-w-[800px] h-auto rounded-lg col-span-1">
       <FlexColCenter className="w-[550px] h-[300px] overflow-hidden  rounded-[12px] border-[.5px] border-white-400/20">
         <video
+          ref={videoRef}
           src={video}
           className={cn(
             "w-[650px] h-full rounded-[12px]",

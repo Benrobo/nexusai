@@ -18,6 +18,7 @@ export default function Hero() {
         <div className="w-[250px] h-[250px] bg-white-100 blur-[150px] rounded-full -translate-y-[10em]" />
       </FlexColCenter>
 
+      <div id="hero" />
       <motion.div
         initial="hidden"
         animate="visible"
@@ -91,31 +92,29 @@ export default function Hero() {
         </FlexColCenter>
       </motion.div>
 
-      {modalOpen && (
-        <Modal
-          fixed={modalOpen}
-          isBlurBg={true}
-          isOpen={true}
-          onClose={() => {
-            setModalOpen(false);
-          }}
-        >
-          <FlexColStart className="w-full h-full bg-white-300 rounded-[22px] px-2 py-2 gap-0">
-            <iframe
-              width="900"
-              height="600"
-              src="https://www.youtube.com/embed/kgVcDrm5Zr4?si=SC10PlteRAXH46h_"
-              title="YouTube video player"
-              // @ts-ignore
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerpolicy="strict-origin-when-cross-origin"
-              allowfullscreen
-              className="rounded-[20px]"
-            ></iframe>
-          </FlexColStart>
-        </Modal>
-      )}
+      <Modal
+        fixed={true}
+        isBlurBg={true}
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+        }}
+      >
+        <FlexColStart className="w-full h-full bg-white-300 rounded-[22px] px-2 py-2 gap-0">
+          <iframe
+            width="900"
+            height="600"
+            src="https://www.youtube.com/embed/kgVcDrm5Zr4?si=SC10PlteRAXH46h_"
+            title="YouTube video player"
+            // @ts-ignore
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen
+            className="rounded-[20px]"
+          ></iframe>
+        </FlexColStart>
+      </Modal>
     </FlexColStart>
   );
 }
