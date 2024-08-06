@@ -13,29 +13,28 @@ const features = [
     title: "Real-Time Insights and Performance Tracking",
     description:
       "Unlock data-driven decision making with our advanced dashboard analytics. Visualize key performance indicators, monitor trends, and optimize your operations for maximum efficiency.",
-    video:
-      "https://trynexusai.imgix.net/assets/videos/dashboard-prev.mp4?dpr=1",
+    video: "https://trynexusai.imgix.net/assets/videos/dashboard-prev.mp4",
   },
   {
     name: "add-knowledge-base",
     title: "Comprehensive Knowledge Base Integration",
     description:
       "Empower your customer support with a dynamic, easily updatable knowledge base. Ensure consistent, accurate responses to customer inquiries, even outside of business hours.",
-    video: "https://trynexusai.imgix.net/assets/videos/add-kb-prev.mp4?dpr=1",
+    video: "https://trynexusai.imgix.net/assets/videos/add-kb-prev.mp4",
   },
   {
     name: "add-integration",
     title: "Seamless Third-Party Integrations",
     description:
       "Streamline your operations by integrating with a wide range of industry-leading tools and services. Our flexible API enables custom connections, creating a cohesive ecosystem tailored to your business needs.",
-    video: "https://trynexusai.imgix.net/assets/videos/add-int-prev.mp4?dpr=1",
+    video: "https://trynexusai.imgix.net/assets/videos/add-int-prev.mp4",
   },
   {
     name: "telegram-integration",
     title: "Enhanced Customer Engagement with Telegram",
     description:
       "Expand your customer engagement channels with Telegram integration. Provide a seamless experience for your customers to interact with your business through Telegram.",
-    video: "https://trynexusai.imgix.net/assets/videos/tg-int.mp4?dpr=1",
+    video: "https://trynexusai.imgix.net/assets/videos/tg-int.mp4",
   },
   {
     name: "monitor-call-logs",
@@ -43,14 +42,14 @@ const features = [
     description:
       "Gain valuable insights from agent-customer interactions with our sophisticated call log monitoring system. Analyze conversation patterns, identify areas for improvement, and refine your customer engagement strategies.",
     video:
-      "https://trynexusai.imgix.net/assets/videos/monitor-call-log-prev.mp4?dpr=1",
+      "https://trynexusai.imgix.net/assets/videos/monitor-call-log-prev.mp4",
   },
   {
     name: "chatbot",
     title: "24/7 Intelligent Customer Support",
     description:
       "Elevate your customer service with our AI-driven chatbot. This customizable widget seamlessly integrates into your website, providing instant, accurate responses and escalating complex issues to human agents when necessary.",
-    video: "https://trynexusai.imgix.net/assets/videos/chatbot-prev.mp4?dpr=1",
+    video: "https://trynexusai.imgix.net/assets/videos/chatbot-prev.mp4",
   },
 ];
 
