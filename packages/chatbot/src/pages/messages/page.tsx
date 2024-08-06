@@ -141,6 +141,8 @@ function Messages() {
         agent_id: params.agent_id,
         convId: params.conversation_id,
       });
+
+      setTimeout(scrollToBottom, 100);
     }
   }, [params?.agent_id, params?.conversation_id]);
 
@@ -299,6 +301,7 @@ function Messages() {
                   scrollToBottom();
                 }
               }}
+              autoFocus
             />
             <button
               className="w-[80px] h-[60px] bg-dark-100 text-white-100 flex-center rounded-full enableBounceEffect scale-[.80] disabled disabled:cursor-not-allowed disabled:opacity-[.5]"
