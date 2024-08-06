@@ -25,7 +25,7 @@ const navigations = [
 export default function TopBar() {
   const { loading, user } = useSession();
   return (
-    <div className="w-full bg-white-100 rounded-[20px] ">
+    <div className="w-full bg-white-100 rounded-[20px] mb-2">
       <FlexRowStartBtw
         className={cn("w-full h-auto py-4 px-5 justify-between bg-transparent")}
       >

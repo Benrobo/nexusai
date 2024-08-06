@@ -1,5 +1,4 @@
 "use client";
-import { FlexColStart } from "@/components/Flex";
 import Footer from "@/components/Footer";
 import { Features, Hero } from "@/components/landing";
 import BuiltWith from "@/components/landing/built-with";
@@ -13,8 +12,8 @@ export default function Home() {
   return (
     <>
       <UnsupportedViewport />
-      <AnimatePresence mode="wait">
-        <FlexColStart className="w-full h-auto hideScrollBar2 overflow-y-scroll overflow-x-hidden scroll-smooth bg-white-300 px-4 py-5 ">
+      <AnimatePresence mode="wait" initial={false}>
+        <div className="w-full h-screen hideScrollBar2 overflow-y-scroll overflow-x-hidden scroll-smooth bg-white-300 px-4 py-5 gap-10">
           <TopBar />
           <Hero />
           <BuiltWith />
@@ -22,7 +21,7 @@ export default function Home() {
           <WhyNexus />
           <GetStarted />
           <Footer />
-        </FlexColStart>
+        </div>
       </AnimatePresence>
     </>
   );

@@ -3,7 +3,7 @@ import { FlexColCenter, FlexRowCenter } from "../Flex";
 
 export default function GetStarted() {
   return (
-    <FlexColCenter className="w-full h-full pb-[5em] min-h-[400px] bg-dark-100 rounded-[20px] relative overflow-hidden">
+    <FlexColCenter className="w-full h-auto pb-[5em] min-h-[400px] bg-dark-100 rounded-[20px] relative overflow-hidden mb-4 ">
       <div className="pattern-bg absolute inset-0 z-0" />
 
       <FlexColCenter className="w-full h-[300px] absolute bottom-0">

@@ -11,7 +11,7 @@ const technologies = [
 
 export default function BuiltWith() {
   return (
-    <FlexColCenter className="w-full h-[200px] max-h-[250px] bg-white-100 py-2 rounded-[20px]">
+    <FlexColCenter className="w-full h-[200px] max-h-[250px] bg-white-100 py-2 rounded-[20px] mb-4 mt-3">
       <h1 className="text-sm font-ppM text-white-400/50">
         Built with trusted technologies
       </h1>

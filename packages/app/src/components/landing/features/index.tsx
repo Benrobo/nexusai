@@ -54,7 +54,7 @@ const features = [
 
 function Features() {
   return (
-    <FlexColStart className="w-full h-auto bg-white-100 py-[8em] px-[5em] rounded-[20px]">
+    <FlexColStart className="w-full h-auto bg-white-100 py-[8em] px-[5em] rounded-[20px] mb-4 ">
       <a id="features"></a>
       <FlexRowStartCenter className="w-auto px-4 py-2 rounded-lg border-[.5px] border-white-400/30 text-white-400 text-sm font-ppReg">
         <Boxes size={20} className="stroke-white-400" />
@@ -71,7 +71,7 @@ function Features() {
         </p>
       </FlexColStart>
 
-      <div className="w-full h-auto grid grid-cols-2 p-0 gap-[4em] mt-10">
+      <div className="w-full h-auto grid grid-cols-2 p-0 gap-[8em] mt-10">
         {features.map((feature) => (
           <FeatureCard
             key={feature.name}

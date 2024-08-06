@@ -27,7 +27,7 @@ const whyNexus = [
 
 export default function WhyNexus() {
   return (
-    <FlexColStart className="w-full h-auto bg-white-100 py-[8em] px-[5em] rounded-[20px]">
+    <FlexColStart className="w-full h-auto bg-white-100 py-[8em] px-[5em] rounded-[20px] mb-4 ">
       <a id="why-nexus"></a>
       <FlexRowStartCenter className="w-auto px-4 py-2 rounded-lg border-[.5px] border-white-400/30 text-white-400 text-sm font-ppReg">
         <Boxes size={20} className="stroke-white-400" />

@@ -11,7 +11,7 @@ export default function Hero() {
   const { loading, user } = useSession();
 
   return (
-    <FlexColStart className="w-full h-full bg-dark-100 rounded-[20px] overflow-hidden relative">
+    <div className="w-full h-full bg-dark-100 rounded-[20px] overflow-hidden relative mb-2">
       <div className="pattern-bg absolute inset-0 z-0" />
 
       <FlexColCenter className="w-full h-[300px] absolute top-0">
@@ -24,9 +24,9 @@ export default function Hero() {
         animate="visible"
         exit={{ opacity: 0, transition: { duration: 5 } }}
         variants={{ visible: { transition: { staggerChildren: 0.3 } } }}
-        className="w-full"
+        className="w-full h-auto"
       >
-        <FlexColCenter className="w-full h-auto mt-[3em] z-[10]">
+        <FlexColCenter className="w-full h-full mt-[3em] z-[10]">
           <FlexColCenter className="w-full mx-auto max-w-[45%] text-center z-[20]">
             <FlexRowCenter className="mb-8 border-[2px] border-white-300/30 rounded-full text-xs font-ppReg bg-white-300/20 px-3 py-1 text-white-100">
               AI Driven Communication Platform
@@ -115,6 +115,6 @@ export default function Hero() {
           ></iframe>
         </FlexColStart>
       </Modal>
-    </FlexColStart>
+    </div>
   );
 }
