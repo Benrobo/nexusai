@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils";
 import { FlexColCenter, FlexRowCenter } from "../Flex";
 
 const technologies = [
-  { name: "gemini", path: "/assets/images/logo/gemini.png" },
-  { name: "firebase", path: "/assets/images/logo/firebase.png" },
-  { name: "twilio", path: "/assets/images/logo/twilio.png" },
-  { name: "xilab", path: "/assets/images/logo/xilab.png" },
+  { name: "gemini", path: "/assets/images/logo/gemini.svg" },
+  { name: "firebase", path: "/assets/images/logo/firebase.svg" },
+  { name: "twilio", path: "/assets/images/logo/twilio.svg" },
+  { name: "xilab", path: "/assets/images/logo/xilab.svg" },
   { name: "neon", path: "/assets/images/logo/neon.svg" },
 ];
 
