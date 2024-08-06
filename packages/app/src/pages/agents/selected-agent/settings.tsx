@@ -158,7 +158,9 @@ export default function SettingsPage({ agent_id, type }: SettingsProps) {
     }
   }, [agentSettings]);
 
-  const phoneSubDaysLeft = dayjs(phoneSubscription?.renews_at).daysInMonth();
+  const phoneSubDaysLeft = Math.abs(
+    dayjs().diff(dayjs(phoneSubscription?.renews_at), "day")
+  );
 
   return (
     <>
