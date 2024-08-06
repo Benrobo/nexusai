@@ -117,11 +117,15 @@ export default function InboxPage() {
     onSuccess: (data: any) => {
       const resp = data as ResponseData;
       const msgData = resp.data;
-
-      // append to selected messages
-      selectedConversation?.messages.push(msgData);
+      setSelectedConversation((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          messages: [...prev.messages, msgData],
+        };
+      });
       setQuery("");
-      scrollToBottom();
+      setTimeout(scrollToBottom, 100);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;

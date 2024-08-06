@@ -82,11 +82,11 @@ export const formatDate = (date: string) => {
   let formattedDate = targetDate.format("h:mmA"); // Format time as 11:20am
 
   if (targetDate.isSame(now, "day")) {
-    formattedDate = `Today at ${formattedDate}`;
+    formattedDate = formattedDate;
   } else if (targetDate.isSame(now.subtract(1, "day"), "day")) {
-    formattedDate = `Yesterday at ${formattedDate}`;
+    formattedDate = formattedDate;
   } else if (targetDate.isSame(now.subtract(1, "week"), "week")) {
-    formattedDate = `Last week at ${formattedDate}`;
+    formattedDate = targetDate.format("ddd, D MMM"); // Format as Sun, 21, month
   } else {
     formattedDate = targetDate.fromNow(); // E.g., "3 days ago"
   }

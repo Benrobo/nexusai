@@ -78,7 +78,7 @@ function Messages() {
         ...prev!,
         messages: [...prev!.messages, customerResponse],
       }));
-      scrollToBottom();
+      setTimeout(scrollToBottom, 100);
       setInitProcessingLastQuery(true);
 
       processlLastUserQueryMut.mutate(params?.conversation_id!);
@@ -101,7 +101,7 @@ function Messages() {
         }));
       }
       setInitProcessingLastQuery(false);
-      scrollToBottom();
+      setTimeout(scrollToBottom, 100);
     },
     onError: (error) => {
       const err = (error as any).response.data as ResponseData;
