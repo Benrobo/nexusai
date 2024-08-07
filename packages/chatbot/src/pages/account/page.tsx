@@ -4,7 +4,7 @@ import ProtectPage from "@/components/ProtectPage";
 import Button from "@/components/ui/button";
 import WIDGET_CONFIG from "@/config/widget";
 import { useDataCtx } from "@/context/DataCtx";
-import { logoutAccount } from "@/http/requests";
+import { deleteAccount, logoutAccount } from "@/http/requests";
 import { capitalizeFirstChar, sendMessageToParentIframe } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -15,6 +15,18 @@ function Account() {
     mutationFn: async () => await logoutAccount(),
     onSuccess: () => {
       console.log("Logged out");
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || "An error occurred";
+      toast.error(msg);
+    },
+  });
+
+  const deleteAccountMut = useMutation({
+    mutationFn: async () => await deleteAccount(),
+    onSuccess: async () => {
+      toast.success("Account deleted successfully");
+      await logoutAccount();
     },
     onError: (error: any) => {
       const msg = error?.response?.data?.message || "An error occurred";
@@ -60,7 +72,19 @@ function Account() {
       <FlexColCenter className="w-full px-[2em] mt-10">
         <FlexColStart className="w-full px-5 py-3 border-[1px] border-red-305 bg-red-305/10 rounded-md">
           <h1 className="font-ppM text-sm text-red-305">Danger Zone</h1>
-          <Button className="w-full px-10 rounded-xl bg-red-305/80 text-xs text-white-100  hover:bg-red-305 enableBounceEffect font-ppM">
+          <Button
+            className="w-full px-10 rounded-xl bg-red-305/80 text-xs text-white-100  hover:bg-red-305 enableBounceEffect font-ppM"
+            onClick={() => {
+              const confirm = window.confirm(
+                "Are you sure you want to delete your account? This action is irreversible."
+              );
+              if (confirm) {
+                deleteAccountMut.mutate();
+              }
+            }}
+            isLoading={deleteAccountMut.isPending}
+            disabled={deleteAccountMut.isPending}
+          >
             <Trash size={15} className="stroke-white-100" />
             <span>Delete Account</span>
           </Button>

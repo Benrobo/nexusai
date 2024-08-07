@@ -76,3 +76,8 @@ export const requestHumanSupport = async (data: {
   );
   return req.data;
 };
+
+export const deleteAccount = async () => {
+  const req = await $axios.delete(`/user/chat-widget-account`);
+  return req.data;
+};

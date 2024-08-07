@@ -692,6 +692,32 @@ export class ChatWidgetUserController {
     );
   }
 
+  public async deleteAccount(req: Request & IReqObject, res: Response) {
+    const user = req.user;
+
+    // delete all conversations related to the account
+    const deletedConversations = prisma.conversations.deleteMany({
+      where: {
+        conversationAccountId: user.id,
+      },
+    });
+
+    const deletedAccount = prisma.chatWidgetAccount.delete({
+      where: {
+        id: user.id,
+      },
+    });
+
+    await prisma.$transaction([deletedConversations, deletedAccount]);
+
+    return sendResponse.success(
+      res,
+      RESPONSE_CODE.SUCCESS,
+      "Account deleted successfully",
+      200
+    );
+  }
+
   private setCookie(name: string, value: string, res: Response) {
     res.cookie(name, value, {
       httpOnly: true,

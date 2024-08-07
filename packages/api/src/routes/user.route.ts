@@ -137,6 +137,18 @@ export default class UserRoute {
       )
     );
 
+    // delete account
+    this.router.delete(
+      `${this.path}/chat-widget-account`,
+      useCatchErrors(
+        isWidgetAccountAuthenticated(
+          this.widgetUserController.deleteAccount.bind(
+            this.widgetUserController
+          )
+        )
+      )
+    );
+
     this.router.post(
       `${this.path}/chat-widget-account/logout`,
       useCatchErrors(
