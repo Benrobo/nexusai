@@ -92,6 +92,9 @@ class NexusWidget {
         case "close-frame":
           this.toggleIframe();
           break;
+        case "reload-frame":
+          this.iframe.contentWindow.location.reload();
+          break;
         default:
           break;
       }

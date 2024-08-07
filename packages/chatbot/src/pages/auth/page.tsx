@@ -74,6 +74,18 @@ function SignUp({ switchTab, closeModal, isOpen }: AuthTab) {
       toast.error(msg);
     },
   });
+  const sendOTPMut = useMutation({
+    mutationFn: async (data: any) => await signInUser(data),
+    onSuccess: (data) => {
+      const resp = data as ResponseData;
+      toast.success(resp?.message);
+      setOtpRequested(true);
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || "An error occurred";
+      toast.error(msg);
+    },
+  });
   const verifyEmailMut = useMutation({
     mutationFn: async (data: any) => await verifyAccount(data),
     onSuccess: (data) => {
@@ -188,7 +200,13 @@ function SignUp({ switchTab, closeModal, isOpen }: AuthTab) {
                     otp,
                   });
                 }}
+                resendOtp={() => {
+                  sendOTPMut.mutate({
+                    email: accountDetails.email,
+                  });
+                }}
                 disabled={verifyEmailMut.isPending}
+                loading={verifyEmailMut.isPending}
               />
             )}
 
@@ -335,7 +353,7 @@ interface VerifyOTPProps {
   verify: (otp: string) => void;
   disabled?: boolean;
   loading?: boolean;
-  resendOtp?: () => void;
+  resendOtp: () => void;
 }
 
 function VerifyOTP({ verify, disabled, loading, resendOtp }: VerifyOTPProps) {
@@ -378,9 +396,9 @@ function VerifyOTP({ verify, disabled, loading, resendOtp }: VerifyOTPProps) {
 
         <FlexRowEnd className="w-auto">
           <button
-            className="text-dark-100 text-xs font-ppReg underline flex-center gap-2"
+            className="text-dark-100 text-xs font-ppReg underline flex-center gap-2 disabled:opacity-[.5] disabled:cursor-not-allowed enableBounceEffect"
             onClick={() => {
-              resendOtp && resendOtp();
+              resendOtp();
             }}
             disabled={loading}
           >

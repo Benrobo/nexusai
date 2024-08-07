@@ -26,7 +26,9 @@ function Account() {
     mutationFn: async () => await deleteAccount(),
     onSuccess: async () => {
       toast.success("Account deleted successfully");
-      await logoutAccount();
+      sendMessageToParentIframe({
+        type: "reload-frame",
+      });
     },
     onError: (error: any) => {
       const msg = error?.response?.data?.message || "An error occurred";

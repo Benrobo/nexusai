@@ -404,6 +404,18 @@ export class ChatWidgetUserController {
     await redis.expire(key, exp);
 
     //! send otp code to email
+    const template = `
+      <h1> OTP Code </h1>
+
+      <p>Use the OTP code below to sign in to your account</p>
+
+      <h1>Your OTP code is: <b>${otp}</b></h1>
+    `;
+    await sendMail({
+      to: acctCreated.email,
+      subject: "OTP Code",
+      html: template,
+    });
 
     return sendResponse.success(
       res,
@@ -709,6 +721,14 @@ export class ChatWidgetUserController {
     });
 
     await prisma.$transaction([deletedConversations, deletedAccount]);
+
+    // logout user
+    res.cookie("widget_account_token", "", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      expires: new Date(0),
+    });
 
     return sendResponse.success(
       res,
