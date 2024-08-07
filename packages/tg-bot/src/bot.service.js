@@ -7,6 +7,7 @@ import shortUUID from "short-uuid";
 import retry from "async-retry";
 import { getAIResponse } from "./api/index.js";
 import { message } from "telegraf/filters";
+import redis from "./config/redis.js";
 
 const botCommands = [
   {
@@ -195,6 +196,10 @@ export default class TelegramBotService {
             where: { id: group.id },
           });
           logger.info(`[Bot_Kicked]: Bot removed from group ${groupId}`);
+          await redis.del(`tg-history:${groupId}`);
+          logger.info(
+            `[Bot_Kicked]: Telegram history cleared for group ${groupId}`
+          );
         }
       } catch (e) {
         console.error("[Bot_Kicked]: Error removing bot from group", e);

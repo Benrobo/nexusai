@@ -4,6 +4,7 @@ import sendResponse from "../lib/sendResponse.js";
 import { RESPONSE_CODE } from "../types/index.js";
 import prisma from "../prisma/prisma.js";
 import HttpException from "../lib/exception.js";
+import redis from "../config/redis.js";
 
 type Payload = {
   agentId: string;
