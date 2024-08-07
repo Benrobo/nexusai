@@ -21,7 +21,9 @@ export function isGroupAuthenticated(fn) {
       });
 
       if (!group) {
-        ctx.reply("Unauthorized group. Please authenticate the bot first.");
+        ctx.reply(
+          `Unauthorized group. Please authenticate the bot first. \n\nTo authenticate the bot, head over to https://trynexusai.xyz agent integration page, add a telegram integration and follow the instructions provided.`
+        );
         return;
       }
 
