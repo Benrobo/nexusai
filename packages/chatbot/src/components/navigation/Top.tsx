@@ -4,13 +4,23 @@ import { MessagesSquare, X } from "../icons";
 import { useDataCtx } from "@/context/DataCtx";
 
 export default function TopNavigation() {
-  const { account } = useDataCtx();
+  const { chatbotConf } = useDataCtx();
   return (
-    <FlexRowStartBtw className="w-full h-auto bg-dark-100 px-6 py-5">
+    <FlexRowStartBtw
+      className="w-full h-auto bg-dark-100 px-6 py-5"
+      style={{
+        backgroundColor: chatbotConf?.brand_color ?? "#000",
+      }}
+    >
       <FlexRowStart className="w-auto gap-3">
-        <MessagesSquare />
-        <h1 className="text-md font-ppM text-white-100">
-          {account?.chatbotConfig?.brand_name ?? "Chatbot"}
+        <MessagesSquare color={chatbotConf?.text_color ?? "#fff"} />
+        <h1
+          className="text-md font-ppM text-white-100"
+          style={{
+            color: chatbotConf?.text_color ?? "#fff",
+          }}
+        >
+          {chatbotConf?.brand_name ?? "Chatbot"}
         </h1>
       </FlexRowStart>
       <button
