@@ -13,6 +13,14 @@ interface DataCtxValueType {
   setAuthVisible: (visible: boolean) => void;
   account: AccountInfo | null;
   setAccount: (account: AccountInfo) => void;
+  setChatbotConf: React.Dispatch<React.SetStateAction<IChatbotConf | null>>;
+  chatbotConf: IChatbotConf | null;
+}
+
+interface IChatbotConf {
+  brand_name: string;
+  brand_color: string;
+  text_color: string;
 }
 
 export default function DataCtxProvider({
@@ -26,6 +34,7 @@ export default function DataCtxProvider({
   const [pageLoading, setPageLoading] = useState<boolean>(false); // remember to update this
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [account, setAccount] = useState<AccountInfo | null>(null);
+  const [chatbotConf, setChatbotConf] = useState<IChatbotConf | null>(null);
 
   useEffect(() => {
     if (params?.agent_id) {
@@ -55,6 +64,8 @@ export default function DataCtxProvider({
     setAuthVisible,
     account,
     setAccount,
+    setChatbotConf,
+    chatbotConf,
   } satisfies DataCtxValueType;
 
   return <DataCtx.Provider value={ctxValues}>{children}</DataCtx.Provider>;
