@@ -43,7 +43,7 @@ const pageConfig: Record<
 export default function ProtectPage<P>(Component: React.ComponentType<P>) {
   return function ComponentModified(props: P & any) {
     const { loading, status, user } = useAuth();
-    const { setAuthVisible, agent_id } = useDataCtx();
+    const { setAuthVisible, agent_id, chatbotConf } = useDataCtx();
     const { pathname } = usePathname();
     const page = pathname.toLowerCase() as PageType;
 
@@ -51,7 +51,7 @@ export default function ProtectPage<P>(Component: React.ComponentType<P>) {
       return <FullPageLoader showText={false} />;
     }
 
-    if (!agent_id || user?.chatbotConfig === null) {
+    if (!agent_id) {
       console.error("Invalid Chatbot Configuration");
       return (
         <FlexColCenter className="w-full h-screen gap-1">
@@ -89,8 +89,16 @@ export default function ProtectPage<P>(Component: React.ComponentType<P>) {
                     setAuthVisible(true);
                   }
                 }}
+                style={{
+                  backgroundColor: chatbotConf?.brand_color ?? "#000",
+                  color: chatbotConf?.text_color ?? "#fff",
+                }}
               >
-                <User size={20} className="stroke-white-100" />
+                <User
+                  size={20}
+                  className="stroke-white-100"
+                  color={chatbotConf?.text_color ?? "#fff"}
+                />
                 <span>Create Account</span>
               </button>
             </FlexColCenter>
