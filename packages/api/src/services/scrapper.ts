@@ -54,7 +54,7 @@ export async function scrapeLinksFromWebpage(url: string) {
       .get()
       .filter(Boolean);
 
-    const MAX_LINKS = 8;
+    const MAX_LINKS = 5; // to limit CF AI usage
     const uniqueLinks = removeDuplicates(links.slice(0, MAX_LINKS));
 
     console.log(uniqueLinks);
