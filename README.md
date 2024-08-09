@@ -18,6 +18,7 @@ Nexusai was built from scratch with the following technologies:
 - [Lemonsqueezy](https://lemonsqueezy.com/) (subscription management)
 - [Puppeteer](https://pptr.dev/) (web scraping)
 - [Browserless](https://browserless.io/) (offers headless browser automation)
+- [Cloudflare AI](https://www.cloudflare.com/ai/) (qwen-1.5-14b-chat-awq)
 - [NeonDB](https://neondb.tech/)
 - [Postgresql](https://www.postgresql.org/)
 - [Elevenlab](https://elevenlabs.io/)
