@@ -17,11 +17,12 @@ Nexusai was built from scratch with the following technologies:
 - [Twilio](https://www.twilio.com/) (voice, sms, phone number provisioning)
 - [Lemonsqueezy](https://lemonsqueezy.com/) (subscription management)
 - [Puppeteer](https://pptr.dev/) (web scraping)
+- [Elevenlab](https://elevenlabs.io/)
 - [Browserless](https://browserless.io/) (offers headless browser automation)
 - [Cloudflare AI](https://www.cloudflare.com/ai/) (qwen-1.5-14b-chat-awq)
+- [Telegram Bot API](https://core.telegram.org/bots)
 - [NeonDB](https://neondb.tech/)
 - [Postgresql](https://www.postgresql.org/)
-- [Elevenlab](https://elevenlabs.io/)
 - [Redis](https://redis.io/)
 - [Upstash Qstash](https://upstash.com/)
 - [Nodejs](https://nodejs.org/en/)
@@ -29,7 +30,6 @@ Nexusai was built from scratch with the following technologies:
 - [Tailwindcss](https://tailwindcss.com/)
 - [Typescript](https://www.typescriptlang.org/)
 - [Prisma](https://www.prisma.io/)
-- [Telegram](https://core.telegram.org/bots)
 
 ## Getting Started
 
