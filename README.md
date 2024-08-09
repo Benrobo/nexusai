@@ -287,3 +287,5 @@ After that, you should be able to view the chatbot widget on `http://localhost:5
 ## Disclaimer
 
 Considering the fact that this project was built within a short period of time (1.5 month), the codebas might not be as clean as expected. I would be working on refactoring the codebase and adding more features in the future (if time permits).
+
+[First Commit](https://github.com/Benrobo/nexusai/commits/main/?after=8e957a51323109f3cfa7c54ebb770d23556ed669+600)
