@@ -83,6 +83,8 @@ export async function scrapeLinksFromWebpage(url: string) {
       .get()
       .filter(Boolean);
 
+    console.log({ links });
+
     const MAX_LINKS = 8;
     const uniqueLinks = removeDuplicates(links.slice(0, MAX_LINKS));
 
