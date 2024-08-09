@@ -118,11 +118,12 @@ export async function getCleanMD(link: string) {
   try {
     const apiUrl = "https://md.dhr.wtf/";
     const req = await axios.get(`${apiUrl}?url=${link}`, {
-      timeout: 10000,
+      timeout: 20000,
     });
     const textresp = req.data;
     return textresp;
   } catch (e: any) {
+    console.log(e?.response?.data ?? e?.message);
     throw new HttpException(
       RESPONSE_CODE.EXTRACT_LINKS_ERROR,
       "Error extracting link markup",
