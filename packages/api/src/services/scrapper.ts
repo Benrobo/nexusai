@@ -10,8 +10,10 @@ import {
   getLLMResponse,
   type LLMResponseProps,
 } from "../helpers/llm.helper.js";
+import GeminiService from "./gemini.service.js";
 
 const turndownService = new TurndownService();
+const gemini = new GeminiService();
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const getBrowser = () =>
   IS_PRODUCTION
@@ -104,6 +106,7 @@ export async function scrapeLinksMarkupFromWebpage(url: string) {
   return markdown.replace(/\n\s\n+/g, "\n");
 }
 
+// using cloudflare qwen chat 14-B model
 export async function getCleanMDV2(markdown: string) {
   const prompt = cleanMDV2Prompt(markdown);
   const messages = [
@@ -111,6 +114,20 @@ export async function getCleanMDV2(markdown: string) {
   ] as LLMResponseProps["messages"];
   const response = await getLLMResponse(messages);
   return response;
+}
+
+// using gemini
+export async function getCleanMDV3(markdown: string) {
+  const prompt = cleanMDV2Prompt(markdown);
+  const messages = [
+    { role: "system", content: prompt },
+  ] as LLMResponseProps["messages"];
+  const resp = await gemini.callAI({
+    user_prompt: "",
+    instruction: prompt,
+  });
+
+  return resp.data;
 }
 
 export async function extractLinkMarkupUsingLLMV2(links: string[] = []) {
@@ -121,7 +138,7 @@ export async function extractLinkMarkupUsingLLMV2(links: string[] = []) {
       links.map(async (link) => {
         const markup = await scrapeLinksMarkupFromWebpage(link);
         if (markup) {
-          const cleanHtml = await getCleanMDV2(markup);
+          const cleanHtml = await getCleanMDV3(markup);
           dataMarkup.push({
             url: link,
             content: cleanHtml,

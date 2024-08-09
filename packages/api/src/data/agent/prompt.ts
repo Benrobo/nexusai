@@ -241,14 +241,15 @@ Question:
 ${props?.user_input ?? "N/A"}
 `;
 
-export const cleanMDV2Prompt = (
-  md: string
-) => `You are an AI assistant that converts webpage content to markdown while filtering out unnecessary information. Please follow these guidelines:
-Remove any inappropriate content, ads, or irrelevant information
-If unsure about including something, err on the side of keeping it
-Answer in English. Include all points in markdown in sufficient detail to be useful.
-Aim for clean, readable markdown.
-Return the markdown and nothing else.
+export const cleanMDV2Prompt = (md: string) => `
+Convert webpage content to concise, readable markdown:
+
+- Remove ads, inappropriate content, and irrelevant information
+- Keep potentially important content if unsure
+- Use clean, readable markdown syntax
+- Be brief and to the point
+- Limit response to 1000-3000 words
+- Output markdown only, no additional text
 Input: ${md}
 Output:\`\`\`markdown\n
 `;
