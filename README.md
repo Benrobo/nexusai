@@ -17,6 +17,7 @@ Nexusai was built from scratch with the following technologies:
 - [Twilio](https://www.twilio.com/) (voice, sms, phone number provisioning)
 - [Lemonsqueezy](https://lemonsqueezy.com/) (subscription management)
 - [Puppeteer](https://pptr.dev/) (web scraping)
+- [Cheerio](https://cheerio.js.org/) (web scraping)
 - [Elevenlab](https://elevenlabs.io/)
 - [Browserless](https://browserless.io/) (offers headless browser automation)
 - [Cloudflare AI](https://www.cloudflare.com/ai/) (qwen-1.5-14b-chat-awq)
