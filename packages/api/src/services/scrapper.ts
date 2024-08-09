@@ -5,6 +5,11 @@ import HttpException from "../lib/exception.js";
 import TurndownService from "turndown";
 import logger from "../config/logger.js";
 import * as cheerio from "cheerio";
+import { cleanMDV2Prompt } from "../data/agent/prompt.js";
+import {
+  getLLMResponse,
+  type LLMResponseProps,
+} from "../helpers/llm.helper.js";
 
 const turndownService = new TurndownService();
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
@@ -17,42 +22,8 @@ const getBrowser = () =>
     : // Run the browser locally while in development
       puppeteer.launch();
 
-// Utilizes puppeteer for link scraping, which was initially problematic in production due to the requirement of a Chrome instance, a setup that would incur additional costs. 😢
-export async function scrapeLinksFromWebpageV1(url: string) {
-  try {
-    // Fetch HTML content of the main page
-    const modifiedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
+/** =========================== NEW IMPLEMENTATION ✅ =========================== **/
 
-    const browser = await getBrowser();
-    const page = await browser.newPage();
-
-    await page.goto(modifiedUrl, {
-      waitUntil: "domcontentloaded",
-    });
-
-    const _links = await page.evaluate((baseUrl) => {
-      return Array.from(document.querySelectorAll("a"))
-        .map((link) => (link as { href: string }).href)
-        .filter((link) => link.startsWith(baseUrl));
-    }, modifiedUrl);
-
-    await browser.close();
-
-    const MAX_LINKS = 8;
-    const uniqueLinks = removeDuplicates(_links.slice(0, MAX_LINKS));
-
-    return uniqueLinks;
-  } catch (error) {
-    console.error("Error:", error);
-    throw new HttpException(
-      RESPONSE_CODE.EXTRACT_LINKS_ERROR,
-      "Error extracting links",
-      400
-    );
-  }
-}
-
-// Optimized code that uses axios and cheerio to scrape the links from the webpage. (not suitable for SPA websites like React, Vue, etc.)
 export async function scrapeLinksFromWebpage(url: string) {
   try {
     const modifiedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
@@ -99,7 +70,125 @@ export async function scrapeLinksFromWebpage(url: string) {
   }
 }
 
-export async function extractLinkMarkupUsingLLM(links: string[] = []) {
+export async function scrapeLinksMarkupFromWebpage(url: string) {
+  const modifiedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
+
+  // Fetch the HTML content of the page
+  const response = await axios.get(modifiedUrl);
+  const html = response.data;
+
+  // Load the HTML into Cheerio
+  const $ = cheerio.load(html);
+
+  const invalidTags = [
+    "script",
+    "style",
+    "noscript",
+    "svg",
+    "img",
+    "path",
+    "input",
+    "button",
+    "head",
+    "meta",
+    "link",
+    "title",
+    "base",
+    "basefont",
+    "basefont",
+    "basefont",
+  ];
+  invalidTags.forEach((tag) => $(tag).remove());
+  const cleanHtml = $("body").html();
+  const markdown = turndownService.turndown(cleanHtml);
+  return markdown.replace(/\n\s\n+/g, "\n");
+}
+
+export async function getCleanMDV2(markdown: string) {
+  const prompt = cleanMDV2Prompt(markdown);
+  const messages = [
+    { role: "system", content: prompt },
+  ] as LLMResponseProps["messages"];
+  const response = await getLLMResponse(messages);
+  return response;
+}
+
+export async function extractLinkMarkupUsingLLMV2(links: string[] = []) {
+  logger.info("Extracting link markup using Cheerio");
+  let dataMarkup = [] as { url: string; content: string }[];
+  try {
+    await Promise.all(
+      links.map(async (link) => {
+        const markup = await scrapeLinksMarkupFromWebpage(link);
+        if (markup) {
+          const cleanHtml = await getCleanMDV2(markup);
+          dataMarkup.push({
+            url: link,
+            content: cleanHtml,
+          });
+        }
+      })
+    );
+
+    return dataMarkup;
+  } catch (e: any) {
+    console.error("Error:", e?.response?.data ?? e);
+    if (dataMarkup.length > 0) return dataMarkup;
+    throw new HttpException(
+      RESPONSE_CODE.EXTRACT_LINKS_ERROR,
+      "Error extracting link markup",
+      400
+    );
+  }
+}
+
+/** =========================== END NEW IMPLEMENTATION ✅ =========================== **/
+
+/**
+ *
+ *
+ *
+ *
+ *
+ */
+
+/** =========================== BEGIN OLD IMPLEMENTATION ❌ =========================== **/
+
+// Puppeteer-based link scraping. Costly in production due to Chrome instance requirement.
+export async function scrapeLinksFromWebpageV1(url: string) {
+  try {
+    const modifiedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
+
+    const browser = await getBrowser();
+    const page = await browser.newPage();
+
+    await page.goto(modifiedUrl, {
+      waitUntil: "domcontentloaded",
+    });
+
+    const _links = await page.evaluate((baseUrl) => {
+      return Array.from(document.querySelectorAll("a"))
+        .map((link) => (link as { href: string }).href)
+        .filter((link) => link.startsWith(baseUrl));
+    }, modifiedUrl);
+
+    await browser.close();
+
+    const MAX_LINKS = 8;
+    const uniqueLinks = removeDuplicates(_links.slice(0, MAX_LINKS));
+
+    return uniqueLinks;
+  } catch (error) {
+    console.error("Error:", error);
+    throw new HttpException(
+      RESPONSE_CODE.EXTRACT_LINKS_ERROR,
+      "Error extracting links",
+      400
+    );
+  }
+}
+
+export async function extractLinkMarkupUsingLLMV1(links: string[] = []) {
   logger.info("Extracting link markup using LLM");
   let dataMarkup = [] as { url: string; content: string }[];
   try {
@@ -125,7 +214,7 @@ export async function extractLinkMarkupUsingLLM(links: string[] = []) {
   }
 }
 
-export async function extractLinkMarkupUsingBrowser(links: string[] = []) {
+export async function extractLinkMarkupUsingBrowserV1(links: string[] = []) {
   const browser = await getBrowser();
   let dataMarkup = [] as { url: string; content: string }[];
 
@@ -184,6 +273,8 @@ export async function getCleanMD(link: string) {
     );
   }
 }
+
+// =========================== END OLD IMPLEMENTATION =========================== //
 
 function removeDuplicates(array: string[]) {
   return array.filter((a, b) => array.indexOf(a) === b);

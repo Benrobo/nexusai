@@ -20,7 +20,7 @@ import KbHelper from "../helpers/kb.helper.js";
 import type { KnowledgeBaseType } from "@prisma/client";
 import logger from "../config/logger.js";
 import {
-  extractLinkMarkupUsingLLM,
+  extractLinkMarkupUsingLLMV2,
   scrapeLinksFromWebpage,
 } from "../services/scrapper.js";
 import redis from "../config/redis.js";
@@ -387,7 +387,7 @@ export default class KnowledgeBaseController extends BaseController {
 
     // crawl page
     const links = await scrapeLinksFromWebpage(url);
-    const markup = await extractLinkMarkupUsingLLM(links);
+    const markup = await extractLinkMarkupUsingLLMV2(links);
 
     // if markup is empty
     if (markup.length === 0) {
@@ -798,7 +798,7 @@ export default class KnowledgeBaseController extends BaseController {
     const url = kbData
       .map((k) => k.title)
       .filter((v, i, a) => a.findIndex((d) => d === v) === i);
-    const markup = await extractLinkMarkupUsingLLM(url);
+    const markup = await extractLinkMarkupUsingLLMV2(url);
 
     // update kb data with new embedding
     for (const m of markup) {
