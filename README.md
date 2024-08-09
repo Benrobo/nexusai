@@ -16,6 +16,8 @@ Nexusai was built from scratch with the following technologies:
 - [Firebase](https://firebase.google.com/) (auth, realtime database)
 - [Twilio](https://www.twilio.com/) (voice, sms, phone number provisioning)
 - [Lemonsqueezy](https://lemonsqueezy.com/) (subscription management)
+- [Puppeteer](https://pptr.dev/) (web scraping)
+- [Browserless](https://browserless.io/) (offers headless browser automation)
 - [NeonDB](https://neondb.tech/)
 - [Postgresql](https://www.postgresql.org/)
 - [Elevenlab](https://elevenlabs.io/)
