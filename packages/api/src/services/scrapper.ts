@@ -119,9 +119,6 @@ export async function getCleanMDV2(markdown: string) {
 // using gemini
 export async function getCleanMDV3(markdown: string) {
   const prompt = cleanMDV2Prompt(markdown);
-  const messages = [
-    { role: "system", content: prompt },
-  ] as LLMResponseProps["messages"];
   const resp = await gemini.callAI({
     user_prompt: "",
     instruction: prompt,
