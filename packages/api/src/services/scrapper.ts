@@ -17,15 +17,12 @@ const gemini = new GeminiService();
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const getBrowser = () =>
   IS_PRODUCTION
-    ? // Connect to browserless so we don't run Chrome on the same hardware in production
-      puppeteer.connect({
+    ? puppeteer.connect({
         browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.BROWSERLESS_API_KEY}`,
       })
-    : // Run the browser locally while in development
-      puppeteer.launch();
+    : puppeteer.launch();
 
 /** =========================== NEW IMPLEMENTATION ✅ =========================== **/
-
 export async function scrapeLinksFromWebpage(url: string) {
   try {
     const modifiedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
@@ -166,7 +163,7 @@ export async function extractLinkMarkupUsingLLMV2(links: string[] = []) {
  *
  */
 
-/** =========================== BEGIN OLD IMPLEMENTATION ❌ =========================== **/
+/** =========================== START OLD IMPLEMENTATION ❌ =========================== **/
 
 // Puppeteer-based link scraping. Costly in production due to Chrome instance requirement.
 export async function scrapeLinksFromWebpageV1(url: string) {
@@ -268,8 +265,8 @@ export async function extractLinkMarkupUsingBrowserV1(links: string[] = []) {
   return dataMarkup;
 }
 
-// A fallback function to extract link using @Dhravya markdown cloudflare function
 // credit: https://github.com/Dhravya/markdowner
+// Disclaimer: ❌ Doesn't work in production due to cloudflare firewall or something else i'm not sure of.
 export async function getCleanMD(link: string) {
   try {
     const apiUrl = "https://md.dhr.wtf/";
