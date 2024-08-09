@@ -140,7 +140,13 @@ export default function SelectedAgent() {
           {activeTab === "appearance" && (
             <Appearance agent_id={agentId!} type={agentInfo.type!} />
           )}
-          {activeTab === "knowledge-base" && <KnowledgeBase />}
+          {activeTab === "knowledge-base" && (
+            <KnowledgeBase
+              refetchAgentInfo={() => {
+                getAgentQuery.mutate(agentId!);
+              }}
+            />
+          )}
           {activeTab === "integrations" && <Integrations />}
         </div>
       </FlexRowStart>

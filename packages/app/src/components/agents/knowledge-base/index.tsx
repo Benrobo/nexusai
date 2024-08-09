@@ -69,7 +69,13 @@ type KBData = {
   status: string;
 };
 
-export default function KnowledgeBase() {
+interface KnowledgeBaseProps {
+  refetchAgentInfo: () => void;
+}
+
+export default function KnowledgeBase({
+  refetchAgentInfo,
+}: KnowledgeBaseProps) {
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [tabLoading, setTabLoading] = useState(true);
   const location = useLocation();
@@ -266,6 +272,7 @@ export default function KnowledgeBase() {
                                       )
                                     );
                                     getKbQuery.refetch();
+                                    refetchAgentInfo();
                                     return "Knowledge base unlinked successfully";
                                   },
                                   error: (err: any) => {
@@ -305,7 +312,10 @@ export default function KnowledgeBase() {
       {activeModal === "add-kb" && (
         <AddKnowledgeBaseModal
           closeModal={() => setActiveModal(null)}
-          refetch={() => getKbQuery.refetch()}
+          refetch={() => {
+            getKbQuery.refetch();
+            refetchAgentInfo();
+          }}
           agentId={agentId}
         />
       )}
@@ -313,7 +323,10 @@ export default function KnowledgeBase() {
       {activeModal === "link-kb" && (
         <LinkKnowledgeBase
           closeModal={() => setActiveModal(null)}
-          refetch={() => getKbQuery.refetch()}
+          refetch={() => {
+            getKbQuery.refetch();
+            refetchAgentInfo();
+          }}
           agentId={agentId}
         />
       )}

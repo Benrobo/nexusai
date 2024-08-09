@@ -57,6 +57,17 @@ export default class KnowledgeBaseController extends BaseController {
     this.googleService = new GeminiService();
   }
 
+  private async activateAgent(agent_id: string) {
+    await prisma.agents.update({
+      where: {
+        id: agent_id,
+      },
+      data: {
+        activated: true,
+      },
+    });
+  }
+
   // add knowledge base
   public async addKb(req: Request & IReqObject, res: Response) {
     const file = req.file;
@@ -147,6 +158,9 @@ export default class KnowledgeBaseController extends BaseController {
           kb_id: kb.id,
         },
       });
+
+      // activate agent if it not activated
+      await this.activateAgent(payload.agent_id);
 
       return sendResponse.success(
         res,
@@ -256,6 +270,9 @@ export default class KnowledgeBaseController extends BaseController {
           kb_id: kb.id,
         },
       });
+
+      // activate agent if it not activated
+      await this.activateAgent(payload.agent_id);
 
       // clear cache
       await redis.del(url);
@@ -401,7 +418,8 @@ export default class KnowledgeBaseController extends BaseController {
       200,
       {
         refId,
-        links,
+        // Return processed URLs to client, ensuring consistency between scraped and processed data, especially in error cases
+        links: markup.map((m) => m.url),
       }
     );
   }
@@ -481,6 +499,18 @@ export default class KnowledgeBaseController extends BaseController {
       data: linkKb,
     });
 
+    // activate agent if it not activated
+    if (!agent.activated) {
+      await prisma.agents.update({
+        where: {
+          id: agent_id,
+        },
+        data: {
+          activated: true,
+        },
+      });
+    }
+
     return sendResponse.success(
       res,
       RESPONSE_CODE.SUCCESS,
@@ -540,6 +570,14 @@ export default class KnowledgeBaseController extends BaseController {
       );
     }
 
+    const allLinkedKb = await prisma.linkedKnowledgeBase.findMany({
+      where: {
+        agentId: agent_id,
+      },
+    });
+
+    const lastLinkedKb = allLinkedKb.filter((lkb) => lkb.kb_id !== kb_id);
+
     // unlink kb from agent
     await prisma.linkedKnowledgeBase.delete({
       where: {
@@ -547,6 +585,17 @@ export default class KnowledgeBaseController extends BaseController {
         agentId: agent_id,
       },
     });
+
+    if (lastLinkedKb.length === 0) {
+      await prisma.agents.update({
+        where: {
+          id: agent_id,
+        },
+        data: {
+          activated: false,
+        },
+      });
+    }
 
     return sendResponse.success(
       res,

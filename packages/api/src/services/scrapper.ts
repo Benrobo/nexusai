@@ -4,6 +4,7 @@ import { RESPONSE_CODE } from "../types/index.js";
 import HttpException from "../lib/exception.js";
 import TurndownService from "turndown";
 import logger from "../config/logger.js";
+import * as cheerio from "cheerio";
 
 const turndownService = new TurndownService();
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
@@ -16,7 +17,8 @@ const getBrowser = () =>
     : // Run the browser locally while in development
       puppeteer.launch();
 
-export async function scrapeLinksFromWebpage(url: string) {
+// Utilizes puppeteer for link scraping, which was initially problematic in production due to the requirement of a Chrome instance, a setup that would incur additional costs. 😢
+export async function scrapeLinksFromWebpageV1(url: string) {
   try {
     // Fetch HTML content of the main page
     const modifiedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
@@ -50,10 +52,55 @@ export async function scrapeLinksFromWebpage(url: string) {
   }
 }
 
+// Optimized code that uses axios and cheerio to scrape the links from the webpage. (not suitable for SPA websites like React, Vue, etc.)
+export async function scrapeLinksFromWebpage(url: string) {
+  try {
+    const modifiedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
+
+    // Fetch the HTML content of the page
+    const response = await axios.get(modifiedUrl);
+    const html = response.data;
+
+    // Load the HTML into Cheerio
+    const $ = cheerio.load(html);
+
+    // Extract all links
+    const modifiedUrlObj = new URL(modifiedUrl);
+    const links = $("a")
+      .map((_, element) => {
+        const href = $(element).attr("href");
+        if (!href) return null;
+
+        try {
+          const fullLink = new URL(href, modifiedUrl);
+          return fullLink.hostname === modifiedUrlObj.hostname
+            ? fullLink.href
+            : null;
+        } catch {
+          return null;
+        }
+      })
+      .get()
+      .filter(Boolean);
+
+    const MAX_LINKS = 8;
+    const uniqueLinks = removeDuplicates(links.slice(0, MAX_LINKS));
+
+    return uniqueLinks;
+  } catch (error) {
+    console.error("Error:", error);
+    throw new HttpException(
+      RESPONSE_CODE.EXTRACT_LINKS_ERROR,
+      "Error extracting links",
+      400
+    );
+  }
+}
+
 export async function extractLinkMarkupUsingLLM(links: string[] = []) {
   logger.info("Extracting link markup using LLM");
+  let dataMarkup = [] as { url: string; content: string }[];
   try {
-    let dataMarkup = [] as { url: string; content: string }[];
     for (const l of links) {
       const md = await getCleanMD(l);
       dataMarkup.push({
@@ -64,6 +111,10 @@ export async function extractLinkMarkupUsingLLM(links: string[] = []) {
 
     return dataMarkup;
   } catch (e: any) {
+    // Partial Degradation
+    // If an error occurs, but some data has been scraped, return it
+    if (dataMarkup.length > 0) return dataMarkup;
+
     throw new HttpException(
       RESPONSE_CODE.EXTRACT_LINKS_ERROR,
       "Error extracting link markup",

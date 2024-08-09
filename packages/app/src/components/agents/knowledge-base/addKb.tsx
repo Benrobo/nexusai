@@ -2,12 +2,14 @@ import {
   FlexColCenter,
   FlexColStart,
   FlexColStartCenter,
+  FlexRowEnd,
   FlexRowStart,
   FlexRowStartBtw,
   FlexRowStartCenter,
 } from "@/components/Flex";
-import { Brain, Trash, X } from "@/components/icons";
+import { Brain, Info, Trash, X } from "@/components/icons";
 import Modal from "@/components/Modal";
+import TooltipComp from "@/components/TooltipComp";
 import Button from "@/components/ui/button";
 import { addKnowledgeBase, crawlWebpage } from "@/http/requests";
 import { cn, validateUrl } from "@/lib/utils";
@@ -61,9 +63,11 @@ export default function AddKnowledgeBaseModal({
   const [webPagesResponse, setWebPagesResponse] = useState<{
     refId: string;
     links: string[];
+    copiedLinks: string[];
   }>({
     refId: "",
     links: [],
+    copiedLinks: [],
   });
   const crawlWebPageMut = useMutation({
     mutationFn: async (data: any) => await crawlWebpage(data),
@@ -73,6 +77,7 @@ export default function AddKnowledgeBaseModal({
       setWebPagesResponse({
         refId: _data.refId,
         links: _data.links,
+        copiedLinks: _data.links,
       });
     },
     onError: (error: any) => {
@@ -92,6 +97,7 @@ export default function AddKnowledgeBaseModal({
       setWebPagesResponse({
         refId: "",
         links: [],
+        copiedLinks: [],
       });
       setTrashLinks([]);
       setFile(null);
@@ -265,6 +271,11 @@ export default function AddKnowledgeBaseModal({
 
             {selectedKbType === "WEB_PAGES" && (
               <FlexColStart className="w-full h-auto bg-white-400/10 rounded-2xl mt-3 border-[1px] border-white-400/20 relative px-6 py-8">
+                <FlexRowEnd className="w-full gap-0 m-0 absolute top-2 right-3">
+                  <TooltipComp text="Not supported for single page websites.">
+                    <Info size={15} className="stroke-white-400" />
+                  </TooltipComp>
+                </FlexRowEnd>
                 <FlexRowStartCenter className="w-full h-[50px] py-1 px-1 bg-white-100 rounded-full gap-0 overflow-hidden border-[1px] border-white-400/20">
                   <input
                     className="bg-none outline-none border-none ring-0 w-full h-[30px] text-dark-100 font-jb text-xs font-semibold px-5 translate-x-1 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -288,6 +299,12 @@ export default function AddKnowledgeBaseModal({
                       crawlWebPageMut.mutate({
                         url: websiteUrl,
                         agent_id: agentId,
+                      });
+                      setTrashLinks([]);
+                      setWebPagesResponse({
+                        ...webPagesResponse,
+                        links: [],
+                        copiedLinks: [],
                       });
                     }}
                     enableBounceEffect={true}
@@ -314,7 +331,9 @@ export default function AddKnowledgeBaseModal({
                         </span>
                         <button
                           onClick={() => {
-                            setTrashLinks([...trashLinks, l]);
+                            if (!trashLinks.includes(l)) {
+                              setTrashLinks([...trashLinks, l]);
+                            }
                             setWebPagesResponse({
                               ...webPagesResponse,
                               links: webPagesResponse.links.filter(
@@ -350,7 +369,11 @@ export default function AddKnowledgeBaseModal({
                     ? true
                     : selectedKbType === "WEB_PAGES" && !webPagesResponse.refId
                       ? true
-                      : selectedKbType === "WEB_PAGES" && addKbMut.isPending
+                      : selectedKbType === "WEB_PAGES" &&
+                          (addKbMut.isPending ||
+                            crawlWebPageMut.isPending ||
+                            trashLinks.length ===
+                              webPagesResponse.copiedLinks.length)
                         ? true
                         : false
                 }
