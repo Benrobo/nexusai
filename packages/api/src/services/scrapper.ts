@@ -83,10 +83,10 @@ export async function scrapeLinksFromWebpage(url: string) {
       .get()
       .filter(Boolean);
 
-    console.log({ links });
-
     const MAX_LINKS = 8;
     const uniqueLinks = removeDuplicates(links.slice(0, MAX_LINKS));
+
+    console.log(uniqueLinks);
 
     return uniqueLinks;
   } catch (error) {
@@ -176,7 +176,7 @@ export async function getCleanMD(link: string) {
     const textresp = req.data;
     return textresp;
   } catch (e: any) {
-    console.log(e?.response?.data ?? e?.message);
+    console.log(e);
     throw new HttpException(
       RESPONSE_CODE.EXTRACT_LINKS_ERROR,
       "Error extracting link markup",
