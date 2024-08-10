@@ -239,7 +239,7 @@ export default function InboxPage() {
     if (state) locationStr += `, ${state}`;
     if (country_code) {
       const country = countryJson.find((c) => c.code === country_code);
-      locationStr += `, ${country?.title} ${country?.emoji}`;
+      locationStr += `, ${country?.name} ${country?.emoji}`;
     }
     return locationStr;
   };
