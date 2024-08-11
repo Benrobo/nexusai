@@ -336,6 +336,7 @@ function sendTgMessage(ctx, message, shouldReply = true) {
         message_id: messageId,
         chat_id: chatId,
       },
+      parse_mode: "Markdown",
     });
   } else {
     ctx.telegram.sendMessage(ctx.chat.id, message);
@@ -347,5 +348,7 @@ async function editTgMessage(ctx, message, messageId, chatId) {
     throw new Error("Message cannot be empty");
   }
 
-  await ctx.telegram.editMessageText(chatId, messageId, null, message, {});
+  await ctx.telegram.editMessageText(chatId, messageId, null, message, {
+    parse_mode: "Markdown",
+  });
 }
