@@ -276,8 +276,9 @@ export default function IntegrationConfig({
                         </span>{" "}
                         or use this{" "}
                         <a
-                          href={"t.me/usenexusai_bot"}
+                          href={"https://t.me/usenexusai_bot"}
                           className="text-blue-100 font-ppM underline"
+                          target="_blank"
                         >
                           Link
                         </a>{" "}
