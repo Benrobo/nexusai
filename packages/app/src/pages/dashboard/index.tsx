@@ -1,4 +1,3 @@
-import CircularProgressBar from "@/components/CircularProgressBar";
 import {
   FlexColCenter,
   FlexColStart,
@@ -38,6 +37,7 @@ import toast from "react-hot-toast";
 import type { AgentType, KBType, ResponseData } from "@/types";
 import TooltipComp from "@/components/TooltipComp";
 import { agentTypes } from "@/data/agent";
+import DonutChart from "@/components/DonutChart";
 
 dayjs.extend(relativeTime);
 
@@ -632,22 +632,28 @@ function SentimentCard() {
   ];
 
   const indicators = [
-    { label: "Positive", colorClass: "bg-green-100" },
-    { label: "Neutral", colorClass: "bg-orange-100" },
-    { label: "Negative", colorClass: "bg-red-305" },
+    {
+      label: "Positive",
+      colorClass: "bg-green-100",
+      percentage: analysis[activeTab]?.percentages?.positive || 0,
+    },
+    {
+      label: "Neutral",
+      colorClass: "bg-orange-100",
+      percentage: analysis[activeTab]?.percentages?.neutral || 0,
+    },
+    {
+      label: "Negative",
+      colorClass: "bg-red-305",
+      percentage: analysis[activeTab]?.percentages?.negative || 0,
+    },
   ];
-
-  const sentimentColor = highestSentiment
-    ? {
-        positive: "#22C55E",
-        neutral: "#f99d52",
-        negative: "#ff4741",
-      }[Object.keys(highestSentiment)[0]]
-    : "";
 
   const sentimentText = highestSentiment
     ? `${Object.keys(highestSentiment)[0]} (${progressBarValue}%)`
-    : "Analysis";
+    : "No data available";
+
+  console.log(analysis[activeTab]);
 
   return (
     <FlexColStart className="w-full h-auto bg-white-100 rounded-md p-6">
@@ -675,38 +681,101 @@ function SentimentCard() {
         </FlexRowStart>
       </FlexColStart>
 
-      {/* Circular Progress Bar */}
-      {loading ? (
-        <CircularProgressBar
-          percentages={[]}
-          size={200}
-          strokeWidth={20}
-          text={"Loading..."}
-        />
-      ) : (
-        <CircularProgressBar
-          percentages={[
-            {
-              color: sentimentColor!,
-              value: progressBarValue,
-            },
-          ]}
-          size={200}
-          strokeWidth={20}
-          text={sentimentText}
-        />
-      )}
+      <div className="w-full h-full flex-center">
+        {loading ? (
+          <DonutChart
+            centeredChildren={
+              <span className="text-sm font-ppM">{"Loading..."}</span>
+            }
+            segments={[
+              {
+                color: "#ebebebb6",
+                value: 100,
+                label: "Segment 1",
+              },
+              {
+                color: "#ebebebb6",
+                value: 100,
+                label: "Segment 2",
+              },
+              {
+                color: "#ebebebb6",
+                value: 100,
+                label: "Segment 3",
+              },
+            ]}
+            size={200}
+          />
+        ) : (
+          <DonutChart
+            centeredChildren={
+              <span className="text-sm font-ppM">
+                {analysis[activeTab] && sentimentText}
+              </span>
+            }
+            segments={
+              analysis[activeTab]
+                ? (() => {
+                    const segments = [
+                      {
+                        color: "#22C55E",
+                        value: analysis[activeTab].percentages.positive,
+                        label: "Positive",
+                      },
+                      {
+                        color: "#f99d52",
+                        value: analysis[activeTab].percentages.neutral,
+                        label: "Neutral",
+                      },
+                      {
+                        color: "#ff4741",
+                        value: analysis[activeTab].percentages.negative,
+                        label: "Negative",
+                      },
+                    ];
+                    const totalPercentage = segments.reduce(
+                      (sum, segment) => sum + segment.value,
+                      0
+                    );
+                    return totalPercentage === 0
+                      ? [{ color: "#ebebebb6", value: 100, label: "No data" }]
+                      : segments.filter((segment) => segment.value !== 0);
+                  })()
+                : [
+                    {
+                      color: "#ebebebb6",
+                      value: 33.33,
+                      label: "Seg-1",
+                    },
+                    {
+                      color: "#ebebebb6",
+                      value: 50,
+                      label: "Seg-2",
+                    },
+                    {
+                      color: "#ebebebb6",
+                      value: 33.33,
+                      label: "Seg-3",
+                    },
+                  ]
+            }
+            size={200}
+          />
+        )}
+      </div>
 
       {/* Indicator */}
-      <FlexRowCenterBtw className="w-full mt-2">
+      <FlexRowCenterBtw className="w-full mt-2 gap-2">
         {indicators.map((indicator, index) => (
-          <FlexRowStartCenter key={index}>
-            <div
-              className={cn(
-                "w-[30px] h-[18px] rounded-sm",
-                indicator.colorClass
-              )}
-            ></div>
+          <FlexRowStartCenter key={index} className="gap-2">
+            <TooltipComp text={`${indicator.percentage}%`}>
+              <div
+                className={cn(
+                  "w-[30px] h-[18px] rounded-sm",
+                  indicator.colorClass
+                )}
+              ></div>
+            </TooltipComp>
             <span className="text-xs font-ppReg text-white-400">
               {indicator.label}
             </span>
