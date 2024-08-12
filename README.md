@@ -308,7 +308,7 @@ Considering the fact that this project was built within a short period of time (
 
 Response between production instance of nexusai might be slow, considering it was hosted on a cheap shared server instance on render with the following specs:
 
-```markdown
+```bash
 # server specs
 
 - 1 CPU
