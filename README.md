@@ -79,7 +79,7 @@ npm run migrate
 yarn migrate
 ```
 
-5. Using pgAdmin or any database client of your choice, headover to `/packages/api/sql/function.sql` and run the sql file to create the necessary functions. Or copy the SQL content below:
+5. Using pgAdmin or any database client of your choice, headover to `/packages/api/sql/function.sql` copy and run the sql content inside the database sql editor.
 
 ```sql
 -- Drop function

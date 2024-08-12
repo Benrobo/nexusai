@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import redis from "../config/redis.js";
 import TTSService from "./tts.service.js";
 import { storage } from "../config/firebase.js";
+import env from "../config/env.js";
 
 export default class PhraseService {
   ttsService = new TTSService();
@@ -18,8 +19,7 @@ export default class PhraseService {
     // generate audio buffer
     const audioBuffer = await this.ttsService.xiLabTTS(text);
 
-    const storageUrl =
-      "https://firebasestorage.googleapis.com/v0/b/nexusai-9f410.appspot.com/o";
+    const storageUrl = `https://firebasestorage.googleapis.com/v0/b/${env.FIREBASE.STORAGE_BUCKET}.appspot.com/o`;
 
     const filename = `voice:${textHash}.mp3`;
     const metadata = {
