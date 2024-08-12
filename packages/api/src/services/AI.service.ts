@@ -1018,6 +1018,17 @@ export default class AIService {
             return resp;
           }
 
+          // send the booking link to the user
+          const bookingLink = bookingIntegration.url;
+          await this.bgJobService.publishJob({
+            type: "send-sms",
+            data: {
+              from: cached_conv_info.calledPhone,
+              to: cached_conv_info.callerPhone,
+              message: `Here is the link to book an appointment: ${bookingLink}`,
+            },
+          });
+
           const followUp = `Got it, a link would be sent to this number shortly. Any other request?`;
           await this.processCallLog(
             cached_conv_info,
