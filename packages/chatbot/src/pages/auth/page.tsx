@@ -229,6 +229,7 @@ function SignUp({ switchTab, closeModal, isOpen }: AuthTab) {
 }
 
 function SignIn({ switchTab, closeModal, isOpen }: AuthTab) {
+  const { location } = useLocation();
   const [otpRequested, setOtpRequested] = useState(false);
   const [email, setEmail] = useState("");
   const signInMut = useMutation({
@@ -262,7 +263,12 @@ function SignIn({ switchTab, closeModal, isOpen }: AuthTab) {
       toast.error("Input must not be empty");
       return;
     }
-    signInMut.mutate({ email });
+    signInMut.mutate({
+      email,
+      country: location?.countryCode,
+      state: location?.state,
+      city: location?.city,
+    });
   };
 
   if (!isOpen) return null;

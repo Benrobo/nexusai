@@ -429,6 +429,9 @@ export class ChatWidgetUserController {
     const payload: {
       email: string;
       otp: string;
+      country?: string;
+      state?: string;
+      city?: string;
     } = req.body;
 
     // validate payload
@@ -481,6 +484,9 @@ export class ChatWidgetUserController {
     await this.updateAccount(chatWidgetAccount.id, {
       verified: true,
       refresh_token: refToken,
+      ...(payload.country && { country: payload.country }),
+      ...(payload.state && { state: payload.state }),
+      ...(payload.city && { city: payload.city }),
     });
 
     // set cookies
@@ -641,6 +647,9 @@ export class ChatWidgetUserController {
     data: ChatWidgetAccountSignupPayload & {
       verified: boolean;
       refresh_token: string;
+      country?: string;
+      state?: string;
+      city?: string;
     }
   ) {
     // check if account exists
