@@ -11,7 +11,6 @@ interface SentimentAnalysisCardProps {
 
 export default function SentimentAnalysisCard({
   analysis,
-  agent_type,
 }: SentimentAnalysisCardProps) {
   const title = analysis?.sentiment;
   const suggested_action = analysis?.suggested_action;
