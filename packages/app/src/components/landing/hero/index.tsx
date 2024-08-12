@@ -47,9 +47,9 @@ export default function Hero() {
               }}
               className="text-sm font-ppL text-white-300"
             >
-              Nexus enables businesses to transform communication by boosting
-              sales with intelligent AI assistants, securing calls from
-              scammers, and offering 24/7 support via chatbots.
+              Nexus helps businesses and individuals to transform communication
+              by boosting sales with intelligent AI assistants, securing calls
+              from scammers, and offering 24/7 support all in one platform.
             </motion.p>
           </FlexColCenter>
           <motion.div
