@@ -13,24 +13,24 @@ Nexus enables businesses to transform communication by boosting sales with intel
 Nexusai was built from scratch with the following technologies:
 
 - [Gemini](https://gemini.google.com/) (gemini-1.5-flash)
-- [Firebase](https://firebase.google.com/) (auth, realtime database)
-- [Twilio](https://www.twilio.com/) (voice, sms, phone number provisioning)
+- [Firebase](https://firebase.google.com/) (storage)
+- [Twilio](https://www.twilio.com/) (sms, phone number provisioning)
 - [Lemonsqueezy](https://lemonsqueezy.com/) (subscription management)
 - [Puppeteer](https://pptr.dev/) (web scraping)
 - [Cheerio](https://cheerio.js.org/) (web scraping)
-- [Elevenlab](https://elevenlabs.io/)
+- [Elevenlab](https://elevenlabs.io/) (realistic text to speech)
 - [Browserless](https://browserless.io/) (offers headless browser automation)
 - [Cloudflare AI](https://www.cloudflare.com/ai/) (qwen-1.5-14b-chat-awq)
-- [Telegram Bot API](https://core.telegram.org/bots)
+- [Telegram Bot API](https://core.telegram.org/bots) (telegram bot)
 - [NeonDB](https://neondb.tech/)
 - [Postgresql](https://www.postgresql.org/)
-- [Redis](https://redis.io/)
-- [Upstash Qstash](https://upstash.com/)
+- [Redis](https://redis.io/) (caching)
+- [Upstash Qstash](https://upstash.com/) (bg-jobs)
 - [Nodejs](https://nodejs.org/en/)
 - [React](https://reactjs.org/)
 - [Tailwindcss](https://tailwindcss.com/)
 - [Typescript](https://www.typescriptlang.org/)
-- [Prisma](https://www.prisma.io/)
+- [Prisma](https://www.prisma.io/) (orm)
 
 ## Getting Started
 
