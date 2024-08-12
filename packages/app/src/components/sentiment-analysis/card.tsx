@@ -49,7 +49,7 @@ export default function SentimentAnalysisCard({
 
       <FlexColStart className="w-full gap-1 mt-1">
         <p className={cn("text-xs text-dark-100 font-bold font-ppM z-[1]")}>
-          {agent_type === "ANTI_THEFT" ? "Red flags 🚩" : "Challenges ⚠️"}
+          Feedback / Actions 💬
         </p>
         <p className={cn("text-xs text-dark-100 font-normal font-ppReg z-[1]")}>
           {analysis?.red_flags?.split(",").join(", ").replace(/\\/g, "") ??
