@@ -40,7 +40,7 @@ export default function WhyNexus() {
         </h1>
         <p className="text-brown-102 text-sm font-ppL max-w-[70%]">
           Nexus delivers AI-enhanced sales with power of Gemini, call
-          protection, and round-the-clock chatbot support in a single,
+          protection, and round-the-clock customer support in a single,
           streamlined platform.
         </p>
       </FlexColStart>
