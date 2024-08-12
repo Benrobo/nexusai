@@ -19,7 +19,7 @@ export default class PhraseService {
     // generate audio buffer
     const audioBuffer = await this.ttsService.xiLabTTS(text);
 
-    const storageUrl = `https://firebasestorage.googleapis.com/v0/b/${env.FIREBASE.STORAGE_BUCKET}.appspot.com/o`;
+    const storageUrl = `https://firebasestorage.googleapis.com/v0/b/${env.FIREBASE.STORAGE_BUCKET}/o`;
 
     const filename = `voice:${textHash}.mp3`;
     const metadata = {
