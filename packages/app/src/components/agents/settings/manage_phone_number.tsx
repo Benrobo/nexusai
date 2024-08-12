@@ -34,6 +34,7 @@ import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import callForwardingCarriersCode from "@/data/call-forwarding";
+import TooltipComp from "@/components/TooltipComp";
 
 dayjs.extend(relativeTime);
 
@@ -621,7 +622,14 @@ export default function ManagePhoneNumber({ agent_id }: Props) {
               <FlexColStart className="w-full gap-1">
                 <h1 className="font-ppM font-bold text-lg">Buy Phone Number</h1>
                 <p className="text-xs font-ppReg font-light text-gray-500">
-                  Purchase a new phone number for this agent.
+                  Purchase a new phone number for this agent.{" "}
+                  <TooltipComp
+                    text={`Funds used in purchasing a number are eligible for refund after the testing phase concludes.\n Please reach out to alumonabenaiah71@gmail.com.`}
+                  >
+                    <span className="text-xs font-ppM font-light text-dark-100 underline">
+                      For Judges
+                    </span>
+                  </TooltipComp>
                 </p>
               </FlexColStart>
             </FlexRowStart>

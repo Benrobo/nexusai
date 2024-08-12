@@ -990,17 +990,16 @@ export default class AIService {
         cached_conv_info.calledPhone
       );
 
-      await this.processCallLog(
-        cached_conv_info,
-        agent_info,
-        user_input,
-        aiMsg
-      );
-
       switch (intent) {
         case "GREETINGS":
         case "ENQUIRY":
           resp.msg = aiMsg;
+          await this.processCallLog(
+            cached_conv_info,
+            agent_info,
+            user_input,
+            aiMsg
+          );
           return resp;
 
         case "APPOINTMENT":
@@ -1015,6 +1014,12 @@ export default class AIService {
           if (integration.length === 0 || !bookingIntegration) {
             resp.msg =
               "I'm sorry, I'm unable to book an appointment at the moment. Please try again later.";
+            await this.processCallLog(
+              cached_conv_info,
+              agent_info,
+              user_input,
+              resp.msg
+            );
             return resp;
           }
 
@@ -1064,16 +1069,34 @@ export default class AIService {
         case "GOODBYE":
           resp.ended = true;
           resp.msg = aiMsg;
+          await this.processCallLog(
+            cached_conv_info,
+            agent_info,
+            user_input,
+            aiMsg
+          );
           return resp;
 
         default:
           resp.msg =
             "I'm sorry, I couldn't find any information on that. Please try again.";
+          await this.processCallLog(
+            cached_conv_info,
+            agent_info,
+            user_input,
+            resp.msg
+          );
           return resp;
       }
     } else {
       resp.msg =
         "I'm sorry, I couldn't find any information on that. Please try again.";
+      await this.processCallLog(
+        cached_conv_info,
+        agent_info,
+        user_input,
+        resp.msg
+      );
       return resp;
     }
   }

@@ -16,7 +16,7 @@ export default function TooltipComp({ text, children }: ITooltipCompProps) {
       <Tooltip>
         <TooltipTrigger className="w-auto">{children}</TooltipTrigger>
         {text && (
-          <TooltipContent>
+          <TooltipContent className="w-auto max-w-[500px]">
             <p className="font-ppReg text-xs">{text}</p>
           </TooltipContent>
         )}
