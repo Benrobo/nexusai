@@ -304,6 +304,21 @@ After that, you should be able to view the chatbot widget on `http://localhost:5
 
 ## Disclaimer
 
-Considering the fact that this project was built within a short period of time (1.5 month), the codebas might not be as clean as expected. I would be working on refactoring the codebase and adding more features in the future (if time permits).
+Considering the fact that this project was built within a short period of time (`1.5 month` to be exact), the codebase might not be as clean as expected. I would be working on refactoring the codebase and adding more features in the future (**if time permits**).
+
+Response between production instance of nexusai might be slow, considering it was hosted on a cheap shared server instance on render with the following specs:
+
+```markdown
+# server specs
+
+- 1 CPU
+- 2GB RAM
+
+# database specs
+
+- 1 vCPU
+- 2GB RAM
+- 4GB SSD
+```
 
 [**First Commit**](https://github.com/Benrobo/nexusai/commits/main/?after=8e957a51323109f3cfa7c54ebb770d23556ed669+600)
