@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "nodemon --exec node -r tsconfig-paths/register --no-warnings=ExperimentalWarning --loader ts-node/esm ./src/server.ts",
     "generate": "prisma generate",
-    "build": "CI=false rimraf ./dist && tsc",
+    "build": "CI=false rimraf ./dist && tsc --build tsconfig.json",
     "dbPush": "prisma db push",
     "migrate": "prisma migrate dev",
     "start": "node ./dist/server.js",

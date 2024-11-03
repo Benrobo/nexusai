@@ -1,4 +1,7 @@
-import type { AgentType, TwilioIncomingCallVoiceResponse } from "types";
+import type {
+  AgentType,
+  TwilioIncomingCallVoiceResponse,
+} from "../types/index.js";
 
 export interface IncomingCallParams extends TwilioIncomingCallVoiceResponse {}
 

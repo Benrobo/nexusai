@@ -1,39 +1,57 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["es2017", "esnext.asynciterable", "DOM"],
-    "typeRoots": ["./node_modules/@types", "./src/types"],
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    // "target": "es6",
+    // "lib": ["es2017", "esnext.asynciterable", "DOM"],
+    // "typeRoots": ["./node_modules/@types", "./src/types"],
+    // "experimentalDecorators": true,
+    // "emitDecoratorMetadata": true,
+    // "moduleResolution": "node",
+
+    // "declaration": true,
+    // "declarationMap": true,
+    // "sourceMap": true,
+
+    // "importHelpers": true,
+    // "composite": true,
+    // "pretty": true,
+    // "resolveJsonModule": true,
+    // "module": "es6",
+    // "allowSyntheticDefaultImports": true,
+    // // "module": "ES2022", // "ES2022" etc
+    // // "moduleResolution": "Node16", // "Node", "Node16"
+    // "rootDir": "./src",
+    // "outDir": "./dist",
+    // "baseUrl": "./src",
+    // "paths": {
+    //   "@/*": ["./src/*"]
+    // }
+    "target": "ESNext",
+    "module": "ESNext",
     "moduleResolution": "node",
-
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-
-    "importHelpers": true,
-    "composite": true,
-    "pretty": true,
-    "resolveJsonModule": true,
-    "module": "es6",
-    "allowSyntheticDefaultImports": true,
-    // "module": "ES2022", // "ES2022" etc
-    // "moduleResolution": "Node16", // "Node", "Node16"
-    "rootDir": "./src",
     "outDir": "./dist",
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "rootDir": "./src",
+    "strict": false,
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
   },
-  "include": [
-    "./**/*",
-    "src/**/*.ts",
-    "./src/**/*",
-    "./src/config/*.json",
-    "./src/types/**/*.d.ts"
-  ],
+  // "include": [
+  //   "./**/*",
+  //   "src/**/*.ts",
+  //   "./src/**/*",
+  //   "./src/config/*.json",
+  //   "./src/types/**/*.d.ts",
+  //   "./src/routes/**/*.d.ts"
+  // ],
+  "include": ["src/**/*"],
   "exclude": ["./node_modules", "./dist/**/*"],
   "ts-node": {
     "require": ["tsconfig-paths/register"],
