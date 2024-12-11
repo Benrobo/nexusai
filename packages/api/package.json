@@ -15,7 +15,8 @@
     "watch": "tsc --watch",
     "format": "npx prettier --write .",
     "db:studio": "npx prisma studio",
-    "inngest": "npx inngest-cli@latest dev -u http://localhost:4001/api/inngest"
+    "inngest": "npx inngest-cli@latest dev -u http://localhost:4001/api/inngest",
+    "export-emails": "tsx src/scripts/export-emails.ts"
   },
   "keywords": [],
   "author": "",
@@ -80,6 +81,7 @@
     "swc-loader": "^0.2.6",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.4.5"
   },
   "os": [

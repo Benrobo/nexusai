@@ -30,3 +30,6 @@ package-lock.json
 .env.local
 
 dump.rdb
+
+
+/packages/exports/*
